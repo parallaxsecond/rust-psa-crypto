@@ -11,6 +11,10 @@
 
 This repository contains a Rust wrapper around the [PSA Cryptography API](https://developer.arm.com/architectures/security-architectures/platform-security-architecture/documentation).
 
+## Notice
+
+The PSA Crypto wrapper is currently work-in-progress. This repository is currently mainly a space for prototyping and design discussion.
+
 ## License
 
 The software is provided under Apache-2.0. Contributions to this project are accepted under the same license.
