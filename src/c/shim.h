@@ -143,6 +143,12 @@ const psa_key_usage_t shim_PSA_KEY_USAGE_SIGN = PSA_KEY_USAGE_SIGN;
 const psa_key_usage_t shim_PSA_KEY_USAGE_VERIFY = PSA_KEY_USAGE_VERIFY;
 const psa_key_usage_t shim_PSA_KEY_USAGE_DERIVE = PSA_KEY_USAGE_DERIVE;
 
+size_t
+shim_get_key_bits(const psa_key_attributes_t *attributes);
+
+psa_key_type_t
+shim_get_key_type(const psa_key_attributes_t *attributes);
+
 psa_key_attributes_t
 shim_key_attributes_init(void);
 

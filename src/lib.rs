@@ -229,14 +229,6 @@ pub fn psa_get_key_attributes(
     ))
 }
 
-pub fn psa_get_key_bits(attributes: &psa_key_attributes_t) -> usize {
-    wrap_any!((*attributes).x.core.bits as usize)
-}
-
-pub fn psa_get_key_type(attributes: &psa_key_attributes_t) -> psa_key_type_t {
-    wrap_any!((*attributes).x.core.type_)
-}
-
 pub fn psa_import_key(
     attributes: *const psa_key_attributes_t,
     data: *const u8,
@@ -262,6 +254,14 @@ pub fn psa_reset_key_attributes(attributes: *mut psa_key_attributes_t) {
 }
 
 // Wrapped shims:
+
+pub fn psa_get_key_bits(attributes: &psa_key_attributes_t) -> usize {
+    wrap_any!(psa_crypto_binding::shim_get_key_bits(&attributes.x))
+}
+
+pub fn psa_get_key_type(attributes: &psa_key_attributes_t) -> psa_key_type_t {
+    wrap_any!(psa_crypto_binding::shim_get_key_type(&attributes.x))
+}
 
 pub fn psa_key_attributes_init() -> psa_key_attributes_t {
     let attr = wrap_any!(psa_crypto_binding::shim_key_attributes_init());
