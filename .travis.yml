@@ -1,5 +1,6 @@
 # Executing our tests on Arm64 with Travis CI
 arch: arm64
+dist: bionic
 language: rust
 script:
   - ./tests/ci.sh
