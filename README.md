@@ -9,7 +9,11 @@
   <a href="https://travis-ci.com/parallaxsecond/rust-psa-crypto"><img src="https://travis-ci.com/parallaxsecond/rust-psa-crypto.svg?branch=master" alt="Travis CI tests"/></a>
 </p>
 
-This repository contains a Rust wrapper around the [PSA Cryptography API](https://developer.arm.com/architectures/security-architectures/platform-security-architecture/documentation).
+This repository contains a Rust wrapper around the [PSA Cryptography API](https://developer.arm.com/architectures/security-architectures/platform-security-architecture/documentation). There are two layers of wrapping:
+
+* [`psa-crypto-sys`](psa-crypto-sys): a lower-level wrapper that exposes a minimal low-level C interface to Rust
+
+* [`psa-crypto`](psa-crypto): a higher-level, more Rust-friendly interface
 
 ## Notice
 

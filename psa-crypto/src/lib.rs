@@ -42,29 +42,48 @@
 #![allow(missing_docs)]
 
 use lazy_static::lazy_static;
+use psa_crypto_sys;
 use std::sync::Mutex;
 
-#[allow(
-    non_snake_case,
-    non_camel_case_types,
-    non_upper_case_globals,
-    dead_code,
-    trivial_casts
-)]
-#[allow(clippy::all)]
-mod psa_crypto_binding {
-    include!(concat!(env!("OUT_DIR"), "/shim_bindings.rs"));
-}
-
-#[allow(dead_code)]
-mod constants;
-pub use constants::*;
+pub use psa_crypto_sys::PSA_ALG_HASH_MASK;
+pub use psa_crypto_sys::PSA_ALG_MD2;
+pub use psa_crypto_sys::PSA_ALG_MD4;
+pub use psa_crypto_sys::PSA_ALG_MD5;
+pub use psa_crypto_sys::PSA_ALG_RIPEMD160;
+pub use psa_crypto_sys::PSA_ALG_RSA_PKCS1V15_SIGN_BASE;
+pub use psa_crypto_sys::PSA_ALG_SHA3_224;
+pub use psa_crypto_sys::PSA_ALG_SHA3_256;
+pub use psa_crypto_sys::PSA_ALG_SHA3_384;
+pub use psa_crypto_sys::PSA_ALG_SHA3_512;
+pub use psa_crypto_sys::PSA_ALG_SHA_1;
+pub use psa_crypto_sys::PSA_ALG_SHA_224;
+pub use psa_crypto_sys::PSA_ALG_SHA_256;
+pub use psa_crypto_sys::PSA_ALG_SHA_384;
+pub use psa_crypto_sys::PSA_ALG_SHA_512;
+pub use psa_crypto_sys::PSA_ALG_SHA_512_224;
+pub use psa_crypto_sys::PSA_ALG_SHA_512_256;
+pub use psa_crypto_sys::PSA_ERROR_BAD_STATE;
+pub use psa_crypto_sys::PSA_KEY_LIFETIME_PERSISTENT;
+pub use psa_crypto_sys::PSA_KEY_SLOT_COUNT;
+pub use psa_crypto_sys::PSA_KEY_TYPE_ECC_KEY_PAIR_BASE;
+pub use psa_crypto_sys::PSA_KEY_TYPE_RSA_KEY_PAIR;
+pub use psa_crypto_sys::PSA_KEY_TYPE_RSA_PUBLIC_KEY;
+pub use psa_crypto_sys::PSA_KEY_USAGE_DECRYPT;
+pub use psa_crypto_sys::PSA_KEY_USAGE_DERIVE;
+pub use psa_crypto_sys::PSA_KEY_USAGE_ENCRYPT;
+pub use psa_crypto_sys::PSA_KEY_USAGE_EXPORT;
+pub use psa_crypto_sys::PSA_KEY_USAGE_SIGN;
+pub use psa_crypto_sys::PSA_KEY_USAGE_VERIFY;
+pub use psa_crypto_sys::PSA_MAX_PERSISTENT_KEY_IDENTIFIER;
+pub use psa_crypto_sys::PSA_SUCCESS;
 
 struct Global {
     init_succeeded: bool,
-    // Calls to psa_open_key, psa_generate_key and psa_destroy_key
-    // are not thread safe. We work around this bug with the key_mutex.
-    // Mbed issue: https://github.com/ARMmbed/mbed-crypto/issues/266
+    // In some versions of Mbed Crypto, calls to psa_open_key,
+    // psa_generate_key and psa_destroy_key are not thread safe. We
+    // work around this bug with the key_mutex. This work-around
+    // should probably be in psa-crypto-sys rather than here. Mbed
+    // issue: https://github.com/ARMmbed/mbed-crypto/issues/266
     key_mutex: Mutex<()>,
 }
 
@@ -85,7 +104,7 @@ fn init() -> bool {
     if GLOBAL.lock().unwrap().init_succeeded {
         return true;
     }
-    let status = unsafe { psa_crypto_binding::psa_crypto_init() };
+    let status = unsafe { psa_crypto_sys::psa_crypto_init() };
     if status != PSA_SUCCESS {
         return false;
     }
@@ -126,24 +145,24 @@ macro_rules! key_lock {
 
 // Reexported types:
 
-pub use psa_crypto_binding::psa_algorithm_t;
-pub use psa_crypto_binding::psa_key_handle_t;
-pub use psa_crypto_binding::psa_key_id_t;
-pub use psa_crypto_binding::psa_key_lifetime_t;
-pub use psa_crypto_binding::psa_key_type_t;
-pub use psa_crypto_binding::psa_key_usage_t;
-pub use psa_crypto_binding::psa_status_t;
+pub use psa_crypto_sys::psa_algorithm_t;
+pub use psa_crypto_sys::psa_key_handle_t;
+pub use psa_crypto_sys::psa_key_id_t;
+pub use psa_crypto_sys::psa_key_lifetime_t;
+pub use psa_crypto_sys::psa_key_type_t;
+pub use psa_crypto_sys::psa_key_usage_t;
+pub use psa_crypto_sys::psa_status_t;
 
 // Wrapped types:
 
 #[allow(non_camel_case_types)]
 pub struct psa_key_attributes_t {
-    x: psa_crypto_binding::psa_key_attributes_t,
+    x: psa_crypto_sys::psa_key_attributes_t,
 }
 
 impl Drop for psa_key_attributes_t {
     fn drop(&mut self) {
-        wrap_any!(psa_crypto_binding::psa_reset_key_attributes(&mut self.x));
+        wrap_any!(psa_crypto_sys::psa_reset_key_attributes(&mut self.x));
     }
 }
 
@@ -158,7 +177,7 @@ pub fn psa_asymmetric_sign(
     signature_size: usize,
     signature_length: *mut usize,
 ) -> psa_status_t {
-    wrap_status!(psa_crypto_binding::psa_asymmetric_sign(
+    wrap_status!(psa_crypto_sys::psa_asymmetric_sign(
         handle,
         alg,
         hash,
@@ -177,7 +196,7 @@ pub fn psa_asymmetric_verify(
     signature: *const u8,
     signature_length: usize,
 ) -> psa_status_t {
-    wrap_status!(psa_crypto_binding::psa_asymmetric_verify(
+    wrap_status!(psa_crypto_sys::psa_asymmetric_verify(
         handle,
         alg,
         hash,
@@ -188,11 +207,11 @@ pub fn psa_asymmetric_verify(
 }
 
 pub fn psa_close_key(handle: psa_key_handle_t) -> psa_status_t {
-    wrap_status!(psa_crypto_binding::psa_close_key(handle))
+    wrap_status!(psa_crypto_sys::psa_close_key(handle))
 }
 
 pub fn psa_destroy_key(handle: psa_key_handle_t) -> psa_status_t {
-    wrap_status!(key_lock!(psa_crypto_binding::psa_destroy_key(handle)))
+    wrap_status!(key_lock!(psa_crypto_sys::psa_destroy_key(handle)))
 }
 
 pub fn psa_export_public_key(
@@ -201,7 +220,7 @@ pub fn psa_export_public_key(
     data_size: usize,
     data_length: *mut usize,
 ) -> psa_status_t {
-    wrap_status!(psa_crypto_binding::psa_export_public_key(
+    wrap_status!(psa_crypto_sys::psa_export_public_key(
         handle,
         data,
         data_size,
@@ -213,7 +232,7 @@ pub fn psa_generate_key(
     attributes: *const psa_key_attributes_t,
     handle: *mut psa_key_handle_t,
 ) -> psa_status_t {
-    wrap_status!(key_lock!(psa_crypto_binding::psa_generate_key(
+    wrap_status!(key_lock!(psa_crypto_sys::psa_generate_key(
         &(*attributes).x,
         handle
     )))
@@ -223,7 +242,7 @@ pub fn psa_get_key_attributes(
     handle: psa_key_handle_t,
     attributes: *mut psa_key_attributes_t,
 ) -> psa_status_t {
-    wrap_status!(psa_crypto_binding::psa_get_key_attributes(
+    wrap_status!(psa_crypto_sys::psa_get_key_attributes(
         handle,
         &mut (*attributes).x
     ))
@@ -235,7 +254,7 @@ pub fn psa_import_key(
     data_length: usize,
     handle: *mut psa_key_handle_t,
 ) -> psa_status_t {
-    wrap_status!(psa_crypto_binding::psa_import_key(
+    wrap_status!(psa_crypto_sys::psa_import_key(
         &(*attributes).x,
         data,
         data_length,
@@ -244,11 +263,11 @@ pub fn psa_import_key(
 }
 
 pub fn psa_open_key(id: psa_key_id_t, handle: *mut psa_key_handle_t) -> psa_status_t {
-    wrap_status!(key_lock!(psa_crypto_binding::psa_open_key(id, handle)))
+    wrap_status!(key_lock!(psa_crypto_sys::psa_open_key(id, handle)))
 }
 
 pub fn psa_reset_key_attributes(attributes: *mut psa_key_attributes_t) {
-    wrap_any!(psa_crypto_binding::psa_reset_key_attributes(
+    wrap_any!(psa_crypto_sys::psa_reset_key_attributes(
         &mut (*attributes).x
     ))
 }
@@ -256,55 +275,49 @@ pub fn psa_reset_key_attributes(attributes: *mut psa_key_attributes_t) {
 // Wrapped shims:
 
 pub fn psa_get_key_bits(attributes: &psa_key_attributes_t) -> usize {
-    wrap_any!(psa_crypto_binding::shim_get_key_bits(&attributes.x))
+    wrap_any!(psa_crypto_sys::shim_get_key_bits(&attributes.x))
 }
 
 pub fn psa_get_key_type(attributes: &psa_key_attributes_t) -> psa_key_type_t {
-    wrap_any!(psa_crypto_binding::shim_get_key_type(&attributes.x))
+    wrap_any!(psa_crypto_sys::shim_get_key_type(&attributes.x))
 }
 
 pub fn psa_key_attributes_init() -> psa_key_attributes_t {
-    let attr = wrap_any!(psa_crypto_binding::shim_key_attributes_init());
+    let attr = wrap_any!(psa_crypto_sys::shim_key_attributes_init());
     psa_key_attributes_t { x: attr }
 }
 
 pub fn psa_set_key_algorithm(attributes: &mut psa_key_attributes_t, alg: psa_algorithm_t) {
-    wrap_any!(psa_crypto_binding::shim_set_key_algorithm(
+    wrap_any!(psa_crypto_sys::shim_set_key_algorithm(
         &mut attributes.x,
         alg
     ));
 }
 
 pub fn psa_set_key_bits(attributes: &mut psa_key_attributes_t, bits: usize) {
-    wrap_any!(psa_crypto_binding::shim_set_key_bits(
-        &mut attributes.x,
-        bits
-    ));
+    wrap_any!(psa_crypto_sys::shim_set_key_bits(&mut attributes.x, bits));
 }
 
 pub fn psa_set_key_id(attributes: &mut psa_key_attributes_t, id: psa_key_id_t) {
-    wrap_any!(psa_crypto_binding::shim_set_key_id(&mut attributes.x, id));
+    wrap_any!(psa_crypto_sys::shim_set_key_id(&mut attributes.x, id));
 }
 
 pub fn psa_set_key_lifetime(attributes: &mut psa_key_attributes_t, lifetime: psa_key_lifetime_t) {
-    wrap_any!(psa_crypto_binding::shim_set_key_lifetime(
+    wrap_any!(psa_crypto_sys::shim_set_key_lifetime(
         &mut attributes.x,
         lifetime
     ));
 }
 
 pub fn psa_set_key_type(attributes: &mut psa_key_attributes_t, type_: psa_key_type_t) {
-    wrap_any!(psa_crypto_binding::shim_set_key_type(
-        &mut attributes.x,
-        type_
-    ));
+    wrap_any!(psa_crypto_sys::shim_set_key_type(&mut attributes.x, type_));
 }
 
 pub fn psa_set_key_usage_flags(
     attributes: &mut psa_key_attributes_t,
     usage_flags: psa_key_usage_t,
 ) {
-    wrap_any!(psa_crypto_binding::shim_set_key_usage_flags(
+    wrap_any!(psa_crypto_sys::shim_set_key_usage_flags(
         &mut attributes.x,
         usage_flags
     ));

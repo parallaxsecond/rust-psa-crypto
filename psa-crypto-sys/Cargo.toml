@@ -1,0 +1,23 @@
+[package]
+name = "psa-crypto-sys"
+version = "0.1.0"
+authors = ["Edmund Grimley Evans <edmund.grimley-evans@arm.com>",
+           "Paul Howard <paul.howard@arm.com>",
+           "Ionut Mihalcea <ionut.mihalcea@arm.com>",
+           "Hugues de Valon <hugues.devalon@arm.com>"]
+edition = "2018"
+description = "Wrapper around the PSA Cryptography API"
+readme = "README.md"
+keywords = ["psa", "crypto", "cryptography"]
+categories = ["api-bindings", "external-ffi-bindings", "cryptography"]
+license = "Apache-2.0"
+repository = "https://github.com/parallaxsecond/rust-psa-crypto"
+
+[build-dependencies]
+bindgen = "0.50.0"
+cargo_toml = "0.7.0"
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.4.2"
+
+[package.metadata.config]
+mbed-crypto-version = "mbedcrypto-2.0.0"
