@@ -1,0 +1,18 @@
+[package]
+name = "psa-crypto"
+version = "0.1.0"
+authors = ["Edmund Grimley Evans <edmund.grimley-evans@arm.com>",
+           "Paul Howard <paul.howard@arm.com>",
+           "Ionut Mihalcea <ionut.mihalcea@arm.com>",
+           "Hugues de Valon <hugues.devalon@arm.com>"]
+edition = "2018"
+description = "Wrapper around the PSA Cryptography API"
+readme = "README.md"
+keywords = ["psa", "crypto", "cryptography"]
+categories = ["api-bindings", "external-ffi-bindings", "cryptography"]
+license = "Apache-2.0"
+repository = "https://github.com/parallaxsecond/rust-psa-crypto"
+
+[dependencies]
+lazy_static = "1.4.0"
+psa-crypto-sys = { path = "../psa-crypto-sys" }
