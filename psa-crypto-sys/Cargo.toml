@@ -20,4 +20,4 @@ serde = { version = "1.0", features = ["derive"] }
 toml = "0.4.2"
 
 [package.metadata.config]
-mbed-crypto-version = "mbedcrypto-2.0.0"
+mbed-crypto-commit = "5435451a1a3d0af3eef71e3883f3087df52e48d5"

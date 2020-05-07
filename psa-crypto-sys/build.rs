@@ -37,7 +37,7 @@ use std::io::{Error, ErrorKind, Result};
 use std::path::{Path, PathBuf};
 
 const CONFIG_TABLE_NAME: &str = "config";
-const MBED_CRYPTO_VERSION_KEY: &str = "mbed-crypto-version";
+const MBED_CRYPTO_COMMIT_KEY: &str = "mbed-crypto-commit";
 
 const SETUP_MBED_SCRIPT_PATH: &str = "./setup_mbed_crypto.sh";
 const BUILD_CONFIG_FILE_PATH: &str = "./build-conf.toml";
@@ -89,10 +89,10 @@ fn get_value_from_table<'a>(table: &'a Value, key: &str) -> Result<&'a Value> {
     }
 }
 
-// Get the Mbed Crypto version to branch on from Cargo.toml file. Use that and MbedConfig to pass
+// Get the Mbed Crypto commit from Cargo.toml file. Use that and MbedConfig to pass
 // parameters to the setup_mbed_crypto.sh script which clones and builds Mbed Crypto and create
 // a static library.
-fn setup_mbed_crypto(mbed_config: &MbedConfig, mbed_version: &str) -> Result<()> {
+fn setup_mbed_crypto(mbed_config: &MbedConfig, mbed_commit: &str) -> Result<()> {
     let (mbed_compiler, mbed_archiver) =
         if std::env::var("TARGET").unwrap() == "aarch64-unknown-linux-gnu" {
             let toolchain;
@@ -148,7 +148,7 @@ fn setup_mbed_crypto(mbed_config: &MbedConfig, mbed_version: &str) -> Result<()>
     println!("cargo:rerun-if-changed={}", "src/c/shim.h");
 
     if !::std::process::Command::new(SETUP_MBED_SCRIPT_PATH)
-        .arg(mbed_version)
+        .arg(mbed_commit)
         .arg(
             mbed_config
                 .mbed_path
@@ -170,14 +170,12 @@ fn setup_mbed_crypto(mbed_config: &MbedConfig, mbed_version: &str) -> Result<()>
     }
 }
 
-fn generate_mbed_bindings(mbed_config: &MbedConfig, mbed_version: &str) -> Result<()> {
+fn generate_mbed_bindings(mbed_config: &MbedConfig) -> Result<()> {
     let mbed_include_dir = mbed_config
         .mbed_path
         .clone()
         .unwrap_or_else(|| env::var("OUT_DIR").unwrap())
-        + "/mbed-crypto-"
-        + mbed_version
-        + "/include";
+        + "/mbedtls/include";
     let header = mbed_include_dir.clone() + "/psa/crypto.h";
 
     println!("cargo:rerun-if-changed={}", header);
@@ -252,18 +250,17 @@ fn main() -> Result<()> {
             )
         })?;
 
-        let mbed_version = get_configuration_string(&parsec_config, MBED_CRYPTO_VERSION_KEY)?;
+        let mbed_commit = get_configuration_string(&parsec_config, MBED_CRYPTO_COMMIT_KEY)?;
 
-        setup_mbed_crypto(&mbed_config, &mbed_version)?;
-        generate_mbed_bindings(&mbed_config, &mbed_version)?;
+        setup_mbed_crypto(&mbed_config, &mbed_commit)?;
+        generate_mbed_bindings(&mbed_config)?;
 
         // Request rustc to link the Mbed Crypto static library
         println!(
-            "cargo:rustc-link-search=native={}/mbed-crypto-{}/library/",
+            "cargo:rustc-link-search=native={}/mbedtls/library/",
             mbed_config
                 .mbed_path
                 .unwrap_or_else(|| env::var("OUT_DIR").unwrap()),
-            mbed_version,
         );
         println!("cargo:rustc-link-lib=static=mbedcrypto");
 

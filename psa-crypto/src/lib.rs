@@ -177,7 +177,7 @@ pub fn psa_asymmetric_sign(
     signature_size: usize,
     signature_length: *mut usize,
 ) -> psa_status_t {
-    wrap_status!(psa_crypto_sys::psa_asymmetric_sign(
+    wrap_status!(psa_crypto_sys::psa_sign_hash(
         handle,
         alg,
         hash,
@@ -196,7 +196,7 @@ pub fn psa_asymmetric_verify(
     signature: *const u8,
     signature_length: usize,
 ) -> psa_status_t {
-    wrap_status!(psa_crypto_sys::psa_asymmetric_verify(
+    wrap_status!(psa_crypto_sys::psa_verify_hash(
         handle,
         alg,
         hash,

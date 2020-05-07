@@ -5,14 +5,14 @@
 # SPDX-License-Identifier: Apache-2.0
 # ------------------------------------------------------------------------------
 
-MBED_VERSION=$1
-if [[ -z "$MBED_VERSION" ]]; then
-    >&2 echo "No mbed version provided."
+MBED_COMMIT=$1
+if [[ -z "$MBED_COMMIT" ]]; then
+    >&2 echo "No mbed commit provided."
     exit 1
 fi
 
-MBED_GITHUB_URL="https://github.com/ARMmbed/mbed-crypto"
-MBED_ROOT_FOLDER_NAME="mbed-crypto-$MBED_VERSION"
+MBED_GITHUB_URL="https://github.com/ARMmbed/mbedtls"
+MBED_ROOT_FOLDER_NAME="mbedtls"
 MBED_LIB_FILENAME="libmbedcrypto.a"
 MBED_SHIMLIB_DIR="src/c"
 
@@ -33,9 +33,9 @@ fi
 
 get_mbed_repo() {
     echo "No mbed-crypto present locally. Cloning."
-    wget $MBED_GITHUB_URL/archive/$MBED_VERSION.tar.gz
-    tar xf $MBED_VERSION.tar.gz
+    git clone $MBED_GITHUB_URL $MBED_ROOT_FOLDER_NAME
     pushd $MBED_ROOT_FOLDER_NAME
+    git checkout $MBED_COMMIT
 }
 
 setup_mbed_library() {
