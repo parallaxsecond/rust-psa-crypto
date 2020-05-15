@@ -7,6 +7,7 @@
 //! You can find the API
 //! [here](https://developer.arm.com/architectures/security-architectures/platform-security-architecture/documentation).
 
+#![no_std]
 #![deny(
     nonstandard_style,
     const_err,
@@ -26,7 +27,8 @@
     while_true,
     missing_debug_implementations,
     missing_docs,
-    trivial_casts,
+    // The following ling is triggered when casting a reference to a raw pointer.
+    //trivial_casts,
     trivial_numeric_casts,
     unused_extern_crates,
     unused_import_braces,
@@ -36,5 +38,33 @@
 )]
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
-// It is ok as the documentation of this crate is the PSA Crypto API.
-#![allow(missing_docs)]
+
+pub mod operations;
+pub mod types;
+
+use core::sync::atomic::{AtomicBool, Ordering};
+use types::status::{status_to_result, Result, Status};
+
+static INITIALISED: AtomicBool = AtomicBool::new(false);
+
+/// Initialize the PSA Crypto library
+///
+/// Applications must call this function before calling any other function in crate.
+/// Applications are permitted to call this function more than once. Once a call succeeds,
+/// subsequent calls are guaranteed to succeed.
+pub fn init() -> Result<()> {
+    // It it not a problem to call psa_crypto_init more than once.
+    status_to_result(unsafe { psa_crypto_sys::psa_crypto_init() })?;
+    let _ = INITIALISED.compare_and_swap(false, true, Ordering::Relaxed);
+
+    Ok(())
+}
+
+/// Check if the PSA Crypto library has been initialized
+pub fn initialized() -> Result<()> {
+    if INITIALISED.load(Ordering::Relaxed) {
+        Ok(())
+    } else {
+        Err(Status::BadState)
+    }
+}

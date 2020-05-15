@@ -8,11 +8,12 @@ authors = ["Edmund Grimley Evans <edmund.grimley-evans@arm.com>",
 edition = "2018"
 description = "Wrapper around the PSA Cryptography API"
 readme = "README.md"
-keywords = ["psa", "crypto", "cryptography"]
+keywords = ["psa", "crypto", "cryptography", "no_std"]
 categories = ["api-bindings", "external-ffi-bindings", "cryptography"]
 license = "Apache-2.0"
 repository = "https://github.com/parallaxsecond/rust-psa-crypto"
 
 [dependencies]
-lazy_static = "1.4.0"
 psa-crypto-sys = { path = "../psa-crypto-sys" }
+log = "0.4.8"
+serde = "1.0.110"
