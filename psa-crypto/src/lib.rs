@@ -43,7 +43,7 @@ pub mod operations;
 pub mod types;
 
 use core::sync::atomic::{AtomicBool, Ordering};
-use types::status::{status_to_result, Result, Status};
+use types::status::{status_to_result, Result, Error};
 
 static INITIALISED: AtomicBool = AtomicBool::new(false);
 
@@ -65,6 +65,6 @@ pub fn initialized() -> Result<()> {
     if INITIALISED.load(Ordering::Relaxed) {
         Ok(())
     } else {
-        Err(Status::BadState)
+        Err(Error::BadState)
     }
 }

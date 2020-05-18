@@ -8,13 +8,20 @@
 use log::error;
 
 /// Result type returned by any PSA operation
-pub type Result<T> = core::result::Result<T, Status>;
+pub type Result<T> = core::result::Result<T, Error>;
 
 /// Definition of a PSA status code
 #[derive(Clone, Copy, Debug)]
 pub enum Status {
     /// Status code for success
     Success,
+    /// Status codes for errors
+    Error(Error),
+}
+
+/// Definition of a PSA status code
+#[derive(Clone, Copy, Debug)]
+pub enum Error {
     /// An error occurred that does not correspond to any defined failure cause
     GenericError,
     /// The requested operation or a parameter is not supported by this implementation
@@ -59,13 +66,19 @@ pub enum Status {
     InvalidHandle,
 }
 
+impl From<Error> for Status {
+    fn from(error: Error) -> Self {
+        Status::Error(error)
+    }
+}
+
 impl From<psa_crypto_sys::psa_status_t> for Status {
     fn from(status: psa_crypto_sys::psa_status_t) -> Self {
         match status {
             psa_crypto_sys::PSA_SUCCESS => Status::Success,
             s => {
                 error!("{} not recognised as a valid PSA status.", s);
-                Status::GenericError
+                Status::Error(Error::GenericError)
             }
         }
     }
@@ -74,6 +87,6 @@ impl From<psa_crypto_sys::psa_status_t> for Status {
 pub(crate) fn status_to_result(status: psa_crypto_sys::psa_status_t) -> Result<()> {
     match status.into() {
         Status::Success => Ok(()),
-        error => Err(error),
+        Status::Error(error) => Err(error),
     }
 }
