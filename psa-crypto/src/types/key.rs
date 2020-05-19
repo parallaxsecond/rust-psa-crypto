@@ -6,7 +6,7 @@
 #![allow(deprecated)]
 
 use crate::types::algorithm::{Algorithm, Cipher};
-use crate::types::status::{status_to_result, Error, Result};
+use crate::types::status::{Error, Result, Status};
 use log::error;
 use serde::{Deserialize, Serialize};
 
@@ -394,7 +394,8 @@ impl Id {
             Some(handle) => handle,
             None => {
                 let mut handle = 0;
-                status_to_result(unsafe { psa_crypto_sys::psa_open_key(self.id, &mut handle) })?;
+                Status::from(unsafe { psa_crypto_sys::psa_open_key(self.id, &mut handle) })
+                    .to_result()?;
 
                 handle
             }
@@ -403,7 +404,7 @@ impl Id {
 
     pub(crate) fn close_handle(self, handle: psa_crypto_sys::psa_key_handle_t) -> Result<()> {
         if self.handle.is_none() {
-            status_to_result(unsafe { psa_crypto_sys::psa_close_key(handle) })
+            Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()
         } else {
             Ok(())
         }

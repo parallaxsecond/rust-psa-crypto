@@ -19,6 +19,16 @@ pub enum Status {
     Error(Error),
 }
 
+impl Status {
+    /// Convert the Status into a Result returning the empty tuple
+    pub fn to_result(self) -> Result<()> {
+        match self {
+            Status::Success => Ok(()),
+            Status::Error(error) => Err(error),
+        }
+    }
+}
+
 /// Definition of a PSA status code
 #[derive(Clone, Copy, Debug)]
 pub enum Error {
@@ -137,9 +147,8 @@ impl From<Status> for psa_crypto_sys::psa_status_t {
     }
 }
 
-pub(crate) fn status_to_result(status: psa_crypto_sys::psa_status_t) -> Result<()> {
-    match status.into() {
-        Status::Success => Ok(()),
-        Status::Error(error) => Err(error),
+impl From<Status> for Result<()> {
+    fn from(status: Status) -> Self {
+        status.to_result()
     }
 }
