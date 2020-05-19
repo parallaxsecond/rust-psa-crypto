@@ -6,7 +6,7 @@
 #![allow(deprecated)]
 
 use crate::types::algorithm::{Algorithm, Cipher};
-use crate::types::status::{status_to_result, Result, Status};
+use crate::types::status::{Error, Result, Status};
 use log::error;
 use serde::{Deserialize, Serialize};
 
@@ -36,7 +36,7 @@ impl Attributes {
             Ok(())
         } else {
             error!("Key attributes do not permit exporting key.");
-            Err(Status::NotPermitted)
+            Err(Error::NotPermitted)
         }
     }
 
@@ -51,7 +51,7 @@ impl Attributes {
             Ok(())
         } else {
             error!("Key attributes do not permit signing hashes.");
-            Err(Status::NotPermitted)
+            Err(Error::NotPermitted)
         }
     }
 
@@ -66,7 +66,7 @@ impl Attributes {
             Ok(())
         } else {
             error!("Key attributes do not permit verifying hashes.");
-            Err(Status::NotPermitted)
+            Err(Error::NotPermitted)
         }
     }
 
@@ -93,7 +93,7 @@ impl Attributes {
             Ok(())
         } else {
             error!("Key attributes do not permit specified algorithm.");
-            Err(Status::NotPermitted)
+            Err(Error::NotPermitted)
         }
     }
 
@@ -172,7 +172,7 @@ impl Attributes {
             Ok(())
         } else {
             error!("Key attributes are not compatible with specified algorithm.");
-            Err(Status::NotPermitted)
+            Err(Error::NotPermitted)
         }
     }
 }
@@ -394,7 +394,8 @@ impl Id {
             Some(handle) => handle,
             None => {
                 let mut handle = 0;
-                status_to_result(unsafe { psa_crypto_sys::psa_open_key(self.id, &mut handle) })?;
+                Status::from(unsafe { psa_crypto_sys::psa_open_key(self.id, &mut handle) })
+                    .to_result()?;
 
                 handle
             }
@@ -403,7 +404,7 @@ impl Id {
 
     pub(crate) fn close_handle(self, handle: psa_crypto_sys::psa_key_handle_t) -> Result<()> {
         if self.handle.is_none() {
-            status_to_result(unsafe { psa_crypto_sys::psa_close_key(handle) })
+            Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()
         } else {
             Ok(())
         }

@@ -6,7 +6,7 @@
 use crate::initialized;
 use crate::types::algorithm::{Algorithm, AsymmetricSignature};
 use crate::types::key::Id;
-use crate::types::status::{status_to_result, Result};
+use crate::types::status::{Result, Status};
 
 /// Sign a hash
 pub fn sign_hash(
@@ -20,7 +20,7 @@ pub fn sign_hash(
     let mut signature_length = 0;
     let handle = key.handle()?;
 
-    status_to_result(unsafe {
+    Status::from(unsafe {
         psa_crypto_sys::psa_asymmetric_sign(
             handle,
             Algorithm::from(alg).into(),
@@ -30,7 +30,8 @@ pub fn sign_hash(
             signature.len(),
             &mut signature_length,
         )
-    })?;
+    })
+    .to_result()?;
 
     key.close_handle(handle)?;
 
@@ -43,7 +44,7 @@ pub fn verify_hash(key: Id, alg: AsymmetricSignature, hash: &[u8], signature: &[
 
     let handle = key.handle()?;
 
-    status_to_result(unsafe {
+    Status::from(unsafe {
         psa_crypto_sys::psa_asymmetric_verify(
             handle,
             Algorithm::from(alg).into(),
@@ -52,7 +53,8 @@ pub fn verify_hash(key: Id, alg: AsymmetricSignature, hash: &[u8], signature: &[
             signature.as_ptr(),
             signature.len(),
         )
-    })?;
+    })
+    .to_result()?;
 
     key.close_handle(handle)
 }

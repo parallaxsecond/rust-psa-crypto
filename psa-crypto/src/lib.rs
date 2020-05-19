@@ -43,7 +43,7 @@ pub mod operations;
 pub mod types;
 
 use core::sync::atomic::{AtomicBool, Ordering};
-use types::status::{status_to_result, Result, Status};
+use types::status::{Error, Result, Status};
 
 static INITIALISED: AtomicBool = AtomicBool::new(false);
 
@@ -54,7 +54,7 @@ static INITIALISED: AtomicBool = AtomicBool::new(false);
 /// subsequent calls are guaranteed to succeed.
 pub fn init() -> Result<()> {
     // It it not a problem to call psa_crypto_init more than once.
-    status_to_result(unsafe { psa_crypto_sys::psa_crypto_init() })?;
+    Status::from(unsafe { psa_crypto_sys::psa_crypto_init() }).to_result()?;
     let _ = INITIALISED.compare_and_swap(false, true, Ordering::Relaxed);
 
     Ok(())
@@ -65,6 +65,6 @@ pub fn initialized() -> Result<()> {
     if INITIALISED.load(Ordering::Relaxed) {
         Ok(())
     } else {
-        Err(Status::BadState)
+        Err(Error::BadState)
     }
 }
