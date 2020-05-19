@@ -19,6 +19,24 @@ shim_get_key_type(const psa_key_attributes_t *attributes)
     return psa_get_key_type(attributes);
 }
 
+psa_key_lifetime_t
+shim_get_key_lifetime(const psa_key_attributes_t *attributes)
+{
+    return psa_get_key_lifetime(attributes);
+}
+
+psa_algorithm_t
+shim_get_key_algorithm(const psa_key_attributes_t *attributes)
+{
+    return psa_get_key_algorithm(attributes);
+}
+
+psa_key_usage_t
+shim_get_key_usage_flags(const psa_key_attributes_t *attributes)
+{
+    return psa_get_key_usage_flags(attributes);
+}
+
 psa_key_attributes_t
 shim_key_attributes_init(void)
 {
@@ -151,4 +169,64 @@ shim_PSA_ALG_ECDSA(psa_algorithm_t hash_alg) {
 psa_algorithm_t
 shim_PSA_ALG_DETERMINISTIC_ECDSA(psa_algorithm_t hash_alg) {
 	return PSA_ALG_DETERMINISTIC_ECDSA(hash_alg);
+}
+
+int
+shim_PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_key_type_t key_type)
+{
+	return PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type);
+}
+
+int
+shim_PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(psa_key_type_t key_type)
+{
+	return PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type);
+}
+
+int
+shim_PSA_KEY_TYPE_IS_DH_PUBLIC_KEY(psa_key_type_t key_type)
+{
+	return PSA_KEY_TYPE_IS_DH_PUBLIC_KEY(key_type);
+}
+
+int
+shim_PSA_KEY_TYPE_IS_DH_KEY_PAIR(psa_key_type_t key_type)
+{
+	return PSA_KEY_TYPE_IS_DH_KEY_PAIR(key_type);
+}
+
+psa_ecc_curve_t
+shim_PSA_KEY_TYPE_GET_CURVE(psa_key_type_t key_type)
+{
+	return PSA_KEY_TYPE_GET_CURVE(key_type);
+}
+
+psa_dh_group_t
+shim_PSA_KEY_TYPE_GET_GROUP(psa_key_type_t key_type)
+{
+	return PSA_KEY_TYPE_GET_GROUP(key_type);
+}
+
+psa_key_type_t
+shim_PSA_KEY_TYPE_ECC_KEY_PAIR(psa_ecc_curve_t curve)
+{
+	return PSA_KEY_TYPE_ECC_KEY_PAIR(curve);
+}
+
+psa_key_type_t
+shim_PSA_KEY_TYPE_ECC_PUBLIC_KEY(psa_ecc_curve_t curve)
+{
+	return PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve);
+}
+
+psa_key_type_t
+shim_PSA_KEY_TYPE_DH_KEY_PAIR(psa_dh_group_t group)
+{
+	return PSA_KEY_TYPE_DH_KEY_PAIR(group);
+}
+
+psa_key_type_t
+shim_PSA_KEY_TYPE_DH_PUBLIC_KEY(psa_dh_group_t group)
+{
+	return PSA_KEY_TYPE_DH_PUBLIC_KEY(group);
 }

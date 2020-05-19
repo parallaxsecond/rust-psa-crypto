@@ -7,6 +7,7 @@
 
 use crate::types::algorithm::{Algorithm, Cipher};
 use crate::types::status::{Error, Result, Status};
+use core::convert::{TryFrom, TryInto};
 use log::error;
 use serde::{Deserialize, Serialize};
 
@@ -174,6 +175,10 @@ impl Attributes {
             error!("Key attributes are not compatible with specified algorithm.");
             Err(Error::NotPermitted)
         }
+    }
+
+    pub(crate) fn reset(attributes: &mut psa_crypto_sys::psa_key_attributes_t) {
+        unsafe { psa_crypto_sys::psa_reset_key_attributes(attributes) };
     }
 }
 
@@ -418,9 +423,236 @@ impl Id {
     }
 }
 
-impl From<Attributes> for psa_crypto_sys::psa_key_attributes_t {
-    fn from(_attributes: Attributes) -> Self {
-        unsafe { psa_crypto_sys::psa_key_attributes_init() }
+impl TryFrom<Attributes> for psa_crypto_sys::psa_key_attributes_t {
+    type Error = Error;
+    fn try_from(attributes: Attributes) -> Result<Self> {
+        let mut attrs = unsafe { psa_crypto_sys::psa_key_attributes_init() };
+        unsafe { psa_crypto_sys::psa_set_key_lifetime(&mut attrs, attributes.lifetime.into()) };
+        unsafe {
+            psa_crypto_sys::psa_set_key_usage_flags(
+                &mut attrs,
+                attributes.policy.usage_flags.into(),
+            )
+        };
+        unsafe {
+            psa_crypto_sys::psa_set_key_algorithm(
+                &mut attrs,
+                attributes.policy.permitted_algorithms.try_into()?,
+            )
+        };
+        unsafe { psa_crypto_sys::psa_set_key_type(&mut attrs, attributes.key_type.try_into()?) };
+        unsafe { psa_crypto_sys::psa_set_key_bits(&mut attrs, attributes.bits) };
+
+        Ok(attrs)
+    }
+}
+
+impl TryFrom<psa_crypto_sys::psa_key_attributes_t> for Attributes {
+    type Error = Error;
+    fn try_from(attributes: psa_crypto_sys::psa_key_attributes_t) -> Result<Self> {
+        Ok(Attributes {
+            lifetime: unsafe { psa_crypto_sys::psa_get_key_lifetime(&attributes).into() },
+            key_type: unsafe { psa_crypto_sys::psa_get_key_type(&attributes).try_into()? },
+            bits: unsafe { psa_crypto_sys::psa_get_key_bits(&attributes) },
+            policy: Policy {
+                usage_flags: unsafe { psa_crypto_sys::psa_get_key_usage_flags(&attributes).into() },
+                permitted_algorithms: unsafe {
+                    psa_crypto_sys::psa_get_key_algorithm(&attributes).try_into()?
+                },
+            },
+        })
+    }
+}
+
+impl From<Lifetime> for psa_crypto_sys::psa_key_lifetime_t {
+    fn from(lifetime: Lifetime) -> Self {
+        match lifetime {
+            Lifetime::Volatile => psa_crypto_sys::PSA_KEY_LIFETIME_VOLATILE,
+            Lifetime::Persistent => psa_crypto_sys::PSA_KEY_LIFETIME_PERSISTENT,
+            Lifetime::Custom(value) => value,
+        }
+    }
+}
+
+impl From<psa_crypto_sys::psa_key_lifetime_t> for Lifetime {
+    fn from(lifetime: psa_crypto_sys::psa_key_lifetime_t) -> Self {
+        match lifetime {
+            psa_crypto_sys::PSA_KEY_LIFETIME_VOLATILE => Lifetime::Volatile,
+            psa_crypto_sys::PSA_KEY_LIFETIME_PERSISTENT => Lifetime::Persistent,
+            value => Lifetime::Custom(value),
+        }
+    }
+}
+
+impl From<UsageFlags> for psa_crypto_sys::psa_key_usage_t {
+    fn from(flags: UsageFlags) -> Self {
+        let mut usage_flags = 0;
+        if flags.export {
+            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_EXPORT;
+        }
+        if flags.encrypt {
+            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_ENCRYPT;
+        }
+        if flags.decrypt {
+            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_DECRYPT;
+        }
+        if flags.sign_message && flags.sign_hash {
+            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN;
+        }
+        if flags.verify_message && flags.verify_hash {
+            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY;
+        }
+        if flags.derive {
+            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_DERIVE;
+        }
+        usage_flags
+    }
+}
+
+impl From<psa_crypto_sys::psa_key_usage_t> for UsageFlags {
+    fn from(flags: psa_crypto_sys::psa_key_usage_t) -> Self {
+        UsageFlags {
+            export: flags & psa_crypto_sys::PSA_KEY_USAGE_EXPORT > 0,
+            copy: false,
+            cache: false,
+            encrypt: flags & psa_crypto_sys::PSA_KEY_USAGE_ENCRYPT > 0,
+            decrypt: flags & psa_crypto_sys::PSA_KEY_USAGE_DECRYPT > 0,
+            sign_message: flags & psa_crypto_sys::PSA_KEY_USAGE_SIGN > 0,
+            verify_message: flags & psa_crypto_sys::PSA_KEY_USAGE_VERIFY > 0,
+            sign_hash: flags & psa_crypto_sys::PSA_KEY_USAGE_SIGN > 0,
+            verify_hash: flags & psa_crypto_sys::PSA_KEY_USAGE_VERIFY > 0,
+            derive: flags & psa_crypto_sys::PSA_KEY_USAGE_DERIVE > 0,
+        }
+    }
+}
+
+impl TryFrom<EccFamily> for psa_crypto_sys::psa_ecc_curve_t {
+    type Error = Error;
+    fn try_from(family: EccFamily) -> Result<Self> {
+        match family {
+            EccFamily::SecpK1 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECP_K1),
+            EccFamily::SecpR1 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECP_R1),
+            EccFamily::SecpR2 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECP_R2),
+            EccFamily::SectK1 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECT_K1),
+            EccFamily::SectR1 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECT_R1),
+            EccFamily::SectR2 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECT_R2),
+            EccFamily::BrainpoolPR1 => Ok(psa_crypto_sys::PSA_ECC_CURVE_BRAINPOOL_P_R1),
+            EccFamily::Frp => Err(Error::NotSupported),
+            EccFamily::Montgomery => Ok(psa_crypto_sys::PSA_ECC_CURVE_MONTGOMERY),
+        }
+    }
+}
+
+impl TryFrom<psa_crypto_sys::psa_ecc_curve_t> for EccFamily {
+    type Error = Error;
+    fn try_from(family: psa_crypto_sys::psa_ecc_curve_t) -> Result<Self> {
+        match family {
+            psa_crypto_sys::PSA_ECC_CURVE_SECP_K1 => Ok(EccFamily::SecpK1),
+            psa_crypto_sys::PSA_ECC_CURVE_SECP_R1 => Ok(EccFamily::SecpR1),
+            psa_crypto_sys::PSA_ECC_CURVE_SECP_R2 => Ok(EccFamily::SecpR2),
+            psa_crypto_sys::PSA_ECC_CURVE_SECT_R1 => Ok(EccFamily::SectR1),
+            psa_crypto_sys::PSA_ECC_CURVE_SECT_R2 => Ok(EccFamily::SectR2),
+            psa_crypto_sys::PSA_ECC_CURVE_BRAINPOOL_P_R1 => Ok(EccFamily::BrainpoolPR1),
+            //psa_crypto_sys::PSA_ECC_CURVE_FRP => Ok(EccFamily::Frp),
+            psa_crypto_sys::PSA_ECC_CURVE_MONTGOMERY => Ok(EccFamily::Montgomery),
+            f => {
+                error!("Can not recognize the ECC family: {:?}.", f);
+                Err(Error::GenericError)
+            }
+        }
+    }
+}
+
+impl From<DhFamily> for psa_crypto_sys::psa_dh_group_t {
+    fn from(group: DhFamily) -> Self {
+        match group {
+            DhFamily::Rfc7919 => psa_crypto_sys::PSA_DH_GROUP_RFC7919,
+        }
+    }
+}
+
+impl TryFrom<psa_crypto_sys::psa_dh_group_t> for DhFamily {
+    type Error = Error;
+    fn try_from(group: psa_crypto_sys::psa_dh_group_t) -> Result<Self> {
+        match group {
+            psa_crypto_sys::PSA_DH_GROUP_RFC7919 => Ok(DhFamily::Rfc7919),
+            f => {
+                error!("Can not recognize the DH family: {:?}.", f);
+                Err(Error::GenericError)
+            }
+        }
+    }
+}
+
+impl TryFrom<Type> for psa_crypto_sys::psa_key_type_t {
+    type Error = Error;
+    fn try_from(key_type: Type) -> Result<Self> {
+        match key_type {
+            Type::RawData => Ok(psa_crypto_sys::PSA_KEY_TYPE_RAW_DATA),
+            Type::Hmac => Ok(psa_crypto_sys::PSA_KEY_TYPE_HMAC),
+            Type::Derive => Ok(psa_crypto_sys::PSA_KEY_TYPE_DERIVE),
+            Type::Aes => Ok(psa_crypto_sys::PSA_KEY_TYPE_AES),
+            Type::Des => Ok(psa_crypto_sys::PSA_KEY_TYPE_DES),
+            Type::Camellia => Ok(psa_crypto_sys::PSA_KEY_TYPE_CAMELLIA),
+            Type::Arc4 => Ok(psa_crypto_sys::PSA_KEY_TYPE_ARC4),
+            Type::Chacha20 => Ok(psa_crypto_sys::PSA_KEY_TYPE_CHACHA20),
+            Type::RsaPublicKey => Ok(psa_crypto_sys::PSA_KEY_TYPE_RSA_PUBLIC_KEY),
+            Type::RsaKeyPair => Ok(psa_crypto_sys::PSA_KEY_TYPE_RSA_KEY_PAIR),
+            Type::EccKeyPair { curve_family } => Ok(psa_crypto_sys::PSA_KEY_TYPE_ECC_KEY_PAIR(
+                curve_family.try_into()?,
+            )),
+            Type::EccPublicKey { curve_family } => Ok(psa_crypto_sys::PSA_KEY_TYPE_ECC_PUBLIC_KEY(
+                curve_family.try_into()?,
+            )),
+            Type::DhKeyPair { group_family } => Ok(psa_crypto_sys::PSA_KEY_TYPE_DH_KEY_PAIR(
+                group_family.into(),
+            )),
+            Type::DhPublicKey { group_family } => Ok(psa_crypto_sys::PSA_KEY_TYPE_DH_PUBLIC_KEY(
+                group_family.into(),
+            )),
+        }
+    }
+}
+
+impl TryFrom<psa_crypto_sys::psa_key_type_t> for Type {
+    type Error = Error;
+    fn try_from(key_type: psa_crypto_sys::psa_key_type_t) -> Result<Self> {
+        match key_type {
+            psa_crypto_sys::PSA_KEY_TYPE_RAW_DATA => Ok(Type::RawData),
+            psa_crypto_sys::PSA_KEY_TYPE_HMAC => Ok(Type::Hmac),
+            psa_crypto_sys::PSA_KEY_TYPE_DERIVE => Ok(Type::Derive),
+            psa_crypto_sys::PSA_KEY_TYPE_AES => Ok(Type::Aes),
+            psa_crypto_sys::PSA_KEY_TYPE_DES => Ok(Type::Des),
+            psa_crypto_sys::PSA_KEY_TYPE_CAMELLIA => Ok(Type::Camellia),
+            psa_crypto_sys::PSA_KEY_TYPE_ARC4 => Ok(Type::Arc4),
+            psa_crypto_sys::PSA_KEY_TYPE_CHACHA20 => Ok(Type::Chacha20),
+            psa_crypto_sys::PSA_KEY_TYPE_RSA_PUBLIC_KEY => Ok(Type::RsaPublicKey),
+            psa_crypto_sys::PSA_KEY_TYPE_RSA_KEY_PAIR => Ok(Type::RsaKeyPair),
+            key_type if psa_crypto_sys::PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) => {
+                Ok(Type::EccKeyPair {
+                    curve_family: psa_crypto_sys::PSA_KEY_TYPE_GET_CURVE(key_type).try_into()?,
+                })
+            }
+            key_type if psa_crypto_sys::PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type) => {
+                Ok(Type::EccPublicKey {
+                    curve_family: psa_crypto_sys::PSA_KEY_TYPE_GET_CURVE(key_type).try_into()?,
+                })
+            }
+            key_type if psa_crypto_sys::PSA_KEY_TYPE_IS_DH_PUBLIC_KEY(key_type) => {
+                Ok(Type::DhPublicKey {
+                    group_family: psa_crypto_sys::PSA_KEY_TYPE_GET_GROUP(key_type).try_into()?,
+                })
+            }
+            key_type if psa_crypto_sys::PSA_KEY_TYPE_IS_DH_KEY_PAIR(key_type) => {
+                Ok(Type::DhKeyPair {
+                    group_family: psa_crypto_sys::PSA_KEY_TYPE_GET_GROUP(key_type).try_into()?,
+                })
+            }
+            key_type => {
+                error!("Can not recognize the key type: {:?}.", key_type);
+                Err(Error::GenericError)
+            }
+        }
     }
 }
 

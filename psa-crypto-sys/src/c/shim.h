@@ -40,42 +40,22 @@ const psa_key_type_t shim_PSA_KEY_TYPE_AES = PSA_KEY_TYPE_AES;
 const psa_key_type_t shim_PSA_KEY_TYPE_DES = PSA_KEY_TYPE_DES;
 const psa_key_type_t shim_PSA_KEY_TYPE_CAMELLIA = PSA_KEY_TYPE_CAMELLIA;
 const psa_key_type_t shim_PSA_KEY_TYPE_ARC4 = PSA_KEY_TYPE_ARC4;
+const psa_key_type_t shim_PSA_KEY_TYPE_CHACHA20 = PSA_KEY_TYPE_CHACHA20;
 const psa_key_type_t shim_PSA_KEY_TYPE_RSA_PUBLIC_KEY = PSA_KEY_TYPE_RSA_PUBLIC_KEY;
 const psa_key_type_t shim_PSA_KEY_TYPE_RSA_KEY_PAIR = PSA_KEY_TYPE_RSA_KEY_PAIR;
 const psa_key_type_t shim_PSA_KEY_TYPE_DSA_PUBLIC_KEY = PSA_KEY_TYPE_DSA_PUBLIC_KEY;
 const psa_key_type_t shim_PSA_KEY_TYPE_ECC_PUBLIC_KEY_BASE = PSA_KEY_TYPE_ECC_PUBLIC_KEY_BASE;
 const psa_key_type_t shim_PSA_KEY_TYPE_ECC_KEY_PAIR_BASE = PSA_KEY_TYPE_ECC_KEY_PAIR_BASE;
 const psa_key_type_t shim_PSA_KEY_TYPE_ECC_CURVE_MASK = PSA_KEY_TYPE_ECC_CURVE_MASK;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT163K1 = PSA_ECC_CURVE_SECT163K1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT163R1 = PSA_ECC_CURVE_SECT163R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT163R2 = PSA_ECC_CURVE_SECT163R2;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT193R1 = PSA_ECC_CURVE_SECT193R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT193R2 = PSA_ECC_CURVE_SECT193R2;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT233K1 = PSA_ECC_CURVE_SECT233K1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT233R1 = PSA_ECC_CURVE_SECT233R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT239K1 = PSA_ECC_CURVE_SECT239K1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT283K1 = PSA_ECC_CURVE_SECT283K1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT283R1 = PSA_ECC_CURVE_SECT283R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT409K1 = PSA_ECC_CURVE_SECT409K1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT409R1 = PSA_ECC_CURVE_SECT409R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT571K1 = PSA_ECC_CURVE_SECT571K1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT571R1 = PSA_ECC_CURVE_SECT571R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP160K1 = PSA_ECC_CURVE_SECP160K1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP160R1 = PSA_ECC_CURVE_SECP160R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP160R2 = PSA_ECC_CURVE_SECP160R2;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP192K1 = PSA_ECC_CURVE_SECP192K1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP192R1 = PSA_ECC_CURVE_SECP192R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP224K1 = PSA_ECC_CURVE_SECP224K1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP224R1 = PSA_ECC_CURVE_SECP224R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP256K1 = PSA_ECC_CURVE_SECP256K1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP256R1 = PSA_ECC_CURVE_SECP256R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP384R1 = PSA_ECC_CURVE_SECP384R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP521R1 = PSA_ECC_CURVE_SECP521R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_BRAINPOOL_P256R1 = PSA_ECC_CURVE_BRAINPOOL_P256R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_BRAINPOOL_P384R1 = PSA_ECC_CURVE_BRAINPOOL_P384R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_BRAINPOOL_P512R1 = PSA_ECC_CURVE_BRAINPOOL_P512R1;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_CURVE25519 = PSA_ECC_CURVE_CURVE25519;
-const psa_ecc_curve_t shim_PSA_ECC_CURVE_CURVE448 = PSA_ECC_CURVE_CURVE448;
+const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP_K1 = PSA_ECC_CURVE_SECP_K1;
+const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP_R1 = PSA_ECC_CURVE_SECP_R1;
+const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECP_R2 = PSA_ECC_CURVE_SECP_R2;
+const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT_K1 = PSA_ECC_CURVE_SECT_K1;
+const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT_R1 = PSA_ECC_CURVE_SECT_R1;
+const psa_ecc_curve_t shim_PSA_ECC_CURVE_SECT_R2 = PSA_ECC_CURVE_SECT_R2;
+const psa_ecc_curve_t shim_PSA_ECC_CURVE_BRAINPOOL_P_R1 = PSA_ECC_CURVE_BRAINPOOL_P_R1;
+const psa_ecc_curve_t shim_PSA_ECC_CURVE_MONTGOMERY = PSA_ECC_CURVE_MONTGOMERY;
+const psa_dh_group_t shim_PSA_DH_GROUP_RFC7919 = PSA_DH_GROUP_RFC7919;
 const psa_algorithm_t shim_PSA_ALG_VENDOR_FLAG = PSA_ALG_VENDOR_FLAG;
 const psa_algorithm_t shim_PSA_ALG_CATEGORY_MASK = PSA_ALG_CATEGORY_MASK;
 const psa_algorithm_t shim_PSA_ALG_CATEGORY_HASH = PSA_ALG_CATEGORY_HASH;
@@ -150,7 +130,12 @@ shim_get_key_bits(const psa_key_attributes_t *attributes);
 
 psa_key_type_t
 shim_get_key_type(const psa_key_attributes_t *attributes);
-
+psa_key_lifetime_t
+shim_get_key_lifetime(const psa_key_attributes_t *attributes);
+psa_algorithm_t
+shim_get_key_algorithm(const psa_key_attributes_t *attributes);
+psa_key_usage_t
+shim_get_key_usage_flags(const psa_key_attributes_t *attributes);
 psa_key_attributes_t
 shim_key_attributes_init(void);
 
@@ -212,3 +197,23 @@ psa_algorithm_t
 shim_PSA_ALG_DETERMINISTIC_ECDSA(psa_algorithm_t hash_alg);
 psa_algorithm_t
 shim_PSA_ALG_SIGN_GET_HASH(psa_algorithm_t alg);
+int
+shim_PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_key_type_t key_type);
+int
+shim_PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(psa_key_type_t key_type);
+int
+shim_PSA_KEY_TYPE_IS_DH_PUBLIC_KEY(psa_key_type_t key_type);
+int
+shim_PSA_KEY_TYPE_IS_DH_KEY_PAIR(psa_key_type_t key_type);
+psa_ecc_curve_t
+shim_PSA_KEY_TYPE_GET_CURVE(psa_key_type_t key_type);
+psa_dh_group_t
+shim_PSA_KEY_TYPE_GET_GROUP(psa_key_type_t key_type);
+psa_key_type_t
+shim_PSA_KEY_TYPE_ECC_KEY_PAIR(psa_ecc_curve_t curve);
+psa_key_type_t
+shim_PSA_KEY_TYPE_ECC_PUBLIC_KEY(psa_ecc_curve_t curve);
+psa_key_type_t
+shim_PSA_KEY_TYPE_DH_KEY_PAIR(psa_dh_group_t group);
+psa_key_type_t
+shim_PSA_KEY_TYPE_DH_PUBLIC_KEY(psa_dh_group_t group);
