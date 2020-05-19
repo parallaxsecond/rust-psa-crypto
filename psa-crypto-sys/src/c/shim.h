@@ -122,11 +122,13 @@ const psa_algorithm_t shim_PSA_ALG_CCM = PSA_ALG_CCM;
 const psa_algorithm_t shim_PSA_ALG_GCM = PSA_ALG_GCM;
 const psa_algorithm_t shim_PSA_ALG_AEAD_TAG_LENGTH_MASK = PSA_ALG_AEAD_TAG_LENGTH_MASK;
 const psa_algorithm_t shim_PSA_ALG_RSA_PKCS1V15_SIGN_BASE = PSA_ALG_RSA_PKCS1V15_SIGN_BASE;
+const psa_algorithm_t shim_PSA_ALG_RSA_PKCS1V15_SIGN_RAW = PSA_ALG_RSA_PKCS1V15_SIGN_RAW;
 const psa_algorithm_t shim_PSA_ALG_RSA_PSS_BASE = PSA_ALG_RSA_PSS_BASE;
 const psa_algorithm_t shim_PSA_ALG_DSA_BASE = PSA_ALG_DSA_BASE;
 const psa_algorithm_t shim_PSA_ALG_DETERMINISTIC_DSA_BASE = PSA_ALG_DETERMINISTIC_DSA_BASE;
 const psa_algorithm_t shim_PSA_ALG_DSA_DETERMINISTIC_FLAG = PSA_ALG_DSA_DETERMINISTIC_FLAG;
 const psa_algorithm_t shim_PSA_ALG_ECDSA_BASE = PSA_ALG_ECDSA_BASE;
+const psa_algorithm_t shim_PSA_ALG_ECDSA_ANY = PSA_ALG_ECDSA_ANY;
 const psa_algorithm_t shim_PSA_ALG_DETERMINISTIC_ECDSA_BASE = PSA_ALG_DETERMINISTIC_ECDSA_BASE;
 const psa_algorithm_t shim_PSA_ALG_RSA_PKCS1V15_CRYPT = PSA_ALG_RSA_PKCS1V15_CRYPT;
 const psa_algorithm_t shim_PSA_ALG_RSA_OAEP_BASE = PSA_ALG_RSA_OAEP_BASE;
@@ -175,3 +177,38 @@ shim_set_key_type(psa_key_attributes_t *attributes,
 void
 shim_set_key_usage_flags(psa_key_attributes_t *attributes,
                          psa_key_usage_t usage_flags);
+
+int
+shim_PSA_ALG_IS_HASH(psa_algorithm_t alg);
+int
+shim_PSA_ALG_IS_MAC(psa_algorithm_t alg);
+int
+shim_PSA_ALG_IS_CIPHER(psa_algorithm_t alg);
+int
+shim_PSA_ALG_IS_AEAD(psa_algorithm_t alg);
+int
+shim_PSA_ALG_IS_SIGN(psa_algorithm_t alg);
+int
+shim_PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(psa_algorithm_t alg);
+int
+shim_PSA_ALG_IS_KEY_AGREEMENT(psa_algorithm_t alg);
+int
+shim_PSA_ALG_IS_KEY_DERIVATION(psa_algorithm_t alg);
+int
+shim_PSA_ALG_IS_RSA_PKCS1V15_SIGN(psa_algorithm_t alg);
+int
+shim_PSA_ALG_IS_RSA_PSS(psa_algorithm_t alg);
+int
+shim_PSA_ALG_IS_ECDSA(psa_algorithm_t alg);
+int
+shim_PSA_ALG_IS_DETERMINISTIC_ECDSA(psa_algorithm_t alg);
+psa_algorithm_t
+shim_PSA_ALG_RSA_PKCS1V15_SIGN(psa_algorithm_t hash_alg);
+psa_algorithm_t
+shim_PSA_ALG_RSA_PSS(psa_algorithm_t hash_alg);
+psa_algorithm_t
+shim_PSA_ALG_ECDSA(psa_algorithm_t hash_alg);
+psa_algorithm_t
+shim_PSA_ALG_DETERMINISTIC_ECDSA(psa_algorithm_t hash_alg);
+psa_algorithm_t
+shim_PSA_ALG_SIGN_GET_HASH(psa_algorithm_t alg);

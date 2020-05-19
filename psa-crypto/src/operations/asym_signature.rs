@@ -4,7 +4,7 @@
 //! # Asymmetric Signature operations
 
 use crate::initialized;
-use crate::types::algorithm::{Algorithm, AsymmetricSignature};
+use crate::types::algorithm::AsymmetricSignature;
 use crate::types::key::Id;
 use crate::types::status::{Result, Status};
 
@@ -23,7 +23,7 @@ pub fn sign_hash(
     Status::from(unsafe {
         psa_crypto_sys::psa_sign_hash(
             handle,
-            Algorithm::from(alg).into(),
+            alg.into(),
             hash.as_ptr(),
             hash.len(),
             signature.as_mut_ptr(),
@@ -47,7 +47,7 @@ pub fn verify_hash(key: Id, alg: AsymmetricSignature, hash: &[u8], signature: &[
     Status::from(unsafe {
         psa_crypto_sys::psa_verify_hash(
             handle,
-            Algorithm::from(alg).into(),
+            alg.into(),
             hash.as_ptr(),
             hash.len(),
             signature.as_ptr(),

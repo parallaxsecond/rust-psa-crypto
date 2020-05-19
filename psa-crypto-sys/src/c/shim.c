@@ -66,3 +66,89 @@ shim_set_key_usage_flags(psa_key_attributes_t *attributes,
 {
     psa_set_key_usage_flags(attributes, usage_flags);
 }
+
+int
+shim_PSA_ALG_IS_HASH(psa_algorithm_t alg)
+{
+    return PSA_ALG_IS_HASH(alg);
+}
+
+int
+shim_PSA_ALG_IS_MAC(psa_algorithm_t alg) {
+    return PSA_ALG_IS_MAC(alg);
+}
+
+int
+shim_PSA_ALG_IS_CIPHER(psa_algorithm_t alg) {
+    return PSA_ALG_IS_CIPHER(alg);
+}
+
+int
+shim_PSA_ALG_IS_AEAD(psa_algorithm_t alg) {
+    return PSA_ALG_IS_AEAD(alg);
+}
+
+int
+shim_PSA_ALG_IS_SIGN(psa_algorithm_t alg) {
+    return PSA_ALG_IS_SIGN(alg);
+}
+
+int
+shim_PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(psa_algorithm_t alg) {
+    return PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg);
+}
+
+int
+shim_PSA_ALG_IS_KEY_AGREEMENT(psa_algorithm_t alg) {
+    return PSA_ALG_IS_KEY_AGREEMENT(alg);
+}
+
+int
+shim_PSA_ALG_IS_KEY_DERIVATION(psa_algorithm_t alg) {
+    return PSA_ALG_IS_KEY_DERIVATION(alg);
+}
+
+int
+shim_PSA_ALG_IS_RSA_PKCS1V15_SIGN(psa_algorithm_t alg) {
+    return PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg);
+}
+
+int
+shim_PSA_ALG_IS_RSA_PSS(psa_algorithm_t alg) {
+    return PSA_ALG_IS_RSA_PSS(alg);
+}
+
+int
+shim_PSA_ALG_IS_ECDSA(psa_algorithm_t alg) {
+    return PSA_ALG_IS_ECDSA(alg);
+}
+
+int
+shim_PSA_ALG_IS_DETERMINISTIC_ECDSA(psa_algorithm_t alg) {
+    return PSA_ALG_IS_DETERMINISTIC_ECDSA(alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_SIGN_GET_HASH(psa_algorithm_t alg) {
+    return PSA_ALG_SIGN_GET_HASH(alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_RSA_PKCS1V15_SIGN(psa_algorithm_t hash_alg) {
+	return PSA_ALG_RSA_PKCS1V15_SIGN(hash_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_RSA_PSS(psa_algorithm_t hash_alg) {
+	return PSA_ALG_RSA_PSS(hash_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_ECDSA(psa_algorithm_t hash_alg) {
+	return PSA_ALG_ECDSA(hash_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_DETERMINISTIC_ECDSA(psa_algorithm_t hash_alg) {
+	return PSA_ALG_DETERMINISTIC_ECDSA(hash_alg);
+}

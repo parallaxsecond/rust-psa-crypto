@@ -10,6 +10,8 @@
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
 #![allow(clippy::missing_safety_doc)]
+// Respect the C API case
+#![allow(non_snake_case)]
 
 #[allow(
     non_snake_case,
@@ -68,4 +70,72 @@ pub unsafe fn psa_set_key_usage_flags(
     usage_flags: psa_key_usage_t,
 ) {
     shim_set_key_usage_flags(attributes, usage_flags);
+}
+
+pub fn PSA_ALG_IS_HASH(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_HASH(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_MAC(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_MAC(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_CIPHER(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_CIPHER(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_AEAD(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_AEAD(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_SIGN(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_SIGN(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_KEY_AGREEMENT(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_KEY_AGREEMENT(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_KEY_DERIVATION(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_KEY_DERIVATION(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_RSA_PSS(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_RSA_PSS(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_ECDSA(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_ECDSA(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_DETERMINISTIC_ECDSA(alg: psa_algorithm_t) -> bool {
+    unsafe { shim_PSA_ALG_IS_DETERMINISTIC_ECDSA(alg) == 1 }
+}
+
+pub fn PSA_ALG_SIGN_GET_HASH(alg: psa_algorithm_t) -> psa_algorithm_t {
+    unsafe { shim_PSA_ALG_SIGN_GET_HASH(alg) }
+}
+
+pub fn PSA_ALG_RSA_PKCS1V15_SIGN(hash_alg: psa_algorithm_t) -> psa_algorithm_t {
+    unsafe { shim_PSA_ALG_RSA_PKCS1V15_SIGN(hash_alg) }
+}
+
+pub fn PSA_ALG_RSA_PSS(hash_alg: psa_algorithm_t) -> psa_algorithm_t {
+    unsafe { shim_PSA_ALG_RSA_PSS(hash_alg) }
+}
+
+pub fn PSA_ALG_ECDSA(hash_alg: psa_algorithm_t) -> psa_algorithm_t {
+    unsafe { shim_PSA_ALG_ECDSA(hash_alg) }
+}
+
+pub fn PSA_ALG_DETERMINISTIC_ECDSA(hash_alg: psa_algorithm_t) -> psa_algorithm_t {
+    unsafe { shim_PSA_ALG_DETERMINISTIC_ECDSA(hash_alg) }
 }

@@ -5,6 +5,9 @@
 
 #![allow(deprecated)]
 
+use crate::types::status::{Error, Result};
+use core::convert::{TryFrom, TryInto};
+use log::error;
 use serde::{Deserialize, Serialize};
 
 /// Enumeration of possible algorithm definitions.
@@ -496,14 +499,178 @@ impl From<KeyDerivation> for Algorithm {
     }
 }
 
-impl From<psa_crypto_sys::psa_algorithm_t> for Algorithm {
-    fn from(_alg: psa_crypto_sys::psa_algorithm_t) -> Self {
-        Algorithm::None
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Algorithm {
+    type Error = Error;
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        if alg == 0 {
+            Ok(Algorithm::None)
+        } else if psa_crypto_sys::PSA_ALG_IS_HASH(alg) {
+            let hash: Hash = alg.try_into()?;
+            Ok(hash.into())
+        } else if psa_crypto_sys::PSA_ALG_IS_MAC(alg) {
+            error!("MAC algorithms are not supported.");
+            Err(Error::NotSupported)
+        } else if psa_crypto_sys::PSA_ALG_IS_CIPHER(alg) {
+            error!("Cipher algorithms are not supported.");
+            Err(Error::NotSupported)
+        } else if psa_crypto_sys::PSA_ALG_IS_AEAD(alg) {
+            error!("AEAD algorithms are not supported.");
+            Err(Error::NotSupported)
+        } else if psa_crypto_sys::PSA_ALG_IS_SIGN(alg) {
+            let asym_sign: AsymmetricSignature = alg.try_into()?;
+            Ok(asym_sign.into())
+        } else if psa_crypto_sys::PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg) {
+            error!("Asymmetric Encryption algorithms are not supported.");
+            Err(Error::NotSupported)
+        } else if psa_crypto_sys::PSA_ALG_IS_KEY_AGREEMENT(alg) {
+            error!("Key Agreement algorithms are not supported.");
+            Err(Error::NotSupported)
+        } else if psa_crypto_sys::PSA_ALG_IS_KEY_DERIVATION(alg) {
+            error!("Key Derivation algorithms are not supported.");
+            Err(Error::NotSupported)
+        } else {
+            error!("Can not find a valid Algorithm for {}.", alg);
+            Err(Error::NotSupported)
+        }
     }
 }
 
-impl From<Algorithm> for psa_crypto_sys::psa_algorithm_t {
-    fn from(_alg: Algorithm) -> Self {
-        0
+impl TryFrom<Algorithm> for psa_crypto_sys::psa_algorithm_t {
+    type Error = Error;
+    fn try_from(alg: Algorithm) -> Result<Self> {
+        match alg {
+            Algorithm::None => Ok(0),
+            Algorithm::Hash(hash) => Ok(hash.into()),
+            Algorithm::AsymmetricSignature(asym_sign) => Ok(asym_sign.into()),
+            _ => {
+                error!("Algorithm not supported: {:?}.", alg);
+                Err(Error::NotSupported)
+            }
+        }
+    }
+}
+
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Hash {
+    type Error = Error;
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        match alg {
+            psa_crypto_sys::PSA_ALG_MD2 => Ok(Hash::Md2),
+            psa_crypto_sys::PSA_ALG_MD4 => Ok(Hash::Md4),
+            psa_crypto_sys::PSA_ALG_MD5 => Ok(Hash::Md5),
+            psa_crypto_sys::PSA_ALG_RIPEMD160 => Ok(Hash::Ripemd160),
+            psa_crypto_sys::PSA_ALG_SHA_1 => Ok(Hash::Sha1),
+            psa_crypto_sys::PSA_ALG_SHA_224 => Ok(Hash::Sha224),
+            psa_crypto_sys::PSA_ALG_SHA_256 => Ok(Hash::Sha256),
+            psa_crypto_sys::PSA_ALG_SHA_384 => Ok(Hash::Sha384),
+            psa_crypto_sys::PSA_ALG_SHA_512 => Ok(Hash::Sha512),
+            psa_crypto_sys::PSA_ALG_SHA_512_224 => Ok(Hash::Sha512_224),
+            psa_crypto_sys::PSA_ALG_SHA_512_256 => Ok(Hash::Sha512_256),
+            psa_crypto_sys::PSA_ALG_SHA3_224 => Ok(Hash::Sha3_224),
+            psa_crypto_sys::PSA_ALG_SHA3_256 => Ok(Hash::Sha3_256),
+            psa_crypto_sys::PSA_ALG_SHA3_384 => Ok(Hash::Sha3_384),
+            psa_crypto_sys::PSA_ALG_SHA3_512 => Ok(Hash::Sha3_512),
+            a => {
+                error!("Can not find a valid Hash algorithm for {}.", a);
+                Err(Error::InvalidArgument)
+            }
+        }
+    }
+}
+
+impl From<Hash> for psa_crypto_sys::psa_algorithm_t {
+    fn from(hash: Hash) -> Self {
+        match hash {
+            Hash::Md2 => psa_crypto_sys::PSA_ALG_MD2,
+            Hash::Md4 => psa_crypto_sys::PSA_ALG_MD4,
+            Hash::Md5 => psa_crypto_sys::PSA_ALG_MD5,
+            Hash::Ripemd160 => psa_crypto_sys::PSA_ALG_RIPEMD160,
+            Hash::Sha1 => psa_crypto_sys::PSA_ALG_SHA_1,
+            Hash::Sha224 => psa_crypto_sys::PSA_ALG_SHA_224,
+            Hash::Sha256 => psa_crypto_sys::PSA_ALG_SHA_256,
+            Hash::Sha384 => psa_crypto_sys::PSA_ALG_SHA_384,
+            Hash::Sha512 => psa_crypto_sys::PSA_ALG_SHA_512,
+            Hash::Sha512_224 => psa_crypto_sys::PSA_ALG_SHA_512_224,
+            Hash::Sha512_256 => psa_crypto_sys::PSA_ALG_SHA_512_256,
+            Hash::Sha3_224 => psa_crypto_sys::PSA_ALG_SHA3_224,
+            Hash::Sha3_256 => psa_crypto_sys::PSA_ALG_SHA3_256,
+            Hash::Sha3_384 => psa_crypto_sys::PSA_ALG_SHA3_384,
+            Hash::Sha3_512 => psa_crypto_sys::PSA_ALG_SHA3_512,
+        }
+    }
+}
+
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for SignHash {
+    type Error = Error;
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        if alg == psa_crypto_sys::PSA_ALG_ANY_HASH {
+            Ok(SignHash::Any)
+        } else {
+            Ok(SignHash::Specific(alg.try_into()?))
+        }
+    }
+}
+
+impl From<SignHash> for psa_crypto_sys::psa_algorithm_t {
+    fn from(sign_hash: SignHash) -> Self {
+        match sign_hash {
+            SignHash::Specific(hash) => hash.into(),
+            SignHash::Any => psa_crypto_sys::PSA_ALG_ANY_HASH,
+        }
+    }
+}
+
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for AsymmetricSignature {
+    type Error = Error;
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        if alg == psa_crypto_sys::PSA_ALG_RSA_PKCS1V15_SIGN_RAW {
+            Ok(AsymmetricSignature::RsaPkcs1v15SignRaw)
+        } else if alg == psa_crypto_sys::PSA_ALG_ECDSA_ANY {
+            Ok(AsymmetricSignature::EcdsaAny)
+        } else if psa_crypto_sys::PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg) {
+            Ok(AsymmetricSignature::RsaPkcs1v15Sign {
+                hash_alg: psa_crypto_sys::PSA_ALG_SIGN_GET_HASH(alg).try_into()?,
+            })
+        } else if psa_crypto_sys::PSA_ALG_IS_RSA_PSS(alg) {
+            Ok(AsymmetricSignature::RsaPss {
+                hash_alg: psa_crypto_sys::PSA_ALG_SIGN_GET_HASH(alg).try_into()?,
+            })
+        } else if psa_crypto_sys::PSA_ALG_IS_ECDSA(alg) {
+            Ok(AsymmetricSignature::Ecdsa {
+                hash_alg: psa_crypto_sys::PSA_ALG_SIGN_GET_HASH(alg).try_into()?,
+            })
+        } else if psa_crypto_sys::PSA_ALG_IS_DETERMINISTIC_ECDSA(alg) {
+            Ok(AsymmetricSignature::DeterministicEcdsa {
+                hash_alg: psa_crypto_sys::PSA_ALG_SIGN_GET_HASH(alg).try_into()?,
+            })
+        } else {
+            error!(
+                "Can not find a valid AsymmetricSignature algorithm for {}.",
+                alg
+            );
+            Err(Error::InvalidArgument)
+        }
+    }
+}
+
+impl From<AsymmetricSignature> for psa_crypto_sys::psa_algorithm_t {
+    fn from(asym_sign: AsymmetricSignature) -> Self {
+        match asym_sign {
+            AsymmetricSignature::RsaPkcs1v15Sign { hash_alg } => {
+                psa_crypto_sys::PSA_ALG_RSA_PKCS1V15_SIGN(hash_alg.into())
+            }
+            AsymmetricSignature::RsaPkcs1v15SignRaw => {
+                psa_crypto_sys::PSA_ALG_RSA_PKCS1V15_SIGN_RAW
+            }
+            AsymmetricSignature::RsaPss { hash_alg } => {
+                psa_crypto_sys::PSA_ALG_RSA_PSS(hash_alg.into())
+            }
+            AsymmetricSignature::Ecdsa { hash_alg } => {
+                psa_crypto_sys::PSA_ALG_ECDSA(hash_alg.into())
+            }
+            AsymmetricSignature::EcdsaAny => psa_crypto_sys::PSA_ALG_ECDSA_ANY,
+            AsymmetricSignature::DeterministicEcdsa { hash_alg } => {
+                psa_crypto_sys::PSA_ALG_DETERMINISTIC_ECDSA(hash_alg.into())
+            }
+        }
     }
 }
