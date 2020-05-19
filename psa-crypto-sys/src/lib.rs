@@ -7,39 +7,9 @@
 //! You can find the API
 //! [here](https://developer.arm.com/architectures/security-architectures/platform-security-architecture/documentation).
 
-#![deny(
-    nonstandard_style,
-    const_err,
-    dead_code,
-    improper_ctypes,
-    non_shorthand_field_patterns,
-    no_mangle_generic_items,
-    overflowing_literals,
-    path_statements,
-    patterns_in_fns_without_body,
-    private_in_public,
-    unconditional_recursion,
-    unused,
-    unused_allocation,
-    unused_comparisons,
-    unused_parens,
-    while_true,
-    missing_debug_implementations,
-    missing_docs,
-    trivial_casts,
-    trivial_numeric_casts,
-    unused_extern_crates,
-    unused_import_braces,
-    unused_qualifications,
-    unused_results,
-    missing_copy_implementations
-)]
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
-//xx For now:
-#![allow(clippy::not_unsafe_ptr_arg_deref)]
-#![allow(missing_debug_implementations)]
-#![allow(missing_docs)]
+#![allow(clippy::missing_safety_doc)]
 
 #[allow(
     non_snake_case,
@@ -57,3 +27,45 @@ mod psa_crypto_binding {
 mod constants;
 pub use constants::*;
 pub use psa_crypto_binding::*;
+
+pub unsafe fn psa_get_key_bits(attributes: *const psa_key_attributes_t) -> usize {
+    shim_get_key_bits(attributes)
+}
+
+pub unsafe fn psa_get_key_type(attributes: *const psa_key_attributes_t) -> psa_key_type_t {
+    shim_get_key_type(attributes)
+}
+
+pub unsafe fn psa_key_attributes_init() -> psa_key_attributes_t {
+    shim_key_attributes_init()
+}
+
+pub unsafe fn psa_set_key_algorithm(attributes: *mut psa_key_attributes_t, alg: psa_algorithm_t) {
+    shim_set_key_algorithm(attributes, alg);
+}
+
+pub unsafe fn psa_set_key_bits(attributes: *mut psa_key_attributes_t, bits: usize) {
+    shim_set_key_bits(attributes, bits);
+}
+
+pub unsafe fn psa_set_key_id(attributes: *mut psa_key_attributes_t, id: psa_key_id_t) {
+    shim_set_key_id(attributes, id);
+}
+
+pub unsafe fn psa_set_key_lifetime(
+    attributes: *mut psa_key_attributes_t,
+    lifetime: psa_key_lifetime_t,
+) {
+    shim_set_key_lifetime(attributes, lifetime);
+}
+
+pub unsafe fn psa_set_key_type(attributes: *mut psa_key_attributes_t, type_: psa_key_type_t) {
+    shim_set_key_type(attributes, type_);
+}
+
+pub unsafe fn psa_set_key_usage_flags(
+    attributes: *mut psa_key_attributes_t,
+    usage_flags: psa_key_usage_t,
+) {
+    shim_set_key_usage_flags(attributes, usage_flags);
+}
