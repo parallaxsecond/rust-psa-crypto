@@ -6,7 +6,7 @@
 #![allow(deprecated)]
 
 use crate::types::algorithm::{Algorithm, Cipher};
-use crate::types::status::{status_to_result, Result, Error};
+use crate::types::status::{status_to_result, Error, Result};
 use log::error;
 use serde::{Deserialize, Serialize};
 

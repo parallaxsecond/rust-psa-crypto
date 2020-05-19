@@ -43,7 +43,7 @@ pub mod operations;
 pub mod types;
 
 use core::sync::atomic::{AtomicBool, Ordering};
-use types::status::{status_to_result, Result, Error};
+use types::status::{status_to_result, Error, Result};
 
 static INITIALISED: AtomicBool = AtomicBool::new(false);
 
