@@ -12,12 +12,11 @@ keywords = ["psa", "crypto", "cryptography"]
 categories = ["api-bindings", "external-ffi-bindings", "cryptography"]
 license = "Apache-2.0"
 repository = "https://github.com/parallaxsecond/rust-psa-crypto"
+links = "mbedtls"
 
 [build-dependencies]
 bindgen = "0.50.0"
-cargo_toml = "0.7.0"
-serde = { version = "1.0", features = ["derive"] }
-toml = "0.4.2"
+cc = "1.0.54"
 
-[package.metadata.config]
-mbed-crypto-version = "mbedcrypto-2.0.0"
+[features]
+static = []

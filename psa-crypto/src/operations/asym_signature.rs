@@ -21,7 +21,7 @@ pub fn sign_hash(
     let handle = key.handle()?;
 
     Status::from(unsafe {
-        psa_crypto_sys::psa_asymmetric_sign(
+        psa_crypto_sys::psa_sign_hash(
             handle,
             Algorithm::from(alg).into(),
             hash.as_ptr(),
@@ -45,7 +45,7 @@ pub fn verify_hash(key: Id, alg: AsymmetricSignature, hash: &[u8], signature: &[
     let handle = key.handle()?;
 
     Status::from(unsafe {
-        psa_crypto_sys::psa_asymmetric_verify(
+        psa_crypto_sys::psa_verify_hash(
             handle,
             Algorithm::from(alg).into(),
             hash.as_ptr(),

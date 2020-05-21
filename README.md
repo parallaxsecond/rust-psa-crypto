@@ -23,6 +23,13 @@ The PSA Crypto wrapper is currently work-in-progress. This repository is current
 
 The software is provided under Apache-2.0. Contributions to this project are accepted under the same license.
 
+This project uses the following third party crates:
+
+* bingden (BSD-3-Clause)
+* cc (MIT and Apache-2.0)
+* log (MIT and Apache-2.0)
+* serde (MIT and Apache-2.0)
+
 ## Contributing
 
 Please check the [**Contribution Guidelines**](https://parallaxsecond.github.io/parsec-book/contributing.html)

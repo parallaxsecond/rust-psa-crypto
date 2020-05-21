@@ -29,155 +29,56 @@
 )]
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
-
-use cargo_toml::{Manifest, Value};
-use serde::Deserialize;
 use std::env;
 use std::io::{Error, ErrorKind, Result};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-const CONFIG_TABLE_NAME: &str = "config";
-const MBED_CRYPTO_VERSION_KEY: &str = "mbed-crypto-version";
-
-const SETUP_MBED_SCRIPT_PATH: &str = "./setup_mbed_crypto.sh";
-const BUILD_CONFIG_FILE_PATH: &str = "./build-conf.toml";
-
-const DEFAULT_NATIVE_MBED_COMPILER: &str = "clang";
-const DEFAULT_NATIVE_MBED_ARCHIVER: &str = "ar";
-const DEFAULT_ARM64_MBED_COMPILER: &str = "aarch64-linux-gnu-gcc";
-const DEFAULT_ARM64_MBED_ARCHIVER: &str = "aarch64-linux-gnu-ar";
-
-#[derive(Debug, Deserialize)]
-struct Configuration {
-    mbed_config: Option<MbedConfig>,
-}
-
-#[derive(Debug, Deserialize)]
-struct MbedConfig {
-    mbed_path: Option<String>,
-    native: Option<Toolchain>,
-    aarch64_unknown_linux_gnu: Option<Toolchain>,
-}
-
-#[derive(Debug, Deserialize)]
-struct Toolchain {
-    mbed_compiler: Option<String>,
-    mbed_archiver: Option<String>,
-}
-
-fn get_configuration_string(parsec_config: &Value, key: &str) -> Result<String> {
-    let config_value = get_value_from_table(parsec_config, key)?;
-    match config_value {
-        Value::String(string) => Ok(string.clone()),
-        _ => Err(Error::new(
-            ErrorKind::InvalidInput,
-            "Configuration key missing",
-        )),
-    }
-}
-
-fn get_value_from_table<'a>(table: &'a Value, key: &str) -> Result<&'a Value> {
-    match table {
-        Value::Table(table) => table.get(key).ok_or_else(|| {
-            println!("Config table does not contain configuration key: {}", key);
-            Error::new(ErrorKind::InvalidInput, "Configuration key missing.")
-        }),
-        _ => Err(Error::new(
-            ErrorKind::InvalidInput,
-            "Value provided is not a TOML table",
-        )),
-    }
-}
-
-// Get the Mbed Crypto version to branch on from Cargo.toml file. Use that and MbedConfig to pass
-// parameters to the setup_mbed_crypto.sh script which clones and builds Mbed Crypto and create
-// a static library.
-fn setup_mbed_crypto(mbed_config: &MbedConfig, mbed_version: &str) -> Result<()> {
-    let (mbed_compiler, mbed_archiver) =
-        if std::env::var("TARGET").unwrap() == "aarch64-unknown-linux-gnu" {
-            let toolchain;
-            toolchain = mbed_config
-                .aarch64_unknown_linux_gnu
-                .as_ref()
-                .ok_or_else(|| {
-                    Error::new(
-                        ErrorKind::InvalidInput,
-                        "The aarch64_unknown_linux_gnu subtable of mbed_config should exist",
-                    )
-                })?;
-            (
-                toolchain
-                    .mbed_compiler
-                    .clone()
-                    .unwrap_or_else(|| DEFAULT_ARM64_MBED_COMPILER.to_string()),
-                toolchain
-                    .mbed_archiver
-                    .clone()
-                    .unwrap_or_else(|| DEFAULT_ARM64_MBED_ARCHIVER.to_string()),
-            )
-        } else {
-            let toolchain;
-            toolchain = mbed_config.native.as_ref().ok_or_else(|| {
-                Error::new(
-                    ErrorKind::InvalidInput,
-                    "The native subtable of mbed_config should exist",
-                )
-            })?;
-            (
-                toolchain
-                    .mbed_compiler
-                    .clone()
-                    .unwrap_or_else(|| DEFAULT_NATIVE_MBED_COMPILER.to_string()),
-                toolchain
-                    .mbed_archiver
-                    .clone()
-                    .unwrap_or_else(|| DEFAULT_NATIVE_MBED_ARCHIVER.to_string()),
-            )
-        };
-
-    let script_fail = |_| {
-        Err(Error::new(
-            ErrorKind::Other,
-            "setup_mbed_crypto.sh script failed",
-        ))
-    };
-
-    println!("cargo:rerun-if-changed={}", SETUP_MBED_SCRIPT_PATH);
-    println!("cargo:rerun-if-changed={}", "src/c/Makefile");
+fn setup_mbed_crypto() -> Result<()> {
+    let mbedtls_dir = String::from("./vendor");
     println!("cargo:rerun-if-changed={}", "src/c/shim.c");
     println!("cargo:rerun-if-changed={}", "src/c/shim.h");
 
-    if !::std::process::Command::new(SETUP_MBED_SCRIPT_PATH)
-        .arg(mbed_version)
-        .arg(
-            mbed_config
-                .mbed_path
-                .clone()
-                .unwrap_or_else(|| env::var("OUT_DIR").unwrap()),
-        )
-        .arg(format!("CC={}", mbed_compiler))
-        .arg(format!("AR={}", mbed_archiver))
+    // Configure the MbedTLS build for making Mbed Crypto
+    if !::std::process::Command::new(mbedtls_dir.clone() + "/scripts/config.py")
+        .arg("crypto")
         .status()
-        .or_else(script_fail)?
+        .or_else(|_| Err(Error::new(ErrorKind::Other, "configuring mbedtls failed")))?
         .success()
     {
-        Err(Error::new(
+        return Err(Error::new(
             ErrorKind::Other,
-            "setup_mbed_crypto.sh returned an error status.",
-        ))
-    } else {
-        Ok(())
+            "config.py returned an error status",
+        ));
     }
+
+    // Build the MbedTLS libraries
+    if !::std::process::Command::new("make")
+        .arg("-C")
+        .arg(&mbedtls_dir)
+        .status()
+        .or_else(|_| Err(Error::new(ErrorKind::Other, "making mbedtls failed")))?
+        .success()
+    {
+        return Err(Error::new(
+            ErrorKind::Other,
+            "making mbedtls returned an error status",
+        ));
+    }
+
+    // Compile and package the shim library
+    cc::Build::new()
+        .include(mbedtls_dir + "/include")
+        .file("./src/c/shim.c")
+        .warnings(true)
+        .flag("-Werror")
+        .opt_level(2)
+        .try_compile("libshim.a")
+        .or_else(|_| Err(Error::new(ErrorKind::Other, "compiling shim.c failed")))?;
+
+    Ok(())
 }
 
-fn generate_mbed_bindings(mbed_config: &MbedConfig, mbed_version: &str) -> Result<()> {
-    let mbed_include_dir = mbed_config
-        .mbed_path
-        .clone()
-        .unwrap_or_else(|| env::var("OUT_DIR").unwrap())
-        + "/mbed-crypto-"
-        + mbed_version
-        + "/include";
+fn generate_mbed_bindings(mbed_include_dir: String) -> Result<()> {
     let header = mbed_include_dir.clone() + "/psa/crypto.h";
 
     println!("cargo:rerun-if-changed={}", header);
@@ -195,84 +96,45 @@ fn generate_mbed_bindings(mbed_config: &MbedConfig, mbed_version: &str) -> Resul
             ))
         })?;
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    shim_bindings.write_to_file(out_path.join("shim_bindings.rs"))
+    shim_bindings.write_to_file(out_path.join("shim_bindings.rs"))?;
+
+    Ok(())
 }
 
-// Get the compiler, the archiver and the location where to clone the Mbed Crypto repository.
-fn parse_config_file() -> Result<Configuration> {
-    let config_str = ::std::fs::read_to_string(Path::new(BUILD_CONFIG_FILE_PATH))?;
-    Ok(toml::from_str(&config_str).or_else(|e| {
-        println!("Error parsing build configuration file ({}).", e);
-        Err(Error::new(
-            ErrorKind::InvalidInput,
-            "Could not parse build configuration file.",
-        ))
-    })?)
+fn link_to_lib(lib_path: String, link_statically: bool) -> Result<()> {
+    let link_type = if link_statically { "static" } else { "dylib" };
+
+    // Request rustc to link the Mbed Crypto library
+    println!("cargo:rustc-link-search=native={}", lib_path,);
+    println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
+
+    // Also link shim library
+    println!(
+        "cargo:rustc-link-search=native={}",
+        env::var("OUT_DIR").unwrap()
+    );
+    println!("cargo:rustc-link-lib=static=shim");
+
+    Ok(())
 }
 
 fn main() -> Result<()> {
-    // Parsing build-conf.toml
-    let config = parse_config_file()?;
+    let lib_dir = env::var("MBEDTLS_LIB_DIR");
+    let include_dir = env::var("MBEDTLS_INCLUDE_DIR");
 
-    // Parsing Cargo.toml
-    let toml_path = std::path::Path::new("./Cargo.toml");
-    if !toml_path.exists() {
-        return Err(Error::new(
-            ErrorKind::InvalidInput,
-            "Could not find Cargo.toml.",
-        ));
-    }
-    let manifest = Manifest::from_path(&toml_path).or_else(|e| {
-        println!("Error parsing Cargo.toml ({}).", e);
-        Err(Error::new(
-            ErrorKind::InvalidInput,
-            "Could not parse Cargo.toml.",
-        ))
-    })?;
+    if let (Ok(lib_dir), Ok(include_dir)) = (lib_dir, include_dir) {
+        generate_mbed_bindings(include_dir)?;
+        link_to_lib(lib_dir, cfg!(feature = "static"))?;
+    } else {
+        println!("Did not find environment variables, building MbedTLS!");
+        setup_mbed_crypto()?;
+        let mut mbed_include_dir = env::current_dir()?;
+        mbed_include_dir.push("vendor/include");
+        generate_mbed_bindings(mbed_include_dir.to_str().unwrap().to_owned())?;
 
-    let package = manifest.package.ok_or_else(|| {
-        Error::new(
-            ErrorKind::InvalidInput,
-            "Cargo.toml does not contain package information.",
-        )
-    })?;
-    let metadata = package.metadata.ok_or_else(|| {
-        Error::new(
-            ErrorKind::InvalidInput,
-            "Cargo.toml does not contain package metadata.",
-        )
-    })?;
-    let parsec_config = get_value_from_table(&metadata, CONFIG_TABLE_NAME)?;
-
-    if true {
-        let mbed_config = config.mbed_config.ok_or_else(|| {
-            Error::new(
-                ErrorKind::InvalidInput,
-                "Could not find mbed_config table in the config file.",
-            )
-        })?;
-
-        let mbed_version = get_configuration_string(&parsec_config, MBED_CRYPTO_VERSION_KEY)?;
-
-        setup_mbed_crypto(&mbed_config, &mbed_version)?;
-        generate_mbed_bindings(&mbed_config, &mbed_version)?;
-
-        // Request rustc to link the Mbed Crypto static library
-        println!(
-            "cargo:rustc-link-search=native={}/mbed-crypto-{}/library/",
-            mbed_config
-                .mbed_path
-                .unwrap_or_else(|| env::var("OUT_DIR").unwrap()),
-            mbed_version,
-        );
-        println!("cargo:rustc-link-lib=static=mbedcrypto");
-
-        // Also link shim library
-        println!(
-            "cargo:rustc-link-search=native={}",
-            env::var("OUT_DIR").unwrap()
-        );
-        println!("cargo:rustc-link-lib=static=shim");
+        let mut mbed_lib_dir = env::current_dir()?;
+        mbed_lib_dir.push("vendor/library");
+        link_to_lib(mbed_lib_dir.to_str().unwrap().to_owned(), true)?;
     }
 
     Ok(())

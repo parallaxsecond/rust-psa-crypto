@@ -8,6 +8,10 @@
 
 set -euf -o pipefail
 
+# The Parsec operations repository is included as a submodule. It is
+# necessary to update it first.
+git submodule update --init
+
 ################
 # Build client #
 ################
