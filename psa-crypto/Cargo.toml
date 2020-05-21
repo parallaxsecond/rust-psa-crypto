@@ -16,4 +16,4 @@ repository = "https://github.com/parallaxsecond/rust-psa-crypto"
 [dependencies]
 psa-crypto-sys = { path = "../psa-crypto-sys" }
 log = "0.4.8"
-serde = "1.0.110"
+serde = { version = "1.0.110", features = ["derive"] }
