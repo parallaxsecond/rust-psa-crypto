@@ -38,6 +38,18 @@ pub unsafe fn psa_get_key_type(attributes: *const psa_key_attributes_t) -> psa_k
     shim_get_key_type(attributes)
 }
 
+pub unsafe fn psa_get_key_lifetime(attributes: *const psa_key_attributes_t) -> psa_key_lifetime_t {
+    shim_get_key_lifetime(attributes)
+}
+
+pub unsafe fn psa_get_key_algorithm(attributes: *const psa_key_attributes_t) -> psa_algorithm_t {
+    shim_get_key_algorithm(attributes)
+}
+
+pub unsafe fn psa_get_key_usage_flags(attributes: *const psa_key_attributes_t) -> psa_key_usage_t {
+    shim_get_key_usage_flags(attributes)
+}
+
 pub unsafe fn psa_key_attributes_init() -> psa_key_attributes_t {
     shim_key_attributes_init()
 }
@@ -138,4 +150,44 @@ pub fn PSA_ALG_ECDSA(hash_alg: psa_algorithm_t) -> psa_algorithm_t {
 
 pub fn PSA_ALG_DETERMINISTIC_ECDSA(hash_alg: psa_algorithm_t) -> psa_algorithm_t {
     unsafe { shim_PSA_ALG_DETERMINISTIC_ECDSA(hash_alg) }
+}
+
+pub fn PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type: psa_key_type_t) -> bool {
+    unsafe { shim_PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) == 1 }
+}
+
+pub fn PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type: psa_key_type_t) -> bool {
+    unsafe { shim_PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type) == 1 }
+}
+
+pub fn PSA_KEY_TYPE_IS_DH_KEY_PAIR(key_type: psa_key_type_t) -> bool {
+    unsafe { shim_PSA_KEY_TYPE_IS_DH_KEY_PAIR(key_type) == 1 }
+}
+
+pub fn PSA_KEY_TYPE_IS_DH_PUBLIC_KEY(key_type: psa_key_type_t) -> bool {
+    unsafe { shim_PSA_KEY_TYPE_IS_DH_PUBLIC_KEY(key_type) == 1 }
+}
+
+pub fn PSA_KEY_TYPE_GET_CURVE(key_type: psa_key_type_t) -> psa_ecc_curve_t {
+    unsafe { shim_PSA_KEY_TYPE_GET_CURVE(key_type) }
+}
+
+pub fn PSA_KEY_TYPE_GET_GROUP(key_type: psa_key_type_t) -> psa_dh_group_t {
+    unsafe { shim_PSA_KEY_TYPE_GET_GROUP(key_type) }
+}
+
+pub fn PSA_KEY_TYPE_ECC_KEY_PAIR(curve: psa_ecc_curve_t) -> psa_key_type_t {
+    unsafe { shim_PSA_KEY_TYPE_ECC_KEY_PAIR(curve) }
+}
+
+pub fn PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve: psa_ecc_curve_t) -> psa_key_type_t {
+    unsafe { shim_PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve) }
+}
+
+pub fn PSA_KEY_TYPE_DH_KEY_PAIR(group: psa_dh_group_t) -> psa_key_type_t {
+    unsafe { shim_PSA_KEY_TYPE_DH_KEY_PAIR(group) }
+}
+
+pub fn PSA_KEY_TYPE_DH_PUBLIC_KEY(group: psa_dh_group_t) -> psa_key_type_t {
+    unsafe { shim_PSA_KEY_TYPE_DH_PUBLIC_KEY(group) }
 }

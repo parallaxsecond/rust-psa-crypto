@@ -6,12 +6,13 @@
 use crate::initialized;
 use crate::types::key::{Attributes, Id};
 use crate::types::status::{Result, Status};
+use core::convert::TryFrom;
 
 /// Generate a key
 pub fn generate_key(attributes: Attributes, id: Option<u32>) -> Result<Id> {
     initialized()?;
 
-    let mut attributes = psa_crypto_sys::psa_key_attributes_t::from(attributes);
+    let mut attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     let id = if let Some(id) = id {
         unsafe { psa_crypto_sys::psa_set_key_id(&mut attributes, id) };
         id
@@ -23,7 +24,7 @@ pub fn generate_key(attributes: Attributes, id: Option<u32>) -> Result<Id> {
     Status::from(unsafe { psa_crypto_sys::psa_generate_key(&attributes, &mut handle) })
         .to_result()?;
 
-    unsafe { psa_crypto_sys::psa_reset_key_attributes(&mut attributes) };
+    Attributes::reset(&mut attributes);
 
     Ok(Id {
         id,
@@ -47,7 +48,7 @@ pub unsafe fn destroy_key(key: Id) -> Result<()> {
 pub fn import_key(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id> {
     initialized()?;
 
-    let mut attributes = psa_crypto_sys::psa_key_attributes_t::from(attributes);
+    let mut attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     let id = if let Some(id) = id {
         unsafe { psa_crypto_sys::psa_set_key_id(&mut attributes, id) };
         id
@@ -61,7 +62,7 @@ pub fn import_key(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Resul
     })
     .to_result()?;
 
-    unsafe { psa_crypto_sys::psa_reset_key_attributes(&mut attributes) };
+    Attributes::reset(&mut attributes);
 
     Ok(Id {
         id,
