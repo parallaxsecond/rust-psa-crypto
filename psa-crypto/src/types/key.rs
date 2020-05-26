@@ -34,7 +34,40 @@ impl Attributes {
         self.policy.usage_flags.export
     }
 
-    /// Check export in a faillible way
+    /// Check export in a fallible way
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
+    /// use psa_crypto::types::algorithm::{Algorithm, AsymmetricSignature, Hash};
+    ///
+    /// let mut attributes = Attributes {
+    ///     key_type: Type::RsaKeyPair,
+    ///     bits: 1024,
+    ///     lifetime: Lifetime::Volatile,
+    ///     policy: Policy {
+    ///         usage_flags: UsageFlags {
+    ///             export: false,
+    ///             copy: false,
+    ///             cache: false,
+    ///             encrypt: false,
+    ///             decrypt: false,
+    ///             sign_message: false,
+    ///             verify_message: false,
+    ///             sign_hash: false,
+    ///             verify_hash: false,
+    ///             derive: false,
+    ///         },
+    ///         permitted_algorithms: Algorithm::AsymmetricSignature(AsymmetricSignature::RsaPkcs1v15Sign {
+    ///             hash_alg: Hash::Sha256.into(),
+    ///         }),
+    ///     },
+    /// };
+
+    /// // Can not export because the export flag is set to false.
+    /// attributes.can_export().unwrap_err();
+    /// ```
     pub fn can_export(self) -> Result<()> {
         if self.is_exportable() {
             Ok(())
@@ -49,7 +82,7 @@ impl Attributes {
         self.policy.usage_flags.sign_hash
     }
 
-    /// Check hash signing permission in a faillible way
+    /// Check hash signing permission in a fallible way
     pub fn can_sign_hash(self) -> Result<()> {
         if self.is_hash_signable() {
             Ok(())
@@ -64,7 +97,7 @@ impl Attributes {
         self.policy.usage_flags.verify_hash
     }
 
-    /// Check hash signing permission in a faillible way
+    /// Check hash signing permission in a fallible way
     pub fn can_verify_hash(self) -> Result<()> {
         if self.is_hash_verifiable() {
             Ok(())
@@ -91,7 +124,7 @@ impl Attributes {
         }
     }
 
-    /// Check if alg is permitted in a faillible way
+    /// Check if alg is permitted in a fallible way
     pub fn permits_alg(self, alg: Algorithm) -> Result<()> {
         if self.is_alg_permitted(alg) {
             Ok(())
@@ -103,6 +136,44 @@ impl Attributes {
 
     /// Check if the alg given for a cryptographic operation is compatible with the type of the
     /// key
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
+    /// use psa_crypto::types::algorithm::{Algorithm, AsymmetricSignature, Hash};
+    ///
+    /// let permitted_alg = Algorithm::AsymmetricSignature(AsymmetricSignature::RsaPkcs1v15Sign {
+    ///     hash_alg: Hash::Sha256.into(),
+    /// });
+    /// let alg = Algorithm::AsymmetricSignature(AsymmetricSignature::RsaPkcs1v15Sign {
+    ///     hash_alg: Hash::Sha256.into(),
+    /// });
+    /// let mut attributes = Attributes {
+    ///     key_type: Type::RsaKeyPair,
+    ///     bits: 1024,
+    ///     lifetime: Lifetime::Volatile,
+    ///     policy: Policy {
+    ///         usage_flags: UsageFlags {
+    ///             export: false,
+    ///             copy: false,
+    ///             cache: false,
+    ///             encrypt: false,
+    ///             decrypt: false,
+    ///             sign_message: false,
+    ///             verify_message: false,
+    ///             sign_hash: false,
+    ///             verify_hash: false,
+    ///             derive: false,
+    ///         },
+    ///         permitted_algorithms: permitted_alg,
+    ///     },
+    /// };
+
+    /// assert!(attributes.is_compatible_with_alg(alg));
+    /// attributes.key_type = Type::RsaPublicKey;
+    /// assert!(attributes.is_compatible_with_alg(alg));
+    /// ```
     pub fn is_compatible_with_alg(self, alg: Algorithm) -> bool {
         match self.key_type {
             Type::RawData => false,
@@ -170,7 +241,7 @@ impl Attributes {
         }
     }
 
-    /// Check if alg is compatible in a faillible way
+    /// Check if alg is compatible in a fallible way
     pub fn compatible_with_alg(self, alg: Algorithm) -> Result<()> {
         if self.is_compatible_with_alg(alg) {
             Ok(())
@@ -256,6 +327,14 @@ impl Type {
     }
 
     /// Checks if a key type is ECC public key with any curve family inside.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use psa_crypto::types::key::{Type, EccFamily};
+    ///
+    /// assert!(Type::EccPublicKey { curve_family: EccFamily::SecpK1}.is_ecc_public_key());
+    /// ```
     pub fn is_ecc_public_key(self) -> bool {
         match self {
             Type::EccPublicKey { .. } => true,
@@ -366,7 +445,7 @@ pub struct Policy {
 }
 
 /// Definition of the usage flags. They encode what kind of operations are permitted on the key.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct UsageFlags {
     /// Permission to export the key.
     pub export: bool,
@@ -677,11 +756,12 @@ impl TryFrom<psa_crypto_sys::psa_key_type_t> for Type {
 
 #[cfg(test)]
 mod tests {
-    use super::{Attributes, Lifetime, Policy, Type, UsageFlags};
+    use super::{Attributes, EccFamily, Lifetime, Policy, Type, UsageFlags};
     use crate::types::algorithm::{
         Aead, AeadWithDefaultLengthTag, Algorithm, AsymmetricSignature, Cipher, FullLengthMac,
         Hash, Mac, SignHash,
     };
+    use core::convert::TryInto;
 
     #[test]
     fn usage_flags() {
@@ -1016,5 +1096,64 @@ mod tests {
         };
 
         assert!(!attributes.is_compatible_with_alg(alg));
+    }
+
+    #[test]
+    fn convert() {
+        let mut attrs = unsafe { psa_crypto_sys::psa_key_attributes_init() };
+        unsafe {
+            psa_crypto_sys::psa_set_key_lifetime(
+                &mut attrs,
+                psa_crypto_sys::PSA_KEY_LIFETIME_VOLATILE,
+            )
+        };
+        unsafe {
+            psa_crypto_sys::psa_set_key_usage_flags(
+                &mut attrs,
+                psa_crypto_sys::PSA_KEY_USAGE_SIGN | psa_crypto_sys::PSA_KEY_USAGE_VERIFY,
+            )
+        };
+        unsafe {
+            psa_crypto_sys::psa_set_key_algorithm(
+                &mut attrs,
+                psa_crypto_sys::PSA_ALG_ECDSA(psa_crypto_sys::PSA_ALG_SHA_256),
+            )
+        };
+        unsafe {
+            psa_crypto_sys::psa_set_key_type(
+                &mut attrs,
+                psa_crypto_sys::PSA_KEY_TYPE_ECC_KEY_PAIR(psa_crypto_sys::PSA_ECC_CURVE_SECP_K1),
+            )
+        };
+        unsafe { psa_crypto_sys::psa_set_key_bits(&mut attrs, 2048) };
+
+        assert_eq!(
+            Attributes {
+                key_type: Type::EccKeyPair {
+                    curve_family: EccFamily::SecpK1,
+                },
+                bits: 2048,
+                lifetime: Lifetime::Volatile,
+                policy: Policy {
+                    usage_flags: UsageFlags {
+                        export: false,
+                        copy: false,
+                        cache: false,
+                        encrypt: false,
+                        decrypt: false,
+                        sign_message: true,
+                        verify_message: true,
+                        sign_hash: true,
+                        verify_hash: true,
+                        derive: false,
+                    },
+                    permitted_algorithms: AsymmetricSignature::Ecdsa {
+                        hash_alg: Hash::Sha256.into(),
+                    }
+                    .into(),
+                },
+            },
+            attrs.try_into().unwrap()
+        );
     }
 }

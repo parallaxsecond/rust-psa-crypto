@@ -13,4 +13,4 @@ jobs:
         with:
           python-version: "3.x"
       - name: Execute all tests
-        run: ./tests/ci.sh
+        run: ./ci.sh
