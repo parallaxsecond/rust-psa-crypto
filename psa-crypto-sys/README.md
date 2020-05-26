@@ -21,3 +21,7 @@ link against it statically. In this use case enabling the `static` feature
 makes no difference and there is no way to allow dynamic linking. The
 requirements for configuring and building MbedTLS can be found
 [on their repository homepage](https://github.com/ARMmbed/mbedtls#tool-versions).
+
+Currently the version of MbedTLS built is based on the `development` branch
+of their repository, as the Mbed Crypto functionality has not yet been included in
+a standard release.

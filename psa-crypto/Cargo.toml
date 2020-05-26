@@ -14,6 +14,10 @@ license = "Apache-2.0"
 repository = "https://github.com/parallaxsecond/rust-psa-crypto"
 
 [dependencies]
-psa-crypto-sys = { path = "../psa-crypto-sys" }
+psa-crypto-sys = { path = "../psa-crypto-sys", optional = true }
 log = "0.4.8"
 serde = { version = "1.0.110", features = ["derive"] }
+
+[features]
+default = ["with-mbed-crypto"]
+with-mbed-crypto = ["psa-crypto-sys"]

@@ -39,12 +39,16 @@
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
 
+#[cfg(feature = "with-mbed-crypto")]
 pub mod operations;
 pub mod types;
 
+#[cfg(feature = "with-mbed-crypto")]
 use core::sync::atomic::{AtomicBool, Ordering};
+#[cfg(feature = "with-mbed-crypto")]
 use types::status::{Error, Result, Status};
 
+#[cfg(feature = "with-mbed-crypto")]
 static INITIALISED: AtomicBool = AtomicBool::new(false);
 
 /// Initialize the PSA Crypto library
@@ -52,6 +56,7 @@ static INITIALISED: AtomicBool = AtomicBool::new(false);
 /// Applications must call this function before calling any other function in crate.
 /// Applications are permitted to call this function more than once. Once a call succeeds,
 /// subsequent calls are guaranteed to succeed.
+#[cfg(feature = "with-mbed-crypto")]
 pub fn init() -> Result<()> {
     // It it not a problem to call psa_crypto_init more than once.
     Status::from(unsafe { psa_crypto_sys::psa_crypto_init() }).to_result()?;
@@ -61,6 +66,7 @@ pub fn init() -> Result<()> {
 }
 
 /// Check if the PSA Crypto library has been initialized
+#[cfg(feature = "with-mbed-crypto")]
 pub fn initialized() -> Result<()> {
     if INITIALISED.load(Ordering::Relaxed) {
         Ok(())
