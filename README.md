@@ -26,6 +26,7 @@ The software is provided under Apache-2.0. Contributions to this project are acc
 This project uses the following third party crates:
 
 * bingden (BSD-3-Clause)
+* cmake (MIT and Apache-2.0)
 * cc (MIT and Apache-2.0)
 * log (MIT and Apache-2.0)
 * serde (MIT and Apache-2.0)

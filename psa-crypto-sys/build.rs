@@ -29,17 +29,22 @@
 )]
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
+use cmake::Config;
 use std::env;
 use std::io::{Error, ErrorKind, Result};
 use std::path::PathBuf;
 
-fn setup_mbed_crypto() -> Result<()> {
+fn setup_mbed_crypto() -> Result<PathBuf> {
     let mbedtls_dir = String::from("./vendor");
     println!("cargo:rerun-if-changed={}", "src/c/shim.c");
     println!("cargo:rerun-if-changed={}", "src/c/shim.h");
 
+    let out_dir = env::var("OUT_DIR").unwrap();
+
     // Configure the MbedTLS build for making Mbed Crypto
     if !::std::process::Command::new(mbedtls_dir.clone() + "/scripts/config.py")
+        .arg("--write")
+        .arg(&(out_dir.clone() + "/config.h"))
         .arg("crypto")
         .status()
         .or_else(|_| Err(Error::new(ErrorKind::Other, "configuring mbedtls failed")))?
@@ -52,22 +57,14 @@ fn setup_mbed_crypto() -> Result<()> {
     }
 
     // Build the MbedTLS libraries
-    if !::std::process::Command::new("make")
-        .arg("-C")
-        .arg(&mbedtls_dir)
-        .status()
-        .or_else(|_| Err(Error::new(ErrorKind::Other, "making mbedtls failed")))?
-        .success()
-    {
-        return Err(Error::new(
-            ErrorKind::Other,
-            "making mbedtls returned an error status",
-        ));
-    }
+    let mbed_build_path = Config::new("vendor")
+        .cflag(format!("-I{}", out_dir))
+        .cflag("-DMBEDTLS_CONFIG_FILE='<config.h>'")
+        .build();
 
     // Compile and package the shim library
     cc::Build::new()
-        .include(mbedtls_dir + "/include")
+        .include(mbed_build_path.to_str().unwrap().to_owned() + "/include")
         .file("./src/c/shim.c")
         .warnings(true)
         .flag("-Werror")
@@ -75,7 +72,7 @@ fn setup_mbed_crypto() -> Result<()> {
         .try_compile("libshim.a")
         .or_else(|_| Err(Error::new(ErrorKind::Other, "compiling shim.c failed")))?;
 
-    Ok(())
+    Ok(mbed_build_path)
 }
 
 fn generate_mbed_bindings(mbed_include_dir: String) -> Result<()> {
@@ -127,13 +124,11 @@ fn main() -> Result<()> {
         link_to_lib(lib_dir, cfg!(feature = "static"))?;
     } else {
         println!("Did not find environment variables, building MbedTLS!");
-        setup_mbed_crypto()?;
-        let mut mbed_include_dir = env::current_dir()?;
-        mbed_include_dir.push("vendor/include");
+        let mut mbed_lib_dir = setup_mbed_crypto()?;
+        let mut mbed_include_dir = mbed_lib_dir.clone();
+        mbed_lib_dir.push("lib");
+        mbed_include_dir.push("include");
         generate_mbed_bindings(mbed_include_dir.to_str().unwrap().to_owned())?;
-
-        let mut mbed_lib_dir = env::current_dir()?;
-        mbed_lib_dir.push("vendor/library");
         link_to_lib(mbed_lib_dir.to_str().unwrap().to_owned(), true)?;
     }
 
