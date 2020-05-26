@@ -17,6 +17,7 @@ links = "mbedcrypto"
 [build-dependencies]
 bindgen = "0.50.0"
 cc = "1.0.54"
+cmake = "0.1.44"
 
 [features]
 static = []
