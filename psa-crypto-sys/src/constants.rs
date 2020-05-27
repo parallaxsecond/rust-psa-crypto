@@ -7,10 +7,6 @@
 
 use super::psa_crypto_binding::*;
 
-// xx There are not part of the public PSA API and should be removed:
-pub const PSA_KEY_SLOT_COUNT: isize = 32;
-pub const PSA_MAX_PERSISTENT_KEY_IDENTIFIER: psa_key_id_t = 0x3fff_ffff;
-
 // PSA error codes
 pub const PSA_SUCCESS: psa_status_t = shim_PSA_SUCCESS;
 pub const PSA_ERROR_GENERIC_ERROR: psa_status_t = shim_PSA_ERROR_GENERIC_ERROR;

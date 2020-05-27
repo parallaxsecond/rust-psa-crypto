@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <psa/crypto.h>
+#include <psa/crypto_se_driver.h>
 
 const psa_status_t shim_PSA_SUCCESS = PSA_SUCCESS;
 const psa_status_t shim_PSA_ERROR_GENERIC_ERROR = PSA_ERROR_GENERIC_ERROR;
