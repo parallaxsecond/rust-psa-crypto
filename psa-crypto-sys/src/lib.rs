@@ -50,6 +50,14 @@ pub use psa_crypto_binding::psa_sign_hash;
 pub use psa_crypto_binding::psa_status_t;
 pub use psa_crypto_binding::psa_verify_hash;
 
+// Secure Element Driver definitions
+pub use psa_crypto_binding::psa_drv_se_asymmetric_t;
+pub use psa_crypto_binding::psa_drv_se_context_t;
+pub use psa_crypto_binding::psa_drv_se_key_management_t;
+pub use psa_crypto_binding::psa_drv_se_t;
+pub use psa_crypto_binding::psa_key_slot_number_t;
+pub use psa_crypto_binding::PSA_DRV_SE_HAL_VERSION;
+
 pub unsafe fn psa_get_key_bits(attributes: *const psa_key_attributes_t) -> usize {
     psa_crypto_binding::shim_get_key_bits(attributes)
 }
