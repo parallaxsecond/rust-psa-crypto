@@ -4,8 +4,10 @@
 //! # PSA Cryptography API Wrapper
 //!
 //! This crate provides abstraction over an implementation of the PSA Cryptography API.
-//! You can find the API
-//! [here](https://developer.arm.com/architectures/security-architectures/platform-security-architecture/documentation).
+//! Please check the API
+//! [here](https://developer.arm.com/architectures/security-architectures/platform-security-architecture/documentation)
+//! for a more complete description of operations and types.
+//! This abstraction is built on top of the `psa-crypto-sys` crate.
 
 #![no_std]
 #![deny(
@@ -56,6 +58,15 @@ static INITIALISED: AtomicBool = AtomicBool::new(false);
 /// Applications must call this function before calling any other function in crate.
 /// Applications are permitted to call this function more than once. Once a call succeeds,
 /// subsequent calls are guaranteed to succeed.
+///
+/// # Example
+///
+/// ```rust
+/// use psa_crypto::init;
+/// init().unwrap();
+/// // Can be called twice
+/// init().unwrap();
+/// ```
 #[cfg(feature = "with-mbed-crypto")]
 pub fn init() -> Result<()> {
     // It it not a problem to call psa_crypto_init more than once.
@@ -66,6 +77,14 @@ pub fn init() -> Result<()> {
 }
 
 /// Check if the PSA Crypto library has been initialized
+///
+/// Example
+///
+/// ```
+/// use psa_crypto::{initialized, init};
+/// init().unwrap();
+/// initialized().unwrap();
+/// ```
 #[cfg(feature = "with-mbed-crypto")]
 pub fn initialized() -> Result<()> {
     if INITIALISED.load(Ordering::Relaxed) {

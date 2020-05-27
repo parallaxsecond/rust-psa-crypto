@@ -12,7 +12,7 @@ use log::error;
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Definition of a PSA status code
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Status {
     /// Status code for success
     Success,
@@ -22,6 +22,18 @@ pub enum Status {
 
 impl Status {
     /// Convert the Status into a Result returning the empty tuple
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use psa_crypto::types::status::{Status, Error};
+    ///
+    /// let status_err = Status::Error(Error::GenericError);
+    /// assert!(status_err.to_result().is_err());
+    ///
+    /// let status_ok = Status::Success;
+    /// assert!(status_ok.to_result().is_ok());
+    /// ```
     pub fn to_result(self) -> Result<()> {
         match self {
             Status::Success => Ok(()),
@@ -31,7 +43,7 @@ impl Status {
 }
 
 /// Definition of a PSA status code
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Error {
     /// An error occurred that does not correspond to any defined failure cause
     GenericError,
@@ -153,5 +165,28 @@ impl From<Status> for psa_crypto_sys::psa_status_t {
 impl From<Status> for Result<()> {
     fn from(status: Status) -> Self {
         status.to_result()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::types::status::{Error, Status};
+
+    #[test]
+    fn conversion() {
+        assert_eq!(psa_crypto_sys::PSA_SUCCESS, Status::Success.into());
+        assert_eq!(
+            psa_crypto_sys::PSA_ERROR_HARDWARE_FAILURE,
+            Status::Error(Error::HardwareFailure).into()
+        );
+        assert_eq!(
+            Status::Error(Error::HardwareFailure),
+            psa_crypto_sys::PSA_ERROR_HARDWARE_FAILURE.into()
+        );
+        assert_ne!(
+            Status::Error(Error::InsufficientEntropy),
+            psa_crypto_sys::PSA_ERROR_HARDWARE_FAILURE.into()
+        );
+        assert_eq!(Status::Error(Error::GenericError), 0x0EAD_BEEF.into());
     }
 }

@@ -42,6 +42,17 @@ pub enum Algorithm {
 
 impl Algorithm {
     /// Check if the algorithm is a HMAC algorithm, truncated or not
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use psa_crypto::types::algorithm::{Algorithm, Mac, FullLengthMac, Hash};
+    /// let hmac = Algorithm::Mac(Mac::Truncated {
+    ///     mac_alg: FullLengthMac::Hmac { hash_alg: Hash::Sha256 },
+    ///     mac_length: 30,
+    /// });
+    /// assert!(hmac.is_hmac());
+    /// ```
     pub fn is_hmac(self) -> bool {
         match self {
             Algorithm::Mac(mac_alg) => mac_alg.is_hmac(),
@@ -92,6 +103,14 @@ pub enum Hash {
 
 impl Hash {
     /// Get the digest size output by the hash algorithm in bytes
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use psa_crypto::types::algorithm::Hash;
+    /// assert_eq!(Hash::Sha256.hash_length(), 32);
+    /// assert_eq!(Hash::Sha512.hash_length(), 64);
+    /// ```
     pub fn hash_length(self) -> usize {
         match self {
             Hash::Md2 | Hash::Md4 | Hash::Md5 => 16,
@@ -325,6 +344,22 @@ pub enum AsymmetricSignature {
 impl AsymmetricSignature {
     /// Check if the alg given for a cryptographic operation is permitted to be used with this
     /// algorithm as a policy
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use psa_crypto::types::algorithm::{AsymmetricSignature, SignHash, Hash};
+    /// assert!(AsymmetricSignature::RsaPkcs1v15Sign { hash_alg: SignHash::Any }
+    ///         .is_alg_permitted(AsymmetricSignature::RsaPkcs1v15Sign {
+    ///             hash_alg:  SignHash::Specific(Hash::Sha1)
+    ///         })
+    ///        );
+    /// assert!(!AsymmetricSignature::RsaPkcs1v15Sign { hash_alg: SignHash::Specific(Hash::Sha256) }
+    ///         .is_alg_permitted(AsymmetricSignature::RsaPkcs1v15Sign {
+    ///             hash_alg:  SignHash::Specific(Hash::Sha1)
+    ///         })
+    ///        );
+    /// ```
     pub fn is_alg_permitted(self, alg: AsymmetricSignature) -> bool {
         match self {
             AsymmetricSignature::RsaPkcs1v15Sign {
@@ -683,5 +718,52 @@ impl From<AsymmetricSignature> for psa_crypto_sys::psa_algorithm_t {
                 psa_crypto_sys::PSA_ALG_DETERMINISTIC_ECDSA(hash_alg.into())
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::types::algorithm::{Algorithm, AsymmetricSignature, Hash, SignHash};
+    use core::convert::{TryFrom, TryInto};
+
+    #[test]
+    fn conversion() {
+        assert_eq!(
+            Hash::Sha256,
+            psa_crypto_sys::PSA_ALG_SHA_256.try_into().unwrap()
+        );
+        assert_eq!(psa_crypto_sys::PSA_ALG_SHA_256, Hash::Sha256.into());
+        assert_eq!(
+            SignHash::Any,
+            psa_crypto_sys::PSA_ALG_ANY_HASH.try_into().unwrap()
+        );
+        assert_eq!(
+            SignHash::Specific(Hash::Sha256),
+            psa_crypto_sys::PSA_ALG_SHA_256.try_into().unwrap()
+        );
+        assert_eq!(
+            Algorithm::AsymmetricSignature(AsymmetricSignature::Ecdsa {
+                hash_alg: SignHash::Specific(Hash::Sha3_512),
+            }),
+            psa_crypto_sys::PSA_ALG_ECDSA(psa_crypto_sys::PSA_ALG_SHA3_512)
+                .try_into()
+                .unwrap()
+        );
+        assert_eq!(
+            psa_crypto_sys::PSA_ALG_ECDSA(psa_crypto_sys::PSA_ALG_SHA3_512),
+            Algorithm::AsymmetricSignature(AsymmetricSignature::Ecdsa {
+                hash_alg: SignHash::Specific(Hash::Sha3_512),
+            })
+            .try_into()
+            .unwrap()
+        );
+    }
+
+    #[test]
+    fn convert_fail() {
+        let _ = AsymmetricSignature::try_from(0xDEAD_BEEF).unwrap_err();
+        let _ = AsymmetricSignature::try_from(psa_crypto_sys::PSA_ALG_ANY_HASH).unwrap_err();
+        let _ = Hash::try_from(psa_crypto_sys::PSA_ALG_ANY_HASH).unwrap_err();
+        let _ = Hash::try_from(psa_crypto_sys::PSA_ALG_RSA_PKCS1V15_SIGN_RAW).unwrap_err();
     }
 }
