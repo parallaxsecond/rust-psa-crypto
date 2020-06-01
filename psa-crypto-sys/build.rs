@@ -34,7 +34,7 @@ use std::env;
 use std::io::{Error, ErrorKind, Result};
 use std::path::PathBuf;
 
-fn setup_mbed_crypto() -> Result<PathBuf> {
+fn compile_mbed_crypto() -> Result<PathBuf> {
     let mbedtls_dir = String::from("./vendor");
     println!("cargo:rerun-if-changed={}", "src/c/shim.c");
     println!("cargo:rerun-if-changed={}", "src/c/shim.h");
@@ -62,20 +62,10 @@ fn setup_mbed_crypto() -> Result<PathBuf> {
         .cflag("-DMBEDTLS_CONFIG_FILE='<config.h>'")
         .build();
 
-    // Compile and package the shim library
-    cc::Build::new()
-        .include(mbed_build_path.to_str().unwrap().to_owned() + "/include")
-        .file("./src/c/shim.c")
-        .warnings(true)
-        .flag("-Werror")
-        .opt_level(2)
-        .try_compile("libshim.a")
-        .or_else(|_| Err(Error::new(ErrorKind::Other, "compiling shim.c failed")))?;
-
     Ok(mbed_build_path)
 }
 
-fn generate_mbed_bindings(mbed_include_dir: String) -> Result<()> {
+fn generate_mbed_crypto_bindings(mbed_include_dir: String) -> Result<()> {
     let header = mbed_include_dir.clone() + "/psa/crypto.h";
 
     println!("cargo:rerun-if-changed={}", header);
@@ -85,6 +75,7 @@ fn generate_mbed_bindings(mbed_include_dir: String) -> Result<()> {
         .rustfmt_bindings(true)
         .header("src/c/shim.h")
         .generate_comments(false)
+        .size_t_is_usize(true)
         .generate()
         .or_else(|_| {
             Err(Error::new(
@@ -96,6 +87,18 @@ fn generate_mbed_bindings(mbed_include_dir: String) -> Result<()> {
     shim_bindings.write_to_file(out_path.join("shim_bindings.rs"))?;
 
     Ok(())
+}
+
+fn compile_shim_library(include_dir: String) -> Result<()> {
+    // Compile and package the shim library
+    cc::Build::new()
+        .include(include_dir)
+        .file("./src/c/shim.c")
+        .warnings(true)
+        .flag("-Werror")
+        .opt_level(2)
+        .try_compile("libshim.a")
+        .or_else(|_| Err(Error::new(ErrorKind::Other, "compiling shim.c failed")))
 }
 
 fn link_to_lib(lib_path: String, link_statically: bool) -> Result<()> {
@@ -116,21 +119,31 @@ fn link_to_lib(lib_path: String, link_statically: bool) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    let lib_dir = env::var("MBEDTLS_LIB_DIR");
-    let include_dir = env::var("MBEDTLS_INCLUDE_DIR");
+    let lib;
+    let include;
+    let statically;
 
-    if let (Ok(lib_dir), Ok(include_dir)) = (lib_dir, include_dir) {
-        generate_mbed_bindings(include_dir)?;
-        link_to_lib(lib_dir, cfg!(feature = "static"))?;
+    if let (Ok(lib_dir), Ok(include_dir)) =
+        (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))
+    {
+        lib = lib_dir;
+        include = include_dir;
+        statically = cfg!(feature = "static");
     } else {
         println!("Did not find environment variables, building MbedTLS!");
-        let mut mbed_lib_dir = setup_mbed_crypto()?;
+        let mut mbed_lib_dir = compile_mbed_crypto()?;
         let mut mbed_include_dir = mbed_lib_dir.clone();
         mbed_lib_dir.push("lib");
         mbed_include_dir.push("include");
-        generate_mbed_bindings(mbed_include_dir.to_str().unwrap().to_owned())?;
-        link_to_lib(mbed_lib_dir.to_str().unwrap().to_owned(), true)?;
+
+        lib = mbed_lib_dir.to_str().unwrap().to_owned();
+        include = mbed_include_dir.to_str().unwrap().to_owned();
+        statically = true;
     }
+
+    compile_shim_library(include.clone())?;
+    generate_mbed_crypto_bindings(include)?;
+    link_to_lib(lib, statically)?;
 
     Ok(())
 }
