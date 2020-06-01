@@ -8,6 +8,9 @@
 #[cfg(feature = "with-mbed-crypto")]
 use log::error;
 
+#[cfg(not(feature = "no-std"))]
+use std::fmt;
+
 /// Result type returned by any PSA operation
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -88,6 +91,73 @@ pub enum Error {
     /// The key handle is not valid
     InvalidHandle,
 }
+
+#[cfg(not(feature = "no-std"))]
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::GenericError => write!(
+                f,
+                "An error occurred that does not correspond to any defined failure cause"
+            ),
+            Error::NotSupported => write!(
+                f,
+                "The requested operation or a parameter is not supported by this implementation"
+            ),
+            Error::NotPermitted => write!(f, "The requested action is denied by a policy"),
+            Error::BufferTooSmall => write!(f, "An output buffer is too small"),
+            Error::AlreadyExists => write!(f, "Asking for an item that already exists"),
+            Error::DoesNotExist => write!(f, "Asking for an item that doesn't exist"),
+            Error::BadState => write!(
+                f,
+                "The requested action cannot be performed in the current state"
+            ),
+            Error::InvalidArgument => {
+                write!(f, "The parameters passed to the function are invalid")
+            }
+            Error::InsufficientMemory => write!(f, "There is not enough runtime memory"),
+            Error::InsufficientStorage => write!(f, "There is not enough persistent storage"),
+            Error::CommunicationFailure => write!(
+                f,
+                "There was a communication failure inside the implementation"
+            ),
+            Error::StorageFailure => write!(
+                f,
+                "There was a storage failure that may have led to data loss"
+            ),
+            Error::DataCorrupt => write!(f, "Stored data has been corrupted"),
+            Error::DataInvalid => write!(
+                f,
+                "Data read from storage is not valid for the implementation"
+            ),
+            Error::HardwareFailure => write!(f, "A hardware failure was detected"),
+            Error::CorruptionDetected => write!(f, "A tampering attempt was detected"),
+            Error::InsufficientEntropy => write!(
+                f,
+                "There is not enough entropy to generate random data needed for the requested action"
+            ),
+            Error::InvalidSignature => write!(
+                f,
+                "The signature, MAC or hash is incorrect"
+            ),
+            Error::InvalidPadding => write!(
+                f,
+                "The decrypted padding is incorrect"
+            ),
+            Error::InsufficientData => write!(
+                f,
+                "Insufficient data when attempting to read from a resource"
+            ),
+            Error::InvalidHandle => write!(
+                f,
+                "The key handle is not valid"
+            ),
+        }
+    }
+}
+
+#[cfg(not(feature = "no-std"))]
+impl std::error::Error for Error {}
 
 impl From<Error> for Status {
     fn from(error: Error) -> Self {
