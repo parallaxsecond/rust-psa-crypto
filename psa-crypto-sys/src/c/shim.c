@@ -7,6 +7,12 @@
 
 #include "shim.h"
 
+psa_key_id_t
+shim_get_key_id(const psa_key_attributes_t *attributes)
+{
+    return psa_get_key_id(attributes);
+}
+
 size_t
 shim_get_key_bits(const psa_key_attributes_t *attributes)
 {

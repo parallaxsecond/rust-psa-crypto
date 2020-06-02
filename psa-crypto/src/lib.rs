@@ -46,6 +46,9 @@ pub mod operations;
 pub mod types;
 
 #[cfg(feature = "with-mbed-crypto")]
+pub use psa_crypto_sys as ffi;
+
+#[cfg(feature = "with-mbed-crypto")]
 use core::sync::atomic::{AtomicBool, Ordering};
 #[cfg(feature = "with-mbed-crypto")]
 use types::status::{Error, Result, Status};

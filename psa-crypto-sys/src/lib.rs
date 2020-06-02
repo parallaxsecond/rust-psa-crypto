@@ -55,8 +55,13 @@ pub use psa_crypto_binding::psa_drv_se_asymmetric_t;
 pub use psa_crypto_binding::psa_drv_se_context_t;
 pub use psa_crypto_binding::psa_drv_se_key_management_t;
 pub use psa_crypto_binding::psa_drv_se_t;
+pub use psa_crypto_binding::psa_key_creation_method_t;
 pub use psa_crypto_binding::psa_key_slot_number_t;
 pub use psa_crypto_binding::PSA_DRV_SE_HAL_VERSION;
+
+pub unsafe fn psa_get_key_id(attributes: *const psa_key_attributes_t) -> psa_key_id_t {
+    psa_crypto_binding::shim_get_key_id(attributes)
+}
 
 pub unsafe fn psa_get_key_bits(attributes: *const psa_key_attributes_t) -> usize {
     psa_crypto_binding::shim_get_key_bits(attributes)
