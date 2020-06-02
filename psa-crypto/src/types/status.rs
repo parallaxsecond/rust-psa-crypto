@@ -5,7 +5,6 @@
 //!
 //! This module defines success and error codes returned by any PSA function.
 
-#[cfg(feature = "with-mbed-crypto")]
 use log::error;
 
 #[cfg(not(feature = "no-std"))]
@@ -165,7 +164,6 @@ impl From<Error> for Status {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
 impl From<psa_crypto_sys::psa_status_t> for Status {
     fn from(status: psa_crypto_sys::psa_status_t) -> Self {
         match status {
@@ -196,7 +194,6 @@ impl From<psa_crypto_sys::psa_status_t> for Status {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
 impl From<Status> for psa_crypto_sys::psa_status_t {
     fn from(status: Status) -> psa_crypto_sys::psa_status_t {
         match status {
@@ -206,7 +203,6 @@ impl From<Status> for psa_crypto_sys::psa_status_t {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
 impl From<Error> for psa_crypto_sys::psa_status_t {
     fn from(error: Error) -> psa_crypto_sys::psa_status_t {
         match error {

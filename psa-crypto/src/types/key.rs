@@ -623,15 +623,15 @@ impl TryFrom<EccFamily> for psa_crypto_sys::psa_ecc_curve_t {
     type Error = Error;
     fn try_from(family: EccFamily) -> Result<Self> {
         match family {
-            EccFamily::SecpK1 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECP_K1),
-            EccFamily::SecpR1 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECP_R1),
-            EccFamily::SecpR2 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECP_R2),
-            EccFamily::SectK1 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECT_K1),
-            EccFamily::SectR1 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECT_R1),
-            EccFamily::SectR2 => Ok(psa_crypto_sys::PSA_ECC_CURVE_SECT_R2),
-            EccFamily::BrainpoolPR1 => Ok(psa_crypto_sys::PSA_ECC_CURVE_BRAINPOOL_P_R1),
+            EccFamily::SecpK1 => Ok(psa_crypto_sys::PSA_ECC_FAMILY_SECP_K1),
+            EccFamily::SecpR1 => Ok(psa_crypto_sys::PSA_ECC_FAMILY_SECP_R1),
+            EccFamily::SecpR2 => Ok(psa_crypto_sys::PSA_ECC_FAMILY_SECP_R2),
+            EccFamily::SectK1 => Ok(psa_crypto_sys::PSA_ECC_FAMILY_SECT_K1),
+            EccFamily::SectR1 => Ok(psa_crypto_sys::PSA_ECC_FAMILY_SECT_R1),
+            EccFamily::SectR2 => Ok(psa_crypto_sys::PSA_ECC_FAMILY_SECT_R2),
+            EccFamily::BrainpoolPR1 => Ok(psa_crypto_sys::PSA_ECC_FAMILY_BRAINPOOL_P_R1),
             EccFamily::Frp => Err(Error::NotSupported),
-            EccFamily::Montgomery => Ok(psa_crypto_sys::PSA_ECC_CURVE_MONTGOMERY),
+            EccFamily::Montgomery => Ok(psa_crypto_sys::PSA_ECC_FAMILY_MONTGOMERY),
         }
     }
 }
@@ -641,14 +641,14 @@ impl TryFrom<psa_crypto_sys::psa_ecc_curve_t> for EccFamily {
     type Error = Error;
     fn try_from(family: psa_crypto_sys::psa_ecc_curve_t) -> Result<Self> {
         match family {
-            psa_crypto_sys::PSA_ECC_CURVE_SECP_K1 => Ok(EccFamily::SecpK1),
-            psa_crypto_sys::PSA_ECC_CURVE_SECP_R1 => Ok(EccFamily::SecpR1),
-            psa_crypto_sys::PSA_ECC_CURVE_SECP_R2 => Ok(EccFamily::SecpR2),
-            psa_crypto_sys::PSA_ECC_CURVE_SECT_R1 => Ok(EccFamily::SectR1),
-            psa_crypto_sys::PSA_ECC_CURVE_SECT_R2 => Ok(EccFamily::SectR2),
-            psa_crypto_sys::PSA_ECC_CURVE_BRAINPOOL_P_R1 => Ok(EccFamily::BrainpoolPR1),
-            //psa_crypto_sys::PSA_ECC_CURVE_FRP => Ok(EccFamily::Frp),
-            psa_crypto_sys::PSA_ECC_CURVE_MONTGOMERY => Ok(EccFamily::Montgomery),
+            psa_crypto_sys::PSA_ECC_FAMILY_SECP_K1 => Ok(EccFamily::SecpK1),
+            psa_crypto_sys::PSA_ECC_FAMILY_SECP_R1 => Ok(EccFamily::SecpR1),
+            psa_crypto_sys::PSA_ECC_FAMILY_SECP_R2 => Ok(EccFamily::SecpR2),
+            psa_crypto_sys::PSA_ECC_FAMILY_SECT_R1 => Ok(EccFamily::SectR1),
+            psa_crypto_sys::PSA_ECC_FAMILY_SECT_R2 => Ok(EccFamily::SectR2),
+            psa_crypto_sys::PSA_ECC_FAMILY_BRAINPOOL_P_R1 => Ok(EccFamily::BrainpoolPR1),
+            //psa_crypto_sys::PSA_ECC_FAMILY_FRP => Ok(EccFamily::Frp),
+            psa_crypto_sys::PSA_ECC_FAMILY_MONTGOMERY => Ok(EccFamily::Montgomery),
             f => {
                 error!("Can not recognize the ECC family: {:?}.", f);
                 Err(Error::GenericError)
@@ -661,7 +661,7 @@ impl TryFrom<psa_crypto_sys::psa_ecc_curve_t> for EccFamily {
 impl From<DhFamily> for psa_crypto_sys::psa_dh_group_t {
     fn from(group: DhFamily) -> Self {
         match group {
-            DhFamily::Rfc7919 => psa_crypto_sys::PSA_DH_GROUP_RFC7919,
+            DhFamily::Rfc7919 => psa_crypto_sys::PSA_DH_FAMILY_RFC7919,
         }
     }
 }
@@ -671,7 +671,7 @@ impl TryFrom<psa_crypto_sys::psa_dh_group_t> for DhFamily {
     type Error = Error;
     fn try_from(group: psa_crypto_sys::psa_dh_group_t) -> Result<Self> {
         match group {
-            psa_crypto_sys::PSA_DH_GROUP_RFC7919 => Ok(DhFamily::Rfc7919),
+            psa_crypto_sys::PSA_DH_FAMILY_RFC7919 => Ok(DhFamily::Rfc7919),
             f => {
                 error!("Can not recognize the DH family: {:?}.", f);
                 Err(Error::GenericError)
@@ -1122,7 +1122,7 @@ mod tests {
         unsafe {
             psa_crypto_sys::psa_set_key_type(
                 &mut attrs,
-                psa_crypto_sys::PSA_KEY_TYPE_ECC_KEY_PAIR(psa_crypto_sys::PSA_ECC_CURVE_SECP_K1),
+                psa_crypto_sys::PSA_KEY_TYPE_ECC_KEY_PAIR(psa_crypto_sys::PSA_ECC_FAMILY_SECP_K1),
             )
         };
         unsafe { psa_crypto_sys::psa_set_key_bits(&mut attrs, 2048) };

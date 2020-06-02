@@ -22,6 +22,11 @@ makes no difference and there is no way to allow dynamic linking. The
 requirements for configuring and building MbedTLS can be found
 [on their repository homepage](https://github.com/ARMmbed/mbedtls#tool-versions).
 
+Linking and generating implementation-specific APIs is controlled by the
+`implementation-defined` feature that is enabled by default. Therefore, if you
+require only the spec-defined bits of the API (namely the constants and types)
+you can simply disable default features.
+
 Currently the version of MbedTLS built is based on the `development` branch
 of their repository, as the Mbed Crypto functionality has not yet been included in
 a standard release.

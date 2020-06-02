@@ -119,6 +119,9 @@ fn link_to_lib(lib_path: String, link_statically: bool) -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    if !cfg!(feature = "implementation-defined") {
+        return Ok(());
+    }
     let lib;
     let include;
     let statically;
@@ -141,8 +144,8 @@ fn main() -> Result<()> {
         statically = true;
     }
 
-    compile_shim_library(include.clone())?;
-    generate_mbed_crypto_bindings(include)?;
+    generate_mbed_crypto_bindings(include.clone())?;
+    compile_shim_library(include)?;
     link_to_lib(lib, statically)?;
 
     Ok(())
