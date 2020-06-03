@@ -164,32 +164,40 @@ impl From<Error> for Status {
     }
 }
 
+impl From<psa_crypto_sys::psa_status_t> for Error {
+    fn from(status: psa_crypto_sys::psa_status_t) -> Self {
+        match status {
+            psa_crypto_sys::PSA_ERROR_GENERIC_ERROR => Error::GenericError,
+            psa_crypto_sys::PSA_ERROR_NOT_SUPPORTED => Error::NotSupported,
+            psa_crypto_sys::PSA_ERROR_NOT_PERMITTED => Error::NotPermitted,
+            psa_crypto_sys::PSA_ERROR_BUFFER_TOO_SMALL => Error::BufferTooSmall,
+            psa_crypto_sys::PSA_ERROR_ALREADY_EXISTS => Error::AlreadyExists,
+            psa_crypto_sys::PSA_ERROR_DOES_NOT_EXIST => Error::DoesNotExist,
+            psa_crypto_sys::PSA_ERROR_BAD_STATE => Error::BadState,
+            psa_crypto_sys::PSA_ERROR_INVALID_ARGUMENT => Error::InvalidArgument,
+            psa_crypto_sys::PSA_ERROR_INSUFFICIENT_MEMORY => Error::InsufficientMemory,
+            psa_crypto_sys::PSA_ERROR_INSUFFICIENT_STORAGE => Error::InsufficientStorage,
+            psa_crypto_sys::PSA_ERROR_COMMUNICATION_FAILURE => Error::CommunicationFailure,
+            psa_crypto_sys::PSA_ERROR_STORAGE_FAILURE => Error::StorageFailure,
+            psa_crypto_sys::PSA_ERROR_HARDWARE_FAILURE => Error::HardwareFailure,
+            psa_crypto_sys::PSA_ERROR_INSUFFICIENT_ENTROPY => Error::InsufficientEntropy,
+            psa_crypto_sys::PSA_ERROR_INVALID_SIGNATURE => Error::InvalidSignature,
+            psa_crypto_sys::PSA_ERROR_INVALID_PADDING => Error::InvalidPadding,
+            psa_crypto_sys::PSA_ERROR_INSUFFICIENT_DATA => Error::InsufficientData,
+            psa_crypto_sys::PSA_ERROR_INVALID_HANDLE => Error::InvalidHandle,
+            s => {
+                error!("{} not recognised as a valid PSA status.", s);
+                Error::GenericError
+            }
+        }
+    }
+}
+
 impl From<psa_crypto_sys::psa_status_t> for Status {
     fn from(status: psa_crypto_sys::psa_status_t) -> Self {
         match status {
             psa_crypto_sys::PSA_SUCCESS => Status::Success,
-            psa_crypto_sys::PSA_ERROR_GENERIC_ERROR => Error::GenericError.into(),
-            psa_crypto_sys::PSA_ERROR_NOT_SUPPORTED => Error::NotSupported.into(),
-            psa_crypto_sys::PSA_ERROR_NOT_PERMITTED => Error::NotPermitted.into(),
-            psa_crypto_sys::PSA_ERROR_BUFFER_TOO_SMALL => Error::BufferTooSmall.into(),
-            psa_crypto_sys::PSA_ERROR_ALREADY_EXISTS => Error::AlreadyExists.into(),
-            psa_crypto_sys::PSA_ERROR_DOES_NOT_EXIST => Error::DoesNotExist.into(),
-            psa_crypto_sys::PSA_ERROR_BAD_STATE => Error::BadState.into(),
-            psa_crypto_sys::PSA_ERROR_INVALID_ARGUMENT => Error::InvalidArgument.into(),
-            psa_crypto_sys::PSA_ERROR_INSUFFICIENT_MEMORY => Error::InsufficientMemory.into(),
-            psa_crypto_sys::PSA_ERROR_INSUFFICIENT_STORAGE => Error::InsufficientStorage.into(),
-            psa_crypto_sys::PSA_ERROR_COMMUNICATION_FAILURE => Error::CommunicationFailure.into(),
-            psa_crypto_sys::PSA_ERROR_STORAGE_FAILURE => Error::StorageFailure.into(),
-            psa_crypto_sys::PSA_ERROR_HARDWARE_FAILURE => Error::HardwareFailure.into(),
-            psa_crypto_sys::PSA_ERROR_INSUFFICIENT_ENTROPY => Error::InsufficientEntropy.into(),
-            psa_crypto_sys::PSA_ERROR_INVALID_SIGNATURE => Error::InvalidSignature.into(),
-            psa_crypto_sys::PSA_ERROR_INVALID_PADDING => Error::InvalidPadding.into(),
-            psa_crypto_sys::PSA_ERROR_INSUFFICIENT_DATA => Error::InsufficientData.into(),
-            psa_crypto_sys::PSA_ERROR_INVALID_HANDLE => Error::InvalidHandle.into(),
-            s => {
-                error!("{} not recognised as a valid PSA status.", s);
-                Status::Error(Error::GenericError)
-            }
+            x => Status::Error(x.into()),
         }
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "psa-crypto"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Edmund Grimley Evans <edmund.grimley-evans@arm.com>",
            "Paul Howard <paul.howard@arm.com>",
            "Ionut Mihalcea <ionut.mihalcea@arm.com>",
