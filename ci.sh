@@ -32,3 +32,17 @@ fi
 # Run tests #
 #############
 RUST_BACKTRACE=1 cargo test
+
+################################
+# Check feature configurations #
+################################
+# psa-crypto-sys
+pushd psa-crypto-sys
+cargo build --no-default-features
+
+# psa-crypto
+popd
+pushd psa-crypto
+cargo build --no-default-features
+cargo build --no-default-features --features with-mbed-crypto
+cargo build --no-default-features --features no-std
