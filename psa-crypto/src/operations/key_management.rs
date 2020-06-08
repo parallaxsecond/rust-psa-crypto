@@ -7,7 +7,6 @@ use crate::initialized;
 use crate::types::key::{Attributes, Id};
 use crate::types::status::{Result, Status};
 use core::convert::TryFrom;
-
 /// Generate a key or a key pair
 ///
 /// `id` can be set to `None` when creating a volatile key. Setting the `id` to something will
@@ -45,9 +44,9 @@ use core::convert::TryFrom;
 /// psa_crypto::init().unwrap();
 /// let _my_key = key_management::generate(attributes, None).unwrap();
 /// ```
+#[cfg(not(feature = "no-std"))]
 pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
     initialized()?;
-
     let mut attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     let id = if let Some(id) = id {
         unsafe { psa_crypto_sys::psa_set_key_id(&mut attributes, id) };
@@ -56,12 +55,9 @@ pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
         0
     };
     let mut handle = 0;
-
     Status::from(unsafe { psa_crypto_sys::psa_generate_key(&attributes, &mut handle) })
         .to_result()?;
-
     Attributes::reset(&mut attributes);
-
     Ok(Id {
         id,
         handle: Some(handle),
@@ -240,4 +236,45 @@ pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
     key.close_handle(handle)?;
 
     Ok(data_length)
+}
+
+/// Gets the attributes for a given key ID
+/// 
+/// The `Id` structure can be created with the `from_persistent_key_id` constructor on `Id`.
+/// 
+/// # Example
+/// 
+/// ```
+/// # use psa_crypto::operations::key_management;
+/// # use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
+/// # use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
+/// # let mut attributes = Attributes {
+/// #     key_type: Type::RsaKeyPair,
+/// #     bits: 1024,
+/// #     lifetime: Lifetime::Volatile,
+/// #     policy: Policy {
+/// #         usage_flags: UsageFlags {
+/// #             sign_hash: true,
+/// #             sign_message: true,
+/// #             verify_hash: true,
+/// #             verify_message: true,
+/// #             ..Default::default()
+/// #         },
+/// #         permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
+/// #             hash_alg: Hash::Sha256.into(),
+/// #         }.into(),
+/// #     },
+/// # };
+/// psa_crypto::init().unwrap();
+/// let my_key = key_management::generate(attributes, None).unwrap();
+/// //...
+/// let key_attributes = key_management::get_key_attributes(my_key);
+/// ```
+
+pub fn get_key_attributes(key: Id) -> Result<Attributes> {
+    initialized()?;
+    let mut key_attributes = unsafe { psa_crypto_sys::psa_key_attributes_init() };
+
+    let _get_attributes_status = Status::from( unsafe { psa_crypto_sys::psa_get_key_attributes(key.handle()?.into(), &mut key_attributes) } );
+    Ok(Attributes::try_from(key_attributes)?)
 }

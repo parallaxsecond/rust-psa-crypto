@@ -493,7 +493,7 @@ impl Id {
     }
 
     pub(crate) fn close_handle(self, handle: psa_crypto_sys::psa_key_handle_t) -> Result<()> {
-        if self.handle.is_none() {
+        if !self.handle.is_none() {
             Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()
         } else {
             Ok(())

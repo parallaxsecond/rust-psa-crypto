@@ -49,6 +49,12 @@ shim_key_attributes_init(void)
     return psa_key_attributes_init();
 }
 
+psa_status_t
+shim_get_key_attributes(psa_key_handle_t key_handle, psa_key_attributes_t *attributes)
+{
+    return psa_get_key_attributes(key_handle, attributes);
+}
+
 void
 shim_set_key_algorithm(psa_key_attributes_t *attributes,
                        psa_algorithm_t alg)

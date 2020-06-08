@@ -83,6 +83,7 @@ psa_algorithm_t shim_get_key_algorithm(const psa_key_attributes_t *attributes);
 psa_key_usage_t
 shim_get_key_usage_flags(const psa_key_attributes_t *attributes);
 psa_key_attributes_t shim_key_attributes_init(void);
+psa_status_t shim_get_key_attributes(psa_key_handle_t key_handle, psa_key_attributes_t *attributes);
 
 void shim_set_key_algorithm(psa_key_attributes_t *attributes,
                             psa_algorithm_t alg);
