@@ -13,6 +13,7 @@ use crate::types::status::{Error, Result};
 use core::convert::{TryFrom, TryInto};
 use log::error;
 use serde::{Deserialize, Serialize};
+pub use psa_crypto_sys::psa_key_id_t as key_id_type;
 
 /// Native definition of the attributes needed to fully describe
 /// a cryptographic key.
@@ -473,7 +474,7 @@ pub struct UsageFlags {
 #[cfg(feature = "with-mbed-crypto")]
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Id {
-    pub(crate) id: psa_crypto_sys::psa_key_id_t,
+    pub(crate) id: key_id_type,
     pub(crate) handle: Option<psa_crypto_sys::psa_key_handle_t>,
 }
 
@@ -493,7 +494,7 @@ impl Id {
     }
 
     pub(crate) fn close_handle(self, handle: psa_crypto_sys::psa_key_handle_t) -> Result<()> {
-        if !self.handle.is_none() {
+        if self.handle.is_none() {
             Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()
         } else {
             Ok(())

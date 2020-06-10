@@ -25,6 +25,9 @@ pub const PSA_ERROR_HARDWARE_FAILURE: psa_status_t = -147;
 pub const PSA_ERROR_INSUFFICIENT_ENTROPY: psa_status_t = -148;
 pub const PSA_ERROR_INVALID_SIGNATURE: psa_status_t = -149;
 pub const PSA_ERROR_INVALID_PADDING: psa_status_t = -150;
+pub const PSA_ERROR_CORRUPTION_DETECTED: psa_status_t = -151;
+pub const PSA_ERROR_DATA_CORRUPT: psa_status_t = -152;
+pub const PSA_ERROR_DATA_INVALID: psa_status_t = -153;
 pub const PSA_ERROR_INSUFFICIENT_DATA: psa_status_t = -143;
 pub const PSA_ERROR_INVALID_HANDLE: psa_status_t = -136;
 

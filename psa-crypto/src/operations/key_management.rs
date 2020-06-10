@@ -4,7 +4,7 @@
 //! # Key Management operations
 
 use crate::initialized;
-use crate::types::key::{Attributes, Id};
+use crate::types::key::{Attributes, Id, Lifetime};
 use crate::types::status::{Result, Status};
 use core::convert::TryFrom;
 /// Generate a key or a key pair
@@ -47,21 +47,32 @@ use core::convert::TryFrom;
 #[cfg(not(feature = "no-std"))]
 pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
     initialized()?;
-    let mut attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
+    let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     let id = if let Some(id) = id {
-        unsafe { psa_crypto_sys::psa_set_key_id(&mut attributes, id) };
+        unsafe { psa_crypto_sys::psa_set_key_id(&mut key_attributes, id) };
         id
     } else {
         0
     };
     let mut handle = 0;
-    Status::from(unsafe { psa_crypto_sys::psa_generate_key(&attributes, &mut handle) })
+    Status::from(unsafe { psa_crypto_sys::psa_generate_key(&key_attributes, &mut handle) })
         .to_result()?;
-    Attributes::reset(&mut attributes);
-    Ok(Id {
-        id,
-        handle: Some(handle),
-    })
+    Attributes::reset(&mut key_attributes);
+    match attributes.lifetime {
+        Lifetime::Persistent | Lifetime::Custom(_) => {
+            Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()?;
+            Ok(Id {
+                id,
+                handle: None
+            })
+        },
+        Lifetime::Volatile => {
+            Ok(Id {
+                id,
+                handle: Some(handle),
+            })
+        }
+    }
 }
 
 /// Destroy a key
@@ -109,8 +120,7 @@ pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
 pub unsafe fn destroy(key: Id) -> Result<()> {
     initialized()?;
     let handle = key.handle()?;
-    Status::from(psa_crypto_sys::psa_destroy_key(handle)).to_result()?;
-    key.close_handle(handle)
+    Status::from(psa_crypto_sys::psa_destroy_key(handle)).to_result()
 }
 
 /// Import a key in binary format
@@ -162,9 +172,9 @@ pub unsafe fn destroy(key: Id) -> Result<()> {
 pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id> {
     initialized()?;
 
-    let mut attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
+    let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     let id = if let Some(id) = id {
-        unsafe { psa_crypto_sys::psa_set_key_id(&mut attributes, id) };
+        unsafe { psa_crypto_sys::psa_set_key_id(&mut key_attributes, id) };
         id
     } else {
         0
@@ -172,16 +182,27 @@ pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id
     let mut handle = 0;
 
     Status::from(unsafe {
-        psa_crypto_sys::psa_import_key(&attributes, data.as_ptr(), data.len(), &mut handle)
+        psa_crypto_sys::psa_import_key(&key_attributes, data.as_ptr(), data.len(), &mut handle)
     })
     .to_result()?;
 
-    Attributes::reset(&mut attributes);
+    Attributes::reset(&mut key_attributes);
 
-    Ok(Id {
-        id,
-        handle: Some(handle),
-    })
+    match attributes.lifetime {
+        Lifetime::Persistent | Lifetime::Custom(_) => {
+            Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()?;
+            Ok(Id {
+                id,
+                handle: None,
+            })
+        },
+        Lifetime::Volatile => {
+            Ok(Id {
+                id,
+                handle: Some(handle),
+            })
+        }
+    }
 }
 
 /// Export a public key or the public part of a key pair in binary format
@@ -274,7 +295,8 @@ pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
 pub fn get_key_attributes(key: Id) -> Result<Attributes> {
     initialized()?;
     let mut key_attributes = unsafe { psa_crypto_sys::psa_key_attributes_init() };
-
-    let _get_attributes_status = Status::from( unsafe { psa_crypto_sys::psa_get_key_attributes(key.handle()?.into(), &mut key_attributes) } );
+    let handle = key.handle()?;
+    let _get_attributes_status = Status::from( unsafe { psa_crypto_sys::psa_get_key_attributes(handle.into(), &mut key_attributes) } );
+    key.close_handle(handle)?;
     Ok(Attributes::try_from(key_attributes)?)
 }
