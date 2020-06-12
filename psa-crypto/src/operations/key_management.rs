@@ -7,6 +7,8 @@ use crate::initialized;
 use crate::types::key::{Attributes, Id, Lifetime};
 use crate::types::status::{Result, Status};
 use core::convert::TryFrom;
+use psa_crypto_sys::{psa_key_handle_t, psa_key_id_t};
+
 /// Generate a key or a key pair
 ///
 /// `id` can be set to `None` when creating a volatile key. Setting the `id` to something will
@@ -55,25 +57,13 @@ pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
         0
     };
     let mut handle = 0;
-    Status::from(unsafe { psa_crypto_sys::psa_generate_key(&key_attributes, &mut handle) })
-        .to_result()?;
+    let gen_res = Status::from(unsafe { psa_crypto_sys::psa_generate_key(&key_attributes, &mut handle) })
+        .to_result();
     Attributes::reset(&mut key_attributes);
-    match attributes.lifetime {
-        Lifetime::Persistent | Lifetime::Custom(_) => {
-            Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()?;
-            Ok(Id {
-                id,
-                handle: None
-            })
-        },
-        Lifetime::Volatile => {
-            Ok(Id {
-                id,
-                handle: Some(handle),
-            })
-        }
-    }
+
+    complete_new_key_operation(attributes.lifetime, id, handle, gen_res)
 }
+
 
 /// Destroy a key
 ///
@@ -181,28 +171,14 @@ pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id
     };
     let mut handle = 0;
 
-    Status::from(unsafe {
+    let gen_res = Status::from(unsafe {
         psa_crypto_sys::psa_import_key(&key_attributes, data.as_ptr(), data.len(), &mut handle)
     })
-    .to_result()?;
+    .to_result();
 
     Attributes::reset(&mut key_attributes);
 
-    match attributes.lifetime {
-        Lifetime::Persistent | Lifetime::Custom(_) => {
-            Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()?;
-            Ok(Id {
-                id,
-                handle: None,
-            })
-        },
-        Lifetime::Volatile => {
-            Ok(Id {
-                id,
-                handle: Some(handle),
-            })
-        }
-    }
+    complete_new_key_operation(attributes.lifetime, id, handle, gen_res)
 }
 
 /// Export a public key or the public part of a key pair in binary format
@@ -244,18 +220,16 @@ pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
     let handle = key.handle()?;
     let mut data_length = 0;
 
-    Status::from(unsafe {
+    let export_res = Status::from(unsafe {
         psa_crypto_sys::psa_export_public_key(
             handle,
             data.as_mut_ptr(),
             data.len(),
             &mut data_length,
         )
-    })
-    .to_result()?;
-
+    }).to_result();
     key.close_handle(handle)?;
-
+    export_res?;
     Ok(data_length)
 }
 
@@ -296,7 +270,26 @@ pub fn get_key_attributes(key: Id) -> Result<Attributes> {
     initialized()?;
     let mut key_attributes = unsafe { psa_crypto_sys::psa_key_attributes_init() };
     let handle = key.handle()?;
-    let _get_attributes_status = Status::from( unsafe { psa_crypto_sys::psa_get_key_attributes(handle.into(), &mut key_attributes) } );
+    let attributes_res = Status::from( unsafe { psa_crypto_sys::psa_get_key_attributes(
+        handle.into(), &mut key_attributes) } ).to_result();
     key.close_handle(handle)?;
+    attributes_res?;
     Ok(Attributes::try_from(key_attributes)?)
+}
+
+
+/// Completes a new key operation (either generate or import)
+///
+/// If key is not `Volatile` (`Persistent` or `Custom(u32)`), handle is closed.
+///
+/// If a key is `Volatile`, `Id` returned contains the key `handle`. Otherwise, it does not.
+fn complete_new_key_operation(key_lifetime: Lifetime, id: psa_key_id_t, handle: psa_key_handle_t, operation_result: Result<()>) -> Result<Id> {
+    if key_lifetime != Lifetime::Volatile {
+        Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()?;
+    }
+    operation_result?;
+    Ok(Id {
+        id,
+        handle: if key_lifetime == Lifetime::Volatile { Some(handle) } else { None }
+    })
 }
