@@ -96,3 +96,18 @@ pub fn initialized() -> Result<()> {
         Err(Error::BadState)
     }
 }
+
+/// Closes mbedtls, releasing resources
+///
+/// Example
+///
+/// ```
+/// use psa_crypto::{init, drop};
+/// init().unwrap();
+/// // ...
+/// drop();
+/// ```
+#[cfg(feature = "with-mbed-crypto")]
+pub fn drop() {
+    unsafe { psa_crypto_sys::mbedtls_psa_crypto_free(); }
+}

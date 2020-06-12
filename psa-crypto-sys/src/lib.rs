@@ -41,7 +41,7 @@ pub use types::*;
 pub use psa_crypto_binding::{
     psa_close_key, psa_crypto_init, psa_destroy_key, psa_export_public_key, psa_generate_key,
     psa_import_key, psa_key_attributes_t, psa_open_key, psa_reset_key_attributes, psa_sign_hash,
-    psa_verify_hash,
+    psa_verify_hash, mbedtls_psa_crypto_free,
 };
 
 // Secure Element Driver definitions

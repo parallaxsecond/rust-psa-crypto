@@ -90,6 +90,8 @@ pub const PSA_KEY_USAGE_DECRYPT: psa_key_usage_t = 512;
 pub const PSA_KEY_USAGE_SIGN: psa_key_usage_t = 1024;
 pub const PSA_KEY_USAGE_VERIFY: psa_key_usage_t = 2048;
 pub const PSA_KEY_USAGE_DERIVE: psa_key_usage_t = 4096;
+pub const PSA_KEY_SLOT_COUNT: isize = 32;
+pub const PSA_MAX_PERSISTENT_KEY_IDENTIFIER: psa_key_id_t = 0x3fff_ffff;
 
 #[cfg(feature = "implementation-defined")]
 pub const PSA_DRV_SE_HAL_VERSION: u32 = 5;
