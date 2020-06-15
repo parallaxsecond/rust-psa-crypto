@@ -27,6 +27,4 @@ Linking and generating implementation-specific APIs is controlled by the
 require only the spec-defined bits of the API (namely the constants and types)
 you can simply disable default features.
 
-Currently the version of MbedTLS built is based on the `development` branch
-of their repository, as the Mbed Crypto functionality has not yet been included in
-a standard release.
+Currently the version of MbedTLS built is 2.22.0
