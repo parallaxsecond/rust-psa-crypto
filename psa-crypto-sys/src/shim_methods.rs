@@ -3,7 +3,7 @@
 
 use super::psa_crypto_binding::{
     self, psa_algorithm_t, psa_dh_group_t, psa_ecc_curve_t, psa_key_attributes_t, psa_key_id_t,
-    psa_key_lifetime_t, psa_key_type_t, psa_key_usage_t
+    psa_key_lifetime_t, psa_key_type_t, psa_key_usage_t,
 };
 
 pub unsafe fn psa_get_key_bits(attributes: *const psa_key_attributes_t) -> usize {

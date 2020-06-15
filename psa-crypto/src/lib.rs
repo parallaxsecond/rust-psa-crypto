@@ -109,5 +109,7 @@ pub fn initialized() -> Result<()> {
 /// ```
 #[cfg(feature = "with-mbed-crypto")]
 pub fn drop() {
-    unsafe { psa_crypto_sys::mbedtls_psa_crypto_free(); }
+    unsafe {
+        psa_crypto_sys::mbedtls_psa_crypto_free();
+    }
 }

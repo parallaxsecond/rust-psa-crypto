@@ -230,7 +230,6 @@ impl From<Error> for psa_crypto_sys::psa_status_t {
             Error::InvalidPadding => psa_crypto_sys::PSA_ERROR_INVALID_PADDING,
             Error::InsufficientData => psa_crypto_sys::PSA_ERROR_INSUFFICIENT_DATA,
             Error::InvalidHandle => psa_crypto_sys::PSA_ERROR_INVALID_HANDLE,
-
             // Commented out as all errors are currently matched against and this causes compilation error
             /*e => {
                 error!("No equivalent of {:?} to a psa_status_t.", e);

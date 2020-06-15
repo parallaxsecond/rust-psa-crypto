@@ -46,7 +46,6 @@ use psa_crypto_sys::{psa_key_handle_t, psa_key_id_t};
 /// psa_crypto::init().unwrap();
 /// let _my_key = key_management::generate(attributes, None).unwrap();
 /// ```
-#[cfg(not(feature = "no-std"))]
 pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
     initialized()?;
     let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
@@ -57,13 +56,13 @@ pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
         0
     };
     let mut handle = 0;
-    let gen_res = Status::from(unsafe { psa_crypto_sys::psa_generate_key(&key_attributes, &mut handle) })
-        .to_result();
+    let gen_res =
+        Status::from(unsafe { psa_crypto_sys::psa_generate_key(&key_attributes, &mut handle) })
+            .to_result();
     Attributes::reset(&mut key_attributes);
 
     complete_new_key_operation(attributes.lifetime, id, handle, gen_res)
 }
-
 
 /// Destroy a key
 ///
@@ -227,18 +226,19 @@ pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
             data.len(),
             &mut data_length,
         )
-    }).to_result();
+    })
+    .to_result();
     key.close_handle(handle)?;
     export_res?;
     Ok(data_length)
 }
 
 /// Gets the attributes for a given key ID
-/// 
+///
 /// The `Id` structure can be created with the `from_persistent_key_id` constructor on `Id`.
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// # use psa_crypto::operations::key_management;
 /// # use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
@@ -270,26 +270,36 @@ pub fn get_key_attributes(key: Id) -> Result<Attributes> {
     initialized()?;
     let mut key_attributes = unsafe { psa_crypto_sys::psa_key_attributes_init() };
     let handle = key.handle()?;
-    let attributes_res = Status::from( unsafe { psa_crypto_sys::psa_get_key_attributes(
-        handle.into(), &mut key_attributes) } ).to_result();
+    let attributes_res = Status::from(unsafe {
+        psa_crypto_sys::psa_get_key_attributes(handle, &mut key_attributes)
+    })
+    .to_result();
     key.close_handle(handle)?;
     attributes_res?;
     Ok(Attributes::try_from(key_attributes)?)
 }
-
 
 /// Completes a new key operation (either generate or import)
 ///
 /// If key is not `Volatile` (`Persistent` or `Custom(u32)`), handle is closed.
 ///
 /// If a key is `Volatile`, `Id` returned contains the key `handle`. Otherwise, it does not.
-fn complete_new_key_operation(key_lifetime: Lifetime, id: psa_key_id_t, handle: psa_key_handle_t, operation_result: Result<()>) -> Result<Id> {
+fn complete_new_key_operation(
+    key_lifetime: Lifetime,
+    id: psa_key_id_t,
+    handle: psa_key_handle_t,
+    operation_result: Result<()>,
+) -> Result<Id> {
     if key_lifetime != Lifetime::Volatile {
         Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()?;
     }
     operation_result?;
     Ok(Id {
         id,
-        handle: if key_lifetime == Lifetime::Volatile { Some(handle) } else { None }
+        handle: if key_lifetime == Lifetime::Volatile {
+            Some(handle)
+        } else {
+            None
+        },
     })
 }

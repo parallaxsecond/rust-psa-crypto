@@ -12,9 +12,10 @@ use crate::types::status::{Error, Result};
 #[cfg(feature = "with-mbed-crypto")]
 use core::convert::{TryFrom, TryInto};
 use log::error;
+pub use psa_crypto_sys::{
+    psa_key_id_t as key_id_type, PSA_KEY_SLOT_COUNT, PSA_MAX_PERSISTENT_KEY_IDENTIFIER,
+};
 use serde::{Deserialize, Serialize};
-pub use psa_crypto_sys::{psa_key_id_t as key_id_type, PSA_KEY_SLOT_COUNT,
-                         PSA_MAX_PERSISTENT_KEY_IDENTIFIER};
 
 /// Native definition of the attributes needed to fully describe
 /// a cryptographic key.
