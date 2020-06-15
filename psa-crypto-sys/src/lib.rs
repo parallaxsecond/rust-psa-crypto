@@ -39,9 +39,9 @@ pub use types::*;
 
 #[cfg(feature = "implementation-defined")]
 pub use psa_crypto_binding::{
-    mbedtls_psa_crypto_free, psa_close_key, psa_crypto_init, psa_destroy_key,
-    psa_export_public_key, psa_generate_key, psa_get_key_attributes, psa_import_key,
-    psa_key_attributes_t, psa_open_key, psa_reset_key_attributes, psa_sign_hash, psa_verify_hash,
+    psa_close_key, psa_crypto_init, psa_destroy_key, psa_export_public_key, psa_generate_key,
+    psa_get_key_attributes, psa_import_key, psa_key_attributes_t, psa_open_key,
+    psa_reset_key_attributes, psa_sign_hash, psa_verify_hash,
 };
 
 // Secure Element Driver definitions

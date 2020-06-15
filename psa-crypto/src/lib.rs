@@ -43,6 +43,7 @@
 
 #[cfg(feature = "with-mbed-crypto")]
 pub mod operations;
+#[cfg(feature = "with-mbed-crypto")]
 pub mod types;
 
 #[cfg(feature = "with-mbed-crypto")]
@@ -94,22 +95,5 @@ pub fn initialized() -> Result<()> {
         Ok(())
     } else {
         Err(Error::BadState)
-    }
-}
-
-/// Closes mbedtls, releasing resources
-///
-/// Example
-///
-/// ```
-/// use psa_crypto::{init, drop};
-/// init().unwrap();
-/// // ...
-/// drop();
-/// ```
-#[cfg(feature = "with-mbed-crypto")]
-pub fn drop() {
-    unsafe {
-        psa_crypto_sys::mbedtls_psa_crypto_free();
     }
 }
