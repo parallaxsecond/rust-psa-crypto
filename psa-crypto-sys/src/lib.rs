@@ -48,7 +48,7 @@ pub use psa_crypto_binding::{
 #[cfg(feature = "implementation-defined")]
 pub use psa_crypto_binding::{
     psa_drv_se_asymmetric_t, psa_drv_se_context_t, psa_drv_se_key_management_t, psa_drv_se_t,
-    psa_key_creation_method_t, psa_key_location_t, psa_key_persistence_t, psa_key_slot_number_t,
+    psa_key_creation_method_t, psa_key_slot_number_t,
 };
 
 #[cfg(feature = "implementation-defined")]
