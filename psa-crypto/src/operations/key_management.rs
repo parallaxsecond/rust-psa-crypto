@@ -4,9 +4,10 @@
 //! # Key Management operations
 
 use crate::initialized;
-use crate::types::key::{Attributes, Id};
+use crate::types::key::{Attributes, Id, Lifetime};
 use crate::types::status::{Result, Status};
 use core::convert::TryFrom;
+use psa_crypto_sys::{psa_key_handle_t, psa_key_id_t};
 
 /// Generate a key or a key pair
 ///
@@ -47,25 +48,19 @@ use core::convert::TryFrom;
 /// ```
 pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
     initialized()?;
-
-    let mut attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
+    let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     let id = if let Some(id) = id {
-        unsafe { psa_crypto_sys::psa_set_key_id(&mut attributes, id) };
+        unsafe { psa_crypto_sys::psa_set_key_id(&mut key_attributes, id) };
         id
     } else {
         0
     };
     let mut handle = 0;
-
-    Status::from(unsafe { psa_crypto_sys::psa_generate_key(&attributes, &mut handle) })
+    Status::from(unsafe { psa_crypto_sys::psa_generate_key(&key_attributes, &mut handle) })
         .to_result()?;
+    Attributes::reset(&mut key_attributes);
 
-    Attributes::reset(&mut attributes);
-
-    Ok(Id {
-        id,
-        handle: Some(handle),
-    })
+    complete_new_key_operation(attributes.lifetime, id, handle)
 }
 
 /// Destroy a key
@@ -113,8 +108,7 @@ pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
 pub unsafe fn destroy(key: Id) -> Result<()> {
     initialized()?;
     let handle = key.handle()?;
-    Status::from(psa_crypto_sys::psa_destroy_key(handle)).to_result()?;
-    key.close_handle(handle)
+    Status::from(psa_crypto_sys::psa_destroy_key(handle)).to_result()
 }
 
 /// Import a key in binary format
@@ -166,9 +160,9 @@ pub unsafe fn destroy(key: Id) -> Result<()> {
 pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id> {
     initialized()?;
 
-    let mut attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
+    let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     let id = if let Some(id) = id {
-        unsafe { psa_crypto_sys::psa_set_key_id(&mut attributes, id) };
+        unsafe { psa_crypto_sys::psa_set_key_id(&mut key_attributes, id) };
         id
     } else {
         0
@@ -176,16 +170,13 @@ pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id
     let mut handle = 0;
 
     Status::from(unsafe {
-        psa_crypto_sys::psa_import_key(&attributes, data.as_ptr(), data.len(), &mut handle)
+        psa_crypto_sys::psa_import_key(&key_attributes, data.as_ptr(), data.len(), &mut handle)
     })
     .to_result()?;
 
-    Attributes::reset(&mut attributes);
+    Attributes::reset(&mut key_attributes);
 
-    Ok(Id {
-        id,
-        handle: Some(handle),
-    })
+    complete_new_key_operation(attributes.lifetime, id, handle)
 }
 
 /// Export a public key or the public part of a key pair in binary format
@@ -227,7 +218,7 @@ pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
     let handle = key.handle()?;
     let mut data_length = 0;
 
-    Status::from(unsafe {
+    let export_res = Status::from(unsafe {
         psa_crypto_sys::psa_export_public_key(
             handle,
             data.as_mut_ptr(),
@@ -235,9 +226,31 @@ pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
             &mut data_length,
         )
     })
-    .to_result()?;
-
+    .to_result();
     key.close_handle(handle)?;
-
+    export_res?;
     Ok(data_length)
+}
+
+/// Completes a new key operation (either generate or import)
+///
+/// If key is not `Volatile` (`Persistent` or `Custom(u32)`), handle is closed.
+///
+/// If a key is `Volatile`, `Id` returned contains the key `handle`. Otherwise, it does not.
+fn complete_new_key_operation(
+    key_lifetime: Lifetime,
+    id: psa_key_id_t,
+    handle: psa_key_handle_t,
+) -> Result<Id> {
+    if key_lifetime != Lifetime::Volatile {
+        Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()?;
+    }
+    Ok(Id {
+        id,
+        handle: if key_lifetime == Lifetime::Volatile {
+            Some(handle)
+        } else {
+            None
+        },
+    })
 }

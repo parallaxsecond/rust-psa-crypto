@@ -62,6 +62,7 @@ static INITIALISED: AtomicBool = AtomicBool::new(false);
 /// Applications are permitted to call this function more than once. Once a call succeeds,
 /// subsequent calls are guaranteed to succeed.
 ///
+///
 /// # Example
 ///
 /// ```rust
@@ -72,7 +73,7 @@ static INITIALISED: AtomicBool = AtomicBool::new(false);
 /// ```
 #[cfg(feature = "with-mbed-crypto")]
 pub fn init() -> Result<()> {
-    // It it not a problem to call psa_crypto_init more than once.
+    // It is not a problem to call psa_crypto_init more than once.
     Status::from(unsafe { psa_crypto_sys::psa_crypto_init() }).to_result()?;
     let _ = INITIALISED.compare_and_swap(false, true, Ordering::Relaxed);
 

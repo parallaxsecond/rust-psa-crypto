@@ -10,23 +10,26 @@ use super::types::*;
 // PSA error codes
 pub const PSA_SUCCESS: psa_status_t = 0;
 pub const PSA_ERROR_GENERIC_ERROR: psa_status_t = -132;
-pub const PSA_ERROR_NOT_SUPPORTED: psa_status_t = -134;
 pub const PSA_ERROR_NOT_PERMITTED: psa_status_t = -133;
+pub const PSA_ERROR_NOT_SUPPORTED: psa_status_t = -134;
+pub const PSA_ERROR_INVALID_ARGUMENT: psa_status_t = -135;
+pub const PSA_ERROR_INVALID_HANDLE: psa_status_t = -136;
+pub const PSA_ERROR_BAD_STATE: psa_status_t = -137;
 pub const PSA_ERROR_BUFFER_TOO_SMALL: psa_status_t = -138;
 pub const PSA_ERROR_ALREADY_EXISTS: psa_status_t = -139;
 pub const PSA_ERROR_DOES_NOT_EXIST: psa_status_t = -140;
-pub const PSA_ERROR_BAD_STATE: psa_status_t = -137;
-pub const PSA_ERROR_INVALID_ARGUMENT: psa_status_t = -135;
 pub const PSA_ERROR_INSUFFICIENT_MEMORY: psa_status_t = -141;
 pub const PSA_ERROR_INSUFFICIENT_STORAGE: psa_status_t = -142;
+pub const PSA_ERROR_INSUFFICIENT_DATA: psa_status_t = -143;
 pub const PSA_ERROR_COMMUNICATION_FAILURE: psa_status_t = -145;
 pub const PSA_ERROR_STORAGE_FAILURE: psa_status_t = -146;
 pub const PSA_ERROR_HARDWARE_FAILURE: psa_status_t = -147;
 pub const PSA_ERROR_INSUFFICIENT_ENTROPY: psa_status_t = -148;
 pub const PSA_ERROR_INVALID_SIGNATURE: psa_status_t = -149;
 pub const PSA_ERROR_INVALID_PADDING: psa_status_t = -150;
-pub const PSA_ERROR_INSUFFICIENT_DATA: psa_status_t = -143;
-pub const PSA_ERROR_INVALID_HANDLE: psa_status_t = -136;
+pub const PSA_ERROR_CORRUPTION_DETECTED: psa_status_t = -151;
+pub const PSA_ERROR_DATA_CORRUPT: psa_status_t = -152;
+pub const PSA_ERROR_DATA_INVALID: psa_status_t = -153;
 
 pub const PSA_MAX_KEY_BITS: usize = 65528;
 pub const PSA_KEY_TYPE_NONE: psa_key_type_t = 0;
@@ -87,6 +90,8 @@ pub const PSA_KEY_USAGE_DECRYPT: psa_key_usage_t = 512;
 pub const PSA_KEY_USAGE_SIGN: psa_key_usage_t = 1024;
 pub const PSA_KEY_USAGE_VERIFY: psa_key_usage_t = 2048;
 pub const PSA_KEY_USAGE_DERIVE: psa_key_usage_t = 4096;
+pub const PSA_KEY_ID_USER_MIN: psa_key_id_t = 0x0000_0001;
+pub const PSA_KEY_ID_USER_MAX: psa_key_id_t = 0x3fff_ffff;
 
 #[cfg(feature = "implementation-defined")]
 pub const PSA_DRV_SE_HAL_VERSION: u32 = 5;

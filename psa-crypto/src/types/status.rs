@@ -186,6 +186,9 @@ impl From<psa_crypto_sys::psa_status_t> for Status {
             psa_crypto_sys::PSA_ERROR_INVALID_PADDING => Error::InvalidPadding.into(),
             psa_crypto_sys::PSA_ERROR_INSUFFICIENT_DATA => Error::InsufficientData.into(),
             psa_crypto_sys::PSA_ERROR_INVALID_HANDLE => Error::InvalidHandle.into(),
+            psa_crypto_sys::PSA_ERROR_CORRUPTION_DETECTED => Error::CorruptionDetected.into(),
+            psa_crypto_sys::PSA_ERROR_DATA_CORRUPT => Error::DataCorrupt.into(),
+            psa_crypto_sys::PSA_ERROR_DATA_INVALID => Error::DataInvalid.into(),
             s => {
                 error!("{} not recognised as a valid PSA status.", s);
                 Status::Error(Error::GenericError)
@@ -218,19 +221,15 @@ impl From<Error> for psa_crypto_sys::psa_status_t {
             Error::InsufficientStorage => psa_crypto_sys::PSA_ERROR_INSUFFICIENT_STORAGE,
             Error::CommunicationFailure => psa_crypto_sys::PSA_ERROR_COMMUNICATION_FAILURE,
             Error::StorageFailure => psa_crypto_sys::PSA_ERROR_STORAGE_FAILURE,
-            //Error::DataCorrupt => psa_crypto_sys::PSA_ERROR_DATA_CORRUPT,
-            //Error::DataInvalid => psa_crypto_sys::PSA_ERROR_DATA_INVALID,
+            Error::DataCorrupt => psa_crypto_sys::PSA_ERROR_DATA_CORRUPT,
+            Error::DataInvalid => psa_crypto_sys::PSA_ERROR_DATA_INVALID,
             Error::HardwareFailure => psa_crypto_sys::PSA_ERROR_HARDWARE_FAILURE,
-            //Error::CorruptionDetected => psa_crypto_sys::PSA_ERROR_CORRUPTION_DETECTED,
+            Error::CorruptionDetected => psa_crypto_sys::PSA_ERROR_CORRUPTION_DETECTED,
             Error::InsufficientEntropy => psa_crypto_sys::PSA_ERROR_INSUFFICIENT_ENTROPY,
             Error::InvalidSignature => psa_crypto_sys::PSA_ERROR_INVALID_SIGNATURE,
             Error::InvalidPadding => psa_crypto_sys::PSA_ERROR_INVALID_PADDING,
             Error::InsufficientData => psa_crypto_sys::PSA_ERROR_INSUFFICIENT_DATA,
             Error::InvalidHandle => psa_crypto_sys::PSA_ERROR_INVALID_HANDLE,
-            e => {
-                error!("No equivalent of {:?} to a psa_status_t.", e);
-                psa_crypto_sys::PSA_ERROR_GENERIC_ERROR
-            }
         }
     }
 }
