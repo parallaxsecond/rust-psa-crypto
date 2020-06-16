@@ -4,7 +4,7 @@
 //! # PSA Key types
 
 #![allow(deprecated)]
-
+#[cfg(feature = "with-mbed-crypto")]
 use crate::initialized;
 use crate::types::algorithm::{Algorithm, Cipher};
 #[cfg(feature = "with-mbed-crypto")]
@@ -13,7 +13,7 @@ use crate::types::status::{Error, Result};
 #[cfg(feature = "with-mbed-crypto")]
 use core::convert::{TryFrom, TryInto};
 use log::error;
-pub use psa_crypto_sys::{self, psa_key_id_t};
+pub use psa_crypto_sys::{self, psa_key_id_t, PSA_KEY_ID_USER_MAX, PSA_KEY_ID_USER_MIN};
 use serde::{Deserialize, Serialize};
 
 /// Native definition of the attributes needed to fully describe
@@ -290,6 +290,7 @@ impl Attributes {
     /// //...
     /// let key_attributes = Attributes::from_key_id(my_key_id);
     /// ```
+    #[cfg(feature = "with-mbed-crypto")]
     pub fn from_key_id(key_id: Id) -> Result<Self> {
         initialized()?;
         let mut key_attributes = unsafe { psa_crypto_sys::psa_key_attributes_init() };

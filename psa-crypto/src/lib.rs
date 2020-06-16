@@ -43,7 +43,6 @@
 
 #[cfg(feature = "with-mbed-crypto")]
 pub mod operations;
-#[cfg(feature = "with-mbed-crypto")]
 pub mod types;
 
 #[cfg(feature = "with-mbed-crypto")]
@@ -62,6 +61,7 @@ static INITIALISED: AtomicBool = AtomicBool::new(false);
 /// Applications must call this function before calling any other function in crate.
 /// Applications are permitted to call this function more than once. Once a call succeeds,
 /// subsequent calls are guaranteed to succeed.
+///
 ///
 /// # Example
 ///

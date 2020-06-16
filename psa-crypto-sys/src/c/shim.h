@@ -72,33 +72,21 @@ const psa_algorithm_t shim_PSA_ALG_TLS12_PSK_TO_MS_BASE =
 const psa_algorithm_t shim_PSA_ALG_KEY_DERIVATION_MASK =
     PSA_ALG_KEY_DERIVATION_MASK;
 
-psa_key_id_t shim_get_key_id(const psa_key_attributes_t *attributes);
-
-size_t shim_get_key_bits(const psa_key_attributes_t *attributes);
-
-psa_key_type_t shim_get_key_type(const psa_key_attributes_t *attributes);
-psa_key_lifetime_t
-shim_get_key_lifetime(const psa_key_attributes_t *attributes);
 psa_algorithm_t shim_get_key_algorithm(const psa_key_attributes_t *attributes);
-psa_key_usage_t
-shim_get_key_usage_flags(const psa_key_attributes_t *attributes);
-psa_key_attributes_t shim_key_attributes_init(void);
 psa_status_t shim_get_key_attributes(psa_key_handle_t key_handle, psa_key_attributes_t *attributes);
+size_t shim_get_key_bits(const psa_key_attributes_t *attributes);
+psa_key_id_t shim_get_key_id(const psa_key_attributes_t *attributes);
+psa_key_lifetime_t shim_get_key_lifetime(const psa_key_attributes_t *attributes);
+psa_key_type_t shim_get_key_type(const psa_key_attributes_t *attributes);
+psa_key_usage_t shim_get_key_usage_flags(const psa_key_attributes_t *attributes);
+psa_key_attributes_t shim_key_attributes_init(void);
 
-void shim_set_key_algorithm(psa_key_attributes_t *attributes,
-                            psa_algorithm_t alg);
-
+void shim_set_key_algorithm(psa_key_attributes_t *attributes, psa_algorithm_t alg);
 void shim_set_key_bits(psa_key_attributes_t *attributes, size_t bits);
-
 void shim_set_key_id(psa_key_attributes_t *attributes, psa_key_id_t id);
-
-void shim_set_key_lifetime(psa_key_attributes_t *attributes,
-                           psa_key_lifetime_t lifetime);
-
+void shim_set_key_lifetime(psa_key_attributes_t *attributes, psa_key_lifetime_t lifetime);
 void shim_set_key_type(psa_key_attributes_t *attributes, psa_key_type_t type_);
-
-void shim_set_key_usage_flags(psa_key_attributes_t *attributes,
-                              psa_key_usage_t usage_flags);
+void shim_set_key_usage_flags(psa_key_attributes_t *attributes, psa_key_usage_t usage_flags);
 
 int shim_PSA_ALG_IS_HASH(psa_algorithm_t alg);
 int shim_PSA_ALG_IS_MAC(psa_algorithm_t alg);
