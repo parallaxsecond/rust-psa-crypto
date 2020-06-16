@@ -73,7 +73,7 @@ fn import_integration_test() {
     let mut test_client = test_tools::TestClient::new();
 
     // Ensure that a large number of keys can be imported
-    for key_index in 1..101u32 {
+    for key_index in 101..201u32 {
         test_client.import(attributes, key_index, &KEY_DATA);
     }
 }
