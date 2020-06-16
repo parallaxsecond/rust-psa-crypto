@@ -36,13 +36,13 @@ use std::path::PathBuf;
 
 fn compile_mbed_crypto() -> Result<PathBuf> {
     let mbedtls_dir = String::from("./vendor");
-    println!("cargo:rerun-if-changed={}", "src/c/shim.c");
-    println!("cargo:rerun-if-changed={}", "src/c/shim.h");
+    println!("cargo:rerun-if-changed=src/c/shim.c");
+    println!("cargo:rerun-if-changed=src/c/shim.h");
 
     let out_dir = env::var("OUT_DIR").unwrap();
 
     // Configure the MbedTLS build for making Mbed Crypto
-    if !::std::process::Command::new(mbedtls_dir.clone() + "/scripts/config.py")
+    if !::std::process::Command::new(mbedtls_dir + "/scripts/config.py")
         .arg("--write")
         .arg(&(out_dir.clone() + "/config.h"))
         .arg("crypto")
