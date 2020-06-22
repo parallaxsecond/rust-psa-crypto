@@ -171,3 +171,19 @@ pub fn PSA_KEY_TYPE_DH_KEY_PAIR(group: psa_dh_group_t) -> psa_key_type_t {
 pub fn PSA_KEY_TYPE_DH_PUBLIC_KEY(group: psa_dh_group_t) -> psa_key_type_t {
     unsafe { psa_crypto_binding::shim_PSA_KEY_TYPE_DH_PUBLIC_KEY(group) }
 }
+
+pub unsafe fn PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(key_type: psa_key_type_t) -> psa_key_type_t {
+    psa_crypto_binding::shim_PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(key_type)
+}
+
+pub unsafe fn PSA_SIGN_OUTPUT_SIZE(
+    key_type: psa_key_type_t,
+    key_bits: usize,
+    alg: psa_algorithm_t,
+) -> usize {
+    psa_crypto_binding::shim_PSA_SIGN_OUTPUT_SIZE(key_type, key_bits, alg)
+}
+
+pub unsafe fn PSA_EXPORT_KEY_OUTPUT_SIZE(key_type: psa_key_type_t, key_bits: usize) -> usize {
+    psa_crypto_binding::shim_PSA_KEY_EXPORT_MAX_SIZE(key_type, key_bits)
+}

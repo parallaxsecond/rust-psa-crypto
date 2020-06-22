@@ -208,7 +208,8 @@ pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id
 /// #     },
 /// # };
 /// psa_crypto::init().unwrap();
-/// let mut data = vec![0; 256];
+/// let buffer_size = attributes.export_public_key_output_size().unwrap();
+/// let mut data = vec![0; buffer_size];
 /// let my_key = key_management::generate(attributes, None).unwrap();
 /// let size = key_management::export_public(my_key, &mut data).unwrap();
 /// data.resize(size, 0);

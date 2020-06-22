@@ -236,3 +236,21 @@ shim_PSA_KEY_TYPE_DH_PUBLIC_KEY(psa_dh_group_t group)
 {
 	return PSA_KEY_TYPE_DH_PUBLIC_KEY(group);
 }
+
+psa_key_type_t
+shim_PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(psa_key_type_t key_type)
+{
+    return PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(key_type);
+}
+
+size_t
+shim_PSA_SIGN_OUTPUT_SIZE(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg)
+{
+    return PSA_SIGN_OUTPUT_SIZE(key_type, key_bits, alg);
+}
+
+size_t
+shim_PSA_KEY_EXPORT_MAX_SIZE(psa_key_type_t key_type, size_t key_bits)
+{
+    return PSA_KEY_EXPORT_MAX_SIZE(key_type, key_bits);
+}

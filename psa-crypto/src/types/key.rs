@@ -6,6 +6,8 @@
 #![allow(deprecated)]
 #[cfg(feature = "with-mbed-crypto")]
 use crate::initialized;
+#[cfg(feature = "with-mbed-crypto")]
+use crate::types::algorithm::AsymmetricSignature;
 use crate::types::algorithm::{Algorithm, Cipher};
 #[cfg(feature = "with-mbed-crypto")]
 use crate::types::status::Status;
@@ -305,6 +307,50 @@ impl Attributes {
         get_attributes_res?;
         Ok(attributes?)
     }
+
+    /// Sufficient size for a buffer to export the key, if supported
+    #[cfg(feature = "with-mbed-crypto")]
+    pub fn export_key_output_size(self) -> Result<usize> {
+        Attributes::export_key_output_size_base(self.key_type, self.bits)
+    }
+
+    /// Sufficient size for a buffer to export the public key, if supported
+    #[cfg(feature = "with-mbed-crypto")]
+    pub fn export_public_key_output_size(self) -> Result<usize> {
+        match self.key_type {
+            Type::RsaKeyPair
+            | Type::RsaPublicKey
+            | Type::EccKeyPair { .. }
+            | Type::EccPublicKey { .. }
+            | Type::DhKeyPair { .. }
+            | Type::DhPublicKey { .. } => {
+                let pub_type = self.key_type.key_type_public_key_of_key_pair()?;
+                Attributes::export_key_output_size_base(pub_type, self.bits)
+            }
+            _ => Err(Error::InvalidArgument),
+        }
+    }
+
+    /// Sufficient size for a buffer to export the given key type, if supported
+    #[cfg(feature = "with-mbed-crypto")]
+    fn export_key_output_size_base(key_type: Type, bits: usize) -> Result<usize> {
+        let size =
+            unsafe { psa_crypto_sys::PSA_EXPORT_KEY_OUTPUT_SIZE(key_type.try_into()?, bits) };
+        if size > 0 {
+            Ok(size)
+        } else {
+            Err(Error::NotSupported)
+        }
+    }
+
+    /// Sufficient buffer size for a signature using the given key, if the key is supported
+    #[cfg(feature = "with-mbed-crypto")]
+    pub fn sign_output_size(self, alg: AsymmetricSignature) -> Result<usize> {
+        self.compatible_with_alg(Algorithm::AsymmetricSignature(alg))?;
+        Ok(unsafe {
+            psa_crypto_sys::PSA_SIGN_OUTPUT_SIZE(self.key_type.try_into()?, self.bits, alg.into())
+        })
+    }
 }
 
 /// The lifetime of a key indicates where it is stored and which application and system actions
@@ -405,6 +451,27 @@ impl Type {
         match self {
             Type::DhKeyPair { .. } => true,
             _ => false,
+        }
+    }
+
+    /// If key is public or key pair, returns the corresponding public key type.
+    #[cfg(feature = "with-mbed-crypto")]
+    pub fn key_type_public_key_of_key_pair(self) -> Result<Type> {
+        match self {
+            Type::RsaKeyPair
+            | Type::RsaPublicKey
+            | Type::EccKeyPair { .. }
+            | Type::EccPublicKey { .. }
+            | Type::DhKeyPair { .. }
+            | Type::DhPublicKey { .. } => {
+                Ok(
+                    unsafe {
+                        psa_crypto_sys::PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(self.try_into()?)
+                    }
+                    .try_into()?,
+                )
+            }
+            _ => Err(Error::InvalidArgument),
         }
     }
 }
