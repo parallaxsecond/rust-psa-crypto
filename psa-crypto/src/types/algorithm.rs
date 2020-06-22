@@ -12,11 +12,12 @@ use core::convert::{TryFrom, TryInto};
 #[cfg(feature = "with-mbed-crypto")]
 use log::error;
 use serde::{Deserialize, Serialize};
+use zeroize::Zeroize;
 
 /// Enumeration of possible algorithm definitions.
 /// Each variant of the enum contains a main algorithm type (which is required for
 /// that variant).
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum Algorithm {
     /// An invalid algorithm identifier value.
     /// `None` does not allow any cryptographic operation with the key. The key can still be
@@ -53,7 +54,7 @@ impl Algorithm {
     /// });
     /// assert!(hmac.is_hmac());
     /// ```
-    pub fn is_hmac(self) -> bool {
+    pub fn is_hmac(&self) -> bool {
         match self {
             Algorithm::Mac(mac_alg) => mac_alg.is_hmac(),
             _ => false,
@@ -62,7 +63,7 @@ impl Algorithm {
 }
 
 /// Enumeration of hash algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 #[allow(deprecated)]
 pub enum Hash {
     /// MD2
@@ -111,7 +112,7 @@ impl Hash {
     /// assert_eq!(Hash::Sha256.hash_length(), 32);
     /// assert_eq!(Hash::Sha512.hash_length(), 64);
     /// ```
-    pub fn hash_length(self) -> usize {
+    pub fn hash_length(&self) -> usize {
         match self {
             Hash::Md2 | Hash::Md4 | Hash::Md5 => 16,
             Hash::Ripemd160 | Hash::Sha1 => 20,
@@ -124,7 +125,7 @@ impl Hash {
 }
 
 /// Enumeration of untruncated MAC algorithms.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum FullLengthMac {
     /// HMAC algorithm
     Hmac {
@@ -138,7 +139,7 @@ pub enum FullLengthMac {
 }
 
 /// Enumeration of message authentication code algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum Mac {
     /// Untruncated MAC algorithm
     FullLength(FullLengthMac),
@@ -153,7 +154,7 @@ pub enum Mac {
 
 impl Mac {
     /// Check if the MAC algorithm is a HMAC algorithm, truncated or not
-    pub fn is_hmac(self) -> bool {
+    pub fn is_hmac(&self) -> bool {
         match self {
             Mac::FullLength(FullLengthMac::Hmac { .. })
             | Mac::Truncated {
@@ -165,7 +166,7 @@ impl Mac {
     }
 
     /// Check if the MAC algorithm is a construction over a block cipher
-    pub fn is_block_cipher_needed(self) -> bool {
+    pub fn is_block_cipher_needed(&self) -> bool {
         match self {
             Mac::FullLength(FullLengthMac::CbcMac)
             | Mac::FullLength(FullLengthMac::Cmac)
@@ -183,7 +184,7 @@ impl Mac {
 }
 
 /// Enumeration of symmetric encryption algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 // StreamCipher contains "Cipher" to differentiate with the other ones that are block cipher modes.
 #[allow(clippy::pub_enum_variant_names)]
 pub enum Cipher {
@@ -207,7 +208,7 @@ pub enum Cipher {
 
 impl Cipher {
     /// Check is the cipher algorithm is a mode of a block cipher.
-    pub fn is_block_cipher_mode(self) -> bool {
+    pub fn is_block_cipher_mode(&self) -> bool {
         match self {
             Cipher::Ctr
             | Cipher::Cfb
@@ -221,7 +222,7 @@ impl Cipher {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 /// AEAD algorithm with default length tag enumeration
 pub enum AeadWithDefaultLengthTag {
     /// The CCM authenticated encryption algorithm.
@@ -234,7 +235,7 @@ pub enum AeadWithDefaultLengthTag {
 
 /// Enumeration of authenticated encryption with additional data algorithms
 /// supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum Aead {
     /// AEAD algorithm with a default length tag
     AeadWithDefaultLengthTag(AeadWithDefaultLengthTag),
@@ -249,7 +250,7 @@ pub enum Aead {
 
 impl Aead {
     /// Check if the Aead algorithm needs a block cipher
-    pub fn is_aead_on_block_cipher(self) -> bool {
+    pub fn is_aead_on_block_cipher(&self) -> bool {
         match self {
             Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm)
             | Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Gcm)
@@ -266,7 +267,7 @@ impl Aead {
     }
 
     /// Check if this AEAD algorithm is the (truncated or not) Chacha20-Poly1305 AEAD algorithm.
-    pub fn is_chacha20_poly1305_alg(self) -> bool {
+    pub fn is_chacha20_poly1305_alg(&self) -> bool {
         match self {
             Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Chacha20Poly1305)
             | Aead::AeadWithShortenedTag {
@@ -279,7 +280,7 @@ impl Aead {
 }
 
 /// Enumeration of hash algorithms used in "hash-and-sign" algorithms.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum SignHash {
     /// A specific hash algorithm to choose.
     Specific(Hash),
@@ -292,9 +293,9 @@ pub enum SignHash {
 impl SignHash {
     /// Check if the alg given for a cryptographic operation is permitted to be used with this
     /// algorithm as a policy
-    pub fn is_alg_permitted(self, alg: SignHash) -> bool {
+    pub fn is_alg_permitted(&self, alg: &SignHash) -> bool {
         if let SignHash::Specific(_) = alg {
-            if self == SignHash::Any {
+            if *self == SignHash::Any {
                 true
             } else {
                 self == alg
@@ -313,7 +314,7 @@ impl From<Hash> for SignHash {
 }
 
 /// Enumeration of asymmetric signing algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum AsymmetricSignature {
     /// RSA PKCS#1 v1.5 signature with hashing.
     RsaPkcs1v15Sign {
@@ -350,17 +351,17 @@ impl AsymmetricSignature {
     /// ```
     /// use psa_crypto::types::algorithm::{AsymmetricSignature, SignHash, Hash};
     /// assert!(AsymmetricSignature::RsaPkcs1v15Sign { hash_alg: SignHash::Any }
-    ///         .is_alg_permitted(AsymmetricSignature::RsaPkcs1v15Sign {
+    ///         .is_alg_permitted(&AsymmetricSignature::RsaPkcs1v15Sign {
     ///             hash_alg:  SignHash::Specific(Hash::Sha1)
     ///         })
     ///        );
     /// assert!(!AsymmetricSignature::RsaPkcs1v15Sign { hash_alg: SignHash::Specific(Hash::Sha256) }
-    ///         .is_alg_permitted(AsymmetricSignature::RsaPkcs1v15Sign {
+    ///         .is_alg_permitted(&AsymmetricSignature::RsaPkcs1v15Sign {
     ///             hash_alg:  SignHash::Specific(Hash::Sha1)
     ///         })
     ///        );
     /// ```
-    pub fn is_alg_permitted(self, alg: AsymmetricSignature) -> bool {
+    pub fn is_alg_permitted(&self, alg: &AsymmetricSignature) -> bool {
         match self {
             AsymmetricSignature::RsaPkcs1v15Sign {
                 hash_alg: hash_policy,
@@ -404,7 +405,7 @@ impl AsymmetricSignature {
     }
 
     /// Check if this is a RSA algorithm
-    pub fn is_rsa_alg(self) -> bool {
+    pub fn is_rsa_alg(&self) -> bool {
         match self {
             AsymmetricSignature::RsaPkcs1v15Sign { .. }
             | AsymmetricSignature::RsaPkcs1v15SignRaw
@@ -414,7 +415,7 @@ impl AsymmetricSignature {
     }
 
     /// Check if this is an ECC algorithm
-    pub fn is_ecc_alg(self) -> bool {
+    pub fn is_ecc_alg(&self) -> bool {
         match self {
             AsymmetricSignature::Ecdsa { .. }
             | AsymmetricSignature::EcdsaAny
@@ -424,7 +425,7 @@ impl AsymmetricSignature {
     }
 
     /// Determines if the given hash length is compatible with the asymmetric signature scheme
-    pub fn is_hash_len_permitted(self, hash_len: usize) -> bool {
+    pub fn is_hash_len_permitted(&self, hash_len: usize) -> bool {
         match self {
             AsymmetricSignature::EcdsaAny | AsymmetricSignature::RsaPkcs1v15SignRaw => true,
             AsymmetricSignature::DeterministicEcdsa { hash_alg }
@@ -442,7 +443,7 @@ impl AsymmetricSignature {
 }
 
 /// Enumeration of asymmetric encryption algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum AsymmetricEncryption {
     /// RSA PKCS#1 v1.5 encryption.
     RsaPkcs1v15Crypt,
@@ -454,7 +455,7 @@ pub enum AsymmetricEncryption {
 }
 
 /// Key agreement algorithm enumeration.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum RawKeyAgreement {
     /// The finite-field Diffie-Hellman (DH) key agreement algorithm.
     Ffdh,
@@ -463,7 +464,7 @@ pub enum RawKeyAgreement {
 }
 
 /// Enumeration of key agreement algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum KeyAgreement {
     /// Key agreement only algorithm.
     Raw(RawKeyAgreement),
@@ -477,7 +478,7 @@ pub enum KeyAgreement {
 }
 
 /// Enumeration of key derivation functions supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum KeyDerivation {
     /// HKDF algorithm.
     Hkdf {
@@ -575,10 +576,10 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Algorithm {
 }
 
 #[cfg(feature = "with-mbed-crypto")]
-impl TryFrom<Algorithm> for psa_crypto_sys::psa_algorithm_t {
+impl TryFrom<&Algorithm> for psa_crypto_sys::psa_algorithm_t {
     type Error = Error;
-    fn try_from(alg: Algorithm) -> Result<Self> {
-        match alg {
+    fn try_from(alg: &Algorithm) -> Result<Self> {
+        match &alg {
             Algorithm::None => Ok(0),
             Algorithm::Hash(hash) => Ok(hash.into()),
             Algorithm::AsymmetricSignature(asym_sign) => Ok(asym_sign.into()),
@@ -619,8 +620,8 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Hash {
 }
 
 #[cfg(feature = "with-mbed-crypto")]
-impl From<Hash> for psa_crypto_sys::psa_algorithm_t {
-    fn from(hash: Hash) -> Self {
+impl From<&Hash> for psa_crypto_sys::psa_algorithm_t {
+    fn from(hash: &Hash) -> Self {
         match hash {
             Hash::Md2 => psa_crypto_sys::PSA_ALG_MD2,
             Hash::Md4 => psa_crypto_sys::PSA_ALG_MD4,
@@ -641,6 +642,14 @@ impl From<Hash> for psa_crypto_sys::psa_algorithm_t {
     }
 }
 
+// TODO: Do we need these kind of conversions?
+#[cfg(feature = "with-mbed-crypto")]
+impl From<Hash> for psa_crypto_sys::psa_algorithm_t {
+    fn from(hash: Hash) -> Self {
+        (&hash).into()
+    }
+}
+
 #[cfg(feature = "with-mbed-crypto")]
 impl TryFrom<psa_crypto_sys::psa_algorithm_t> for SignHash {
     type Error = Error;
@@ -654,9 +663,9 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for SignHash {
 }
 
 #[cfg(feature = "with-mbed-crypto")]
-impl From<SignHash> for psa_crypto_sys::psa_algorithm_t {
-    fn from(sign_hash: SignHash) -> Self {
-        match sign_hash {
+impl From<&SignHash> for psa_crypto_sys::psa_algorithm_t {
+    fn from(sign_hash: &SignHash) -> Self {
+        match &sign_hash {
             SignHash::Specific(hash) => hash.into(),
             SignHash::Any => psa_crypto_sys::PSA_ALG_ANY_HASH,
         }
@@ -698,9 +707,9 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for AsymmetricSignature {
 }
 
 #[cfg(feature = "with-mbed-crypto")]
-impl From<AsymmetricSignature> for psa_crypto_sys::psa_algorithm_t {
-    fn from(asym_sign: AsymmetricSignature) -> Self {
-        match asym_sign {
+impl From<&AsymmetricSignature> for psa_crypto_sys::psa_algorithm_t {
+    fn from(asym_sign: &AsymmetricSignature) -> Self {
+        match &asym_sign {
             AsymmetricSignature::RsaPkcs1v15Sign { hash_alg } => {
                 psa_crypto_sys::PSA_ALG_RSA_PKCS1V15_SIGN(hash_alg.into())
             }
@@ -751,11 +760,11 @@ mod test {
         );
         assert_eq!(
             psa_crypto_sys::PSA_ALG_ECDSA(psa_crypto_sys::PSA_ALG_SHA3_512),
-            Algorithm::AsymmetricSignature(AsymmetricSignature::Ecdsa {
+            (&Algorithm::AsymmetricSignature(AsymmetricSignature::Ecdsa {
                 hash_alg: SignHash::Specific(Hash::Sha3_512),
-            })
-            .try_into()
-            .unwrap()
+            }))
+                .try_into()
+                .unwrap()
         );
     }
 

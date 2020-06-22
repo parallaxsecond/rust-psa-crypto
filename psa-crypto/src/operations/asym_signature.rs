@@ -44,9 +44,9 @@ use crate::types::status::{Result, Status};
 /// # ];
 /// psa_crypto::init().unwrap();
 /// let mut signature = vec![0; 256];
-/// let my_key = generate(attributes, None).unwrap();
-/// let size = sign_hash(my_key,
-///                      AsymmetricSignature::RsaPkcs1v15Sign {
+/// let my_key = generate(&attributes, None).unwrap();
+/// let size = sign_hash(&my_key,
+///                      &AsymmetricSignature::RsaPkcs1v15Sign {
 ///                          hash_alg: Hash::Sha256.into(),
 ///                      },
 ///                      &HASH,
@@ -54,8 +54,8 @@ use crate::types::status::{Result, Status};
 /// signature.resize(size, 0);
 /// ```
 pub fn sign_hash(
-    key: Id,
-    alg: AsymmetricSignature,
+    key: &Id,
+    alg: &AsymmetricSignature,
     hash: &[u8],
     signature: &mut [u8],
 ) -> Result<usize> {
@@ -116,15 +116,20 @@ pub fn sign_hash(
 /// let alg = AsymmetricSignature::RsaPkcs1v15Sign {
 ///     hash_alg: Hash::Sha256.into(),
 /// };
-/// let my_key = generate(attributes, None).unwrap();
-/// let size = sign_hash(my_key,
-///                      alg,
+/// let my_key = generate(&attributes, None).unwrap();
+/// let size = sign_hash(&my_key,
+///                      &alg,
 ///                      &HASH,
 ///                      &mut signature).unwrap();
 /// signature.resize(size, 0);
-/// verify_hash(my_key, alg, &HASH, &signature).unwrap();
+/// verify_hash(&my_key, &alg, &HASH, &signature).unwrap();
 /// ```
-pub fn verify_hash(key: Id, alg: AsymmetricSignature, hash: &[u8], signature: &[u8]) -> Result<()> {
+pub fn verify_hash(
+    key: &Id,
+    alg: &AsymmetricSignature,
+    hash: &[u8],
+    signature: &[u8],
+) -> Result<()> {
     initialized()?;
 
     let handle = key.handle()?;

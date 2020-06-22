@@ -15,10 +15,11 @@ use core::convert::{TryFrom, TryInto};
 use log::error;
 pub use psa_crypto_sys::{self, psa_key_id_t, PSA_KEY_ID_USER_MAX, PSA_KEY_ID_USER_MIN};
 use serde::{Deserialize, Serialize};
+use zeroize::Zeroize;
 
 /// Native definition of the attributes needed to fully describe
 /// a cryptographic key.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Zeroize, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Attributes {
     /// Lifetime of the key
     pub lifetime: Lifetime,
@@ -32,7 +33,7 @@ pub struct Attributes {
 
 impl Attributes {
     /// Check if a key has permission to be exported
-    pub fn is_exportable(self) -> bool {
+    pub fn is_exportable(&self) -> bool {
         self.policy.usage_flags.export
     }
 
@@ -70,7 +71,7 @@ impl Attributes {
     /// // Can not export because the export flag is set to false.
     /// attributes.can_export().unwrap_err();
     /// ```
-    pub fn can_export(self) -> Result<()> {
+    pub fn can_export(&self) -> Result<()> {
         if self.is_exportable() {
             Ok(())
         } else {
@@ -80,12 +81,12 @@ impl Attributes {
     }
 
     /// Check if a key has permission to sign a message hash
-    pub fn is_hash_signable(self) -> bool {
+    pub fn is_hash_signable(&self) -> bool {
         self.policy.usage_flags.sign_hash
     }
 
     /// Check hash signing permission in a fallible way
-    pub fn can_sign_hash(self) -> Result<()> {
+    pub fn can_sign_hash(&self) -> Result<()> {
         if self.is_hash_signable() {
             Ok(())
         } else {
@@ -95,12 +96,12 @@ impl Attributes {
     }
 
     /// Check if a key has permission to verify a message hash
-    pub fn is_hash_verifiable(self) -> bool {
+    pub fn is_hash_verifiable(&self) -> bool {
         self.policy.usage_flags.verify_hash
     }
 
     /// Check hash signing permission in a fallible way
-    pub fn can_verify_hash(self) -> Result<()> {
+    pub fn can_verify_hash(&self) -> Result<()> {
         if self.is_hash_verifiable() {
             Ok(())
         } else {
@@ -110,8 +111,8 @@ impl Attributes {
     }
 
     /// Check if the alg given for a cryptographic operation is permitted to be used with the key
-    pub fn is_alg_permitted(self, alg: Algorithm) -> bool {
-        match self.policy.permitted_algorithms {
+    pub fn is_alg_permitted(&self, alg: &Algorithm) -> bool {
+        match &self.policy.permitted_algorithms {
             Algorithm::None => false,
             Algorithm::AsymmetricSignature(asymmetric_signature_alg_policy) => {
                 if let Algorithm::AsymmetricSignature(asymmetric_signature_alg) = alg {
@@ -122,12 +123,12 @@ impl Attributes {
             }
             // These ones can not be wildcard algorithms: it is sufficient to just check for
             // equality.
-            permitted_alg => permitted_alg == alg,
+            permitted_alg => *permitted_alg == *alg,
         }
     }
 
     /// Check if alg is permitted in a fallible way
-    pub fn permits_alg(self, alg: Algorithm) -> Result<()> {
+    pub fn permits_alg(&self, alg: &Algorithm) -> Result<()> {
         if self.is_alg_permitted(alg) {
             Ok(())
         } else {
@@ -172,11 +173,11 @@ impl Attributes {
     ///     },
     /// };
 
-    /// assert!(attributes.is_compatible_with_alg(alg));
+    /// assert!(attributes.is_compatible_with_alg(&alg));
     /// attributes.key_type = Type::RsaPublicKey;
-    /// assert!(attributes.is_compatible_with_alg(alg));
+    /// assert!(attributes.is_compatible_with_alg(&alg));
     /// ```
-    pub fn is_compatible_with_alg(self, alg: Algorithm) -> bool {
+    pub fn is_compatible_with_alg(&self, alg: &Algorithm) -> bool {
         match self.key_type {
             Type::RawData => false,
             Type::Hmac => alg.is_hmac(),
@@ -207,9 +208,9 @@ impl Attributes {
                     false
                 }
             }
-            Type::Arc4 => alg == Algorithm::Cipher(Cipher::StreamCipher),
+            Type::Arc4 => *alg == Algorithm::Cipher(Cipher::StreamCipher),
             Type::Chacha20 => {
-                if alg == Algorithm::Cipher(Cipher::StreamCipher) {
+                if *alg == Algorithm::Cipher(Cipher::StreamCipher) {
                     true
                 } else if let Algorithm::Aead(aead_alg) = alg {
                     aead_alg.is_chacha20_poly1305_alg()
@@ -244,7 +245,7 @@ impl Attributes {
     }
 
     /// Check if alg is compatible in a fallible way
-    pub fn compatible_with_alg(self, alg: Algorithm) -> Result<()> {
+    pub fn compatible_with_alg(&self, alg: &Algorithm) -> Result<()> {
         if self.is_compatible_with_alg(alg) {
             Ok(())
         } else {
@@ -286,12 +287,12 @@ impl Attributes {
     /// #     },
     /// # };
     /// psa_crypto::init().unwrap();
-    /// let my_key_id = key_management::generate(attributes, None).unwrap();
+    /// let my_key_id = key_management::generate(&attributes, None).unwrap();
     /// //...
-    /// let key_attributes = Attributes::from_key_id(my_key_id);
+    /// let key_attributes = Attributes::from_key_id(&my_key_id);
     /// ```
     #[cfg(feature = "with-mbed-crypto")]
-    pub fn from_key_id(key_id: Id) -> Result<Self> {
+    pub fn from_key_id(key_id: &Id) -> Result<Self> {
         initialized()?;
         let mut key_attributes = unsafe { psa_crypto_sys::psa_key_attributes_init() };
         let handle = key_id.handle()?;
@@ -309,7 +310,7 @@ impl Attributes {
 
 /// The lifetime of a key indicates where it is stored and which application and system actions
 /// will create and destroy it.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Zeroize, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Lifetime {
     /// A volatile key only exists as long as the identifier to it is not destroyed.
     Volatile,
@@ -322,7 +323,7 @@ pub enum Lifetime {
 }
 
 /// Enumeration of key types supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Zeroize, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Type {
     /// Not a valid key type for any cryptographic operation but can be used to store arbitrary
     /// data in the key store.
@@ -369,7 +370,7 @@ pub enum Type {
 
 impl Type {
     /// Checks if a key type is ECC key pair with any curve family inside.
-    pub fn is_ecc_key_pair(self) -> bool {
+    pub fn is_ecc_key_pair(&self) -> bool {
         match self {
             Type::EccKeyPair { .. } => true,
             _ => false,
@@ -385,7 +386,7 @@ impl Type {
     ///
     /// assert!(Type::EccPublicKey { curve_family: EccFamily::SecpK1}.is_ecc_public_key());
     /// ```
-    pub fn is_ecc_public_key(self) -> bool {
+    pub fn is_ecc_public_key(&self) -> bool {
         match self {
             Type::EccPublicKey { .. } => true,
             _ => false,
@@ -393,7 +394,7 @@ impl Type {
     }
 
     /// Checks if a key type is DH public key with any group family inside.
-    pub fn is_dh_public_key(self) -> bool {
+    pub fn is_dh_public_key(&self) -> bool {
         match self {
             Type::DhPublicKey { .. } => true,
             _ => false,
@@ -401,7 +402,7 @@ impl Type {
     }
 
     /// Checks if a key type is DH key pair with any group family inside.
-    pub fn is_dh_key_pair(self) -> bool {
+    pub fn is_dh_key_pair(&self) -> bool {
         match self {
             Type::DhKeyPair { .. } => true,
             _ => false,
@@ -412,7 +413,7 @@ impl Type {
 /// Enumeration of elliptic curve families supported. They are needed to create an ECC key.
 /// The specific curve used for each family is given by the `bits` field of the key attributes.
 /// See the book for more details.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Zeroize, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum EccFamily {
     /// SEC Koblitz curves over prime fields.
     /// This family comprises the following curves:
@@ -477,7 +478,7 @@ pub enum EccFamily {
 }
 
 /// Enumeration of Diffie Hellman group families supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Zeroize, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DhFamily {
     /// Diffie-Hellman groups defined in RFC 7919 Appendix A.
     /// This family includes groups with the following `bits`: 2048, 3072, 4096, 6144, 8192.
@@ -486,7 +487,7 @@ pub enum DhFamily {
 }
 
 /// Definition of the key policy, what is permitted to do with the key.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Zeroize, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Policy {
     /// Usage flags for the key.
     pub usage_flags: UsageFlags,
@@ -495,7 +496,7 @@ pub struct Policy {
 }
 
 /// Definition of the usage flags. They encode what kind of operations are permitted on the key.
-#[derive(Copy, Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Zeroize, Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct UsageFlags {
     /// Permission to export the key.
     pub export: bool,
@@ -521,7 +522,7 @@ pub struct UsageFlags {
 
 /// Definition of the key ID.
 #[cfg(feature = "with-mbed-crypto")]
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Zeroize, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Id {
     pub(crate) id: psa_key_id_t,
     pub(crate) handle: Option<psa_crypto_sys::psa_key_handle_t>,
@@ -529,7 +530,7 @@ pub struct Id {
 
 #[cfg(feature = "with-mbed-crypto")]
 impl Id {
-    pub(crate) fn handle(self) -> Result<psa_crypto_sys::psa_key_handle_t> {
+    pub(crate) fn handle(&self) -> Result<psa_crypto_sys::psa_key_handle_t> {
         Ok(match self.handle {
             Some(handle) => handle,
             None => {
@@ -542,7 +543,7 @@ impl Id {
         })
     }
 
-    pub(crate) fn close_handle(self, handle: psa_crypto_sys::psa_key_handle_t) -> Result<()> {
+    pub(crate) fn close_handle(&self, handle: psa_crypto_sys::psa_key_handle_t) -> Result<()> {
         if self.handle.is_none() {
             Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()
         } else {
@@ -560,24 +561,24 @@ impl Id {
 }
 
 #[cfg(feature = "with-mbed-crypto")]
-impl TryFrom<Attributes> for psa_crypto_sys::psa_key_attributes_t {
+impl TryFrom<&Attributes> for psa_crypto_sys::psa_key_attributes_t {
     type Error = Error;
-    fn try_from(attributes: Attributes) -> Result<Self> {
+    fn try_from(attributes: &Attributes) -> Result<Self> {
         let mut attrs = unsafe { psa_crypto_sys::psa_key_attributes_init() };
-        unsafe { psa_crypto_sys::psa_set_key_lifetime(&mut attrs, attributes.lifetime.into()) };
+        unsafe { psa_crypto_sys::psa_set_key_lifetime(&mut attrs, (&attributes.lifetime).into()) };
         unsafe {
             psa_crypto_sys::psa_set_key_usage_flags(
                 &mut attrs,
-                attributes.policy.usage_flags.into(),
+                (&attributes.policy.usage_flags).into(),
             )
         };
         unsafe {
             psa_crypto_sys::psa_set_key_algorithm(
                 &mut attrs,
-                attributes.policy.permitted_algorithms.try_into()?,
+                (&attributes.policy.permitted_algorithms).try_into()?,
             )
         };
-        unsafe { psa_crypto_sys::psa_set_key_type(&mut attrs, attributes.key_type.try_into()?) };
+        unsafe { psa_crypto_sys::psa_set_key_type(&mut attrs, (&attributes.key_type).try_into()?) };
         unsafe { psa_crypto_sys::psa_set_key_bits(&mut attrs, attributes.bits) };
 
         Ok(attrs)
@@ -603,12 +604,12 @@ impl TryFrom<psa_crypto_sys::psa_key_attributes_t> for Attributes {
 }
 
 #[cfg(feature = "with-mbed-crypto")]
-impl From<Lifetime> for psa_crypto_sys::psa_key_lifetime_t {
-    fn from(lifetime: Lifetime) -> Self {
+impl From<&Lifetime> for psa_crypto_sys::psa_key_lifetime_t {
+    fn from(lifetime: &Lifetime) -> Self {
         match lifetime {
             Lifetime::Volatile => psa_crypto_sys::PSA_KEY_LIFETIME_VOLATILE,
             Lifetime::Persistent => psa_crypto_sys::PSA_KEY_LIFETIME_PERSISTENT,
-            Lifetime::Custom(value) => value,
+            Lifetime::Custom(value) => *value,
         }
     }
 }
@@ -625,8 +626,8 @@ impl From<psa_crypto_sys::psa_key_lifetime_t> for Lifetime {
 }
 
 #[cfg(feature = "with-mbed-crypto")]
-impl From<UsageFlags> for psa_crypto_sys::psa_key_usage_t {
-    fn from(flags: UsageFlags) -> Self {
+impl From<&UsageFlags> for psa_crypto_sys::psa_key_usage_t {
+    fn from(flags: &UsageFlags) -> Self {
         let mut usage_flags = 0;
         if flags.export {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_EXPORT;
@@ -669,9 +670,9 @@ impl From<psa_crypto_sys::psa_key_usage_t> for UsageFlags {
 }
 
 #[cfg(feature = "with-mbed-crypto")]
-impl TryFrom<EccFamily> for psa_crypto_sys::psa_ecc_curve_t {
+impl TryFrom<&EccFamily> for psa_crypto_sys::psa_ecc_curve_t {
     type Error = Error;
-    fn try_from(family: EccFamily) -> Result<Self> {
+    fn try_from(family: &EccFamily) -> Result<Self> {
         match family {
             EccFamily::SecpK1 => Ok(psa_crypto_sys::PSA_ECC_FAMILY_SECP_K1),
             EccFamily::SecpR1 => Ok(psa_crypto_sys::PSA_ECC_FAMILY_SECP_R1),
@@ -708,8 +709,8 @@ impl TryFrom<psa_crypto_sys::psa_ecc_curve_t> for EccFamily {
 }
 
 #[cfg(feature = "with-mbed-crypto")]
-impl From<DhFamily> for psa_crypto_sys::psa_dh_group_t {
-    fn from(group: DhFamily) -> Self {
+impl From<&DhFamily> for psa_crypto_sys::psa_dh_group_t {
+    fn from(group: &DhFamily) -> Self {
         match group {
             DhFamily::Rfc7919 => psa_crypto_sys::PSA_DH_FAMILY_RFC7919,
         }
@@ -731,10 +732,10 @@ impl TryFrom<psa_crypto_sys::psa_dh_group_t> for DhFamily {
 }
 
 #[cfg(feature = "with-mbed-crypto")]
-impl TryFrom<Type> for psa_crypto_sys::psa_key_type_t {
+impl TryFrom<&Type> for psa_crypto_sys::psa_key_type_t {
     type Error = Error;
-    fn try_from(key_type: Type) -> Result<Self> {
-        match key_type {
+    fn try_from(key_type: &Type) -> Result<Self> {
+        match &key_type {
             Type::RawData => Ok(psa_crypto_sys::PSA_KEY_TYPE_RAW_DATA),
             Type::Hmac => Ok(psa_crypto_sys::PSA_KEY_TYPE_HMAC),
             Type::Derive => Ok(psa_crypto_sys::PSA_KEY_TYPE_DERIVE),
@@ -884,7 +885,7 @@ mod tests {
                 permitted_algorithms: permitted_alg,
             },
         };
-        assert!(attributes.is_alg_permitted(alg));
+        assert!(attributes.is_alg_permitted(&alg));
     }
 
     #[test]
@@ -915,7 +916,7 @@ mod tests {
                 permitted_algorithms: permitted_alg,
             },
         };
-        assert!(!attributes.is_alg_permitted(alg));
+        assert!(!attributes.is_alg_permitted(&alg));
     }
 
     #[test]
@@ -946,7 +947,7 @@ mod tests {
                 permitted_algorithms: permitted_alg,
             },
         };
-        assert!(attributes.is_alg_permitted(alg));
+        assert!(attributes.is_alg_permitted(&alg));
     }
 
     #[test]
@@ -977,7 +978,7 @@ mod tests {
                 permitted_algorithms: permitted_alg,
             },
         };
-        assert!(!attributes.is_alg_permitted(alg));
+        assert!(!attributes.is_alg_permitted(&alg));
     }
 
     #[test]
@@ -1009,9 +1010,9 @@ mod tests {
             },
         };
 
-        assert!(attributes.is_compatible_with_alg(alg));
+        assert!(attributes.is_compatible_with_alg(&alg));
         attributes.key_type = Type::RsaPublicKey;
-        assert!(attributes.is_compatible_with_alg(alg));
+        assert!(attributes.is_compatible_with_alg(&alg));
     }
 
     #[test]
@@ -1041,7 +1042,7 @@ mod tests {
             },
         };
 
-        assert!(!attributes.is_compatible_with_alg(alg));
+        assert!(!attributes.is_compatible_with_alg(&alg));
     }
 
     #[test]
@@ -1071,17 +1072,17 @@ mod tests {
             },
         };
 
-        assert!(attributes.is_compatible_with_alg(alg));
+        assert!(attributes.is_compatible_with_alg(&alg));
         attributes.key_type = Type::Des;
-        assert!(attributes.is_compatible_with_alg(alg));
+        assert!(attributes.is_compatible_with_alg(&alg));
         attributes.key_type = Type::Camellia;
-        assert!(attributes.is_compatible_with_alg(alg));
+        assert!(attributes.is_compatible_with_alg(&alg));
         alg = Algorithm::Aead(Aead::AeadWithDefaultLengthTag(
             AeadWithDefaultLengthTag::Ccm,
         ));
-        assert!(attributes.is_compatible_with_alg(alg));
+        assert!(attributes.is_compatible_with_alg(&alg));
         attributes.key_type = Type::Des;
-        assert!(!attributes.is_compatible_with_alg(alg));
+        assert!(!attributes.is_compatible_with_alg(&alg));
     }
 
     #[test]
@@ -1113,7 +1114,7 @@ mod tests {
             },
         };
 
-        assert!(attributes.is_compatible_with_alg(alg));
+        assert!(attributes.is_compatible_with_alg(&alg));
     }
 
     #[test]
@@ -1145,7 +1146,7 @@ mod tests {
             },
         };
 
-        assert!(!attributes.is_compatible_with_alg(alg));
+        assert!(!attributes.is_compatible_with_alg(&alg));
     }
 
     #[test]

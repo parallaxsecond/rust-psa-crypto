@@ -44,9 +44,9 @@ use psa_crypto_sys::{psa_key_handle_t, psa_key_id_t};
 /// };
 ///
 /// psa_crypto::init().unwrap();
-/// let _my_key = key_management::generate(attributes, None).unwrap();
+/// let _my_key = key_management::generate(&attributes, None).unwrap();
 /// ```
-pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
+pub fn generate(attributes: &Attributes, id: Option<u32>) -> Result<Id> {
     initialized()?;
     let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     let id = if let Some(id) = id {
@@ -60,7 +60,7 @@ pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
         .to_result()?;
     Attributes::reset(&mut key_attributes);
 
-    complete_new_key_operation(attributes.lifetime, id, handle)
+    complete_new_key_operation(&attributes.lifetime, id, handle)
 }
 
 /// Destroy a key
@@ -101,11 +101,11 @@ pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
 /// # };
 ///
 /// psa_crypto::init().unwrap();
-/// let my_key = key_management::generate(attributes, None).unwrap();
+/// let my_key = key_management::generate(&attributes, None).unwrap();
 /// // Safe because no other threads is using this ID.
-/// unsafe {key_management::destroy(my_key).unwrap() };
+/// unsafe {key_management::destroy(&my_key).unwrap() };
 /// ```
-pub unsafe fn destroy(key: Id) -> Result<()> {
+pub unsafe fn destroy(key: &Id) -> Result<()> {
     initialized()?;
     let handle = key.handle()?;
     Status::from(psa_crypto_sys::psa_destroy_key(handle)).to_result()
@@ -155,9 +155,9 @@ pub unsafe fn destroy(key: Id) -> Result<()> {
 /// };
 ///
 /// psa_crypto::init().unwrap();
-/// let _my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
+/// let _my_key = key_management::import(&attributes, None, &KEY_DATA).unwrap();
 /// ```
-pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id> {
+pub fn import(attributes: &Attributes, id: Option<u32>, data: &[u8]) -> Result<Id> {
     initialized()?;
 
     let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
@@ -176,7 +176,7 @@ pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id
 
     Attributes::reset(&mut key_attributes);
 
-    complete_new_key_operation(attributes.lifetime, id, handle)
+    complete_new_key_operation(&attributes.lifetime, id, handle)
 }
 
 /// Export a public key or the public part of a key pair in binary format
@@ -209,11 +209,11 @@ pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id
 /// # };
 /// psa_crypto::init().unwrap();
 /// let mut data = vec![0; 256];
-/// let my_key = key_management::generate(attributes, None).unwrap();
-/// let size = key_management::export_public(my_key, &mut data).unwrap();
+/// let my_key = key_management::generate(&attributes, None).unwrap();
+/// let size = key_management::export_public(&my_key, &mut data).unwrap();
 /// data.resize(size, 0);
 /// ```
-pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
+pub fn export_public(key: &Id, data: &mut [u8]) -> Result<usize> {
     initialized()?;
     let handle = key.handle()?;
     let mut data_length = 0;
@@ -238,16 +238,16 @@ pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
 ///
 /// If a key is `Volatile`, `Id` returned contains the key `handle`. Otherwise, it does not.
 fn complete_new_key_operation(
-    key_lifetime: Lifetime,
+    key_lifetime: &Lifetime,
     id: psa_key_id_t,
     handle: psa_key_handle_t,
 ) -> Result<Id> {
-    if key_lifetime != Lifetime::Volatile {
+    if *key_lifetime != Lifetime::Volatile {
         Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()?;
     }
     Ok(Id {
         id,
-        handle: if key_lifetime == Lifetime::Volatile {
+        handle: if *key_lifetime == Lifetime::Volatile {
             Some(handle)
         } else {
             None

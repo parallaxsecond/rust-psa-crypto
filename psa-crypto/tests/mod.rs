@@ -34,7 +34,7 @@ fn generate_integration_test() {
 
     // Ensure that a large number of keys can be generated
     for key_index in 1..101u32 {
-        test_client.generate(attributes, key_index);
+        test_client.generate(attributes.clone(), key_index);
     }
 }
 
@@ -74,7 +74,7 @@ fn import_integration_test() {
 
     // Ensure that a large number of keys can be imported
     for key_index in 101..201u32 {
-        test_client.import(attributes, key_index, &KEY_DATA);
+        test_client.import(attributes.clone(), key_index, &KEY_DATA);
     }
 }
 
@@ -94,19 +94,19 @@ mod test_tools {
 
         pub fn generate(&mut self, attributes: Attributes, key_id: u32) {
             self.keys
-                .push(key_management::generate(attributes, Some(key_id)).unwrap());
+                .push(key_management::generate(&attributes, Some(key_id)).unwrap());
         }
 
         pub fn import(&mut self, attributes: Attributes, key_id: u32, key_data: &[u8]) {
             self.keys
-                .push(key_management::import(attributes, Some(key_id), key_data).unwrap());
+                .push(key_management::import(&attributes, Some(key_id), key_data).unwrap());
         }
     }
 
     impl Drop for TestClient {
         fn drop(&mut self) {
             for key in self.keys.clone() {
-                unsafe { key_management::destroy(key) }.unwrap();
+                unsafe { key_management::destroy(&key) }.unwrap();
             }
         }
     }

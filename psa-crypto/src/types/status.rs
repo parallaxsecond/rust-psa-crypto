@@ -6,6 +6,7 @@
 //! This module defines success and error codes returned by any PSA function.
 
 use log::error;
+use zeroize::Zeroize;
 
 #[cfg(not(feature = "no-std"))]
 use std::fmt;
@@ -14,7 +15,7 @@ use std::fmt;
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Definition of a PSA status code
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Zeroize, Clone, Debug, PartialEq)]
 pub enum Status {
     /// Status code for success
     Success,
@@ -36,16 +37,16 @@ impl Status {
     /// let status_ok = Status::Success;
     /// assert!(status_ok.to_result().is_ok());
     /// ```
-    pub fn to_result(self) -> Result<()> {
+    pub fn to_result(&self) -> Result<()> {
         match self {
             Status::Success => Ok(()),
-            Status::Error(error) => Err(error),
+            Status::Error(error) => Err(error.clone()),
         }
     }
 }
 
 /// Definition of a PSA status code
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Zeroize, Clone, Debug, PartialEq)]
 pub enum Error {
     /// An error occurred that does not correspond to any defined failure cause
     GenericError,
@@ -199,9 +200,9 @@ impl From<psa_crypto_sys::psa_status_t> for Status {
 
 impl From<Status> for psa_crypto_sys::psa_status_t {
     fn from(status: Status) -> psa_crypto_sys::psa_status_t {
-        match status {
+        match &status {
             Status::Success => psa_crypto_sys::PSA_SUCCESS,
-            Status::Error(error) => error.into(),
+            Status::Error(error) => error.clone().into(),
         }
     }
 }
