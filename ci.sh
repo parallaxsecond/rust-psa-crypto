@@ -31,8 +31,10 @@ fi
 #############
 # Run tests #
 #############
-RUST_BACKTRACE=1 cargo test
+RUST_BACKTRACE=1 cargo test -- --test-threads=1
 
+# Remove mbedtls directory if it exists
+rm -rf psa-crypto/mbedtls
 ################################
 # Check feature configurations #
 ################################

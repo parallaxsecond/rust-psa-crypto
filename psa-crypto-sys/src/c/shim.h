@@ -115,3 +115,6 @@ psa_key_type_t shim_PSA_KEY_TYPE_ECC_KEY_PAIR(psa_ecc_curve_t curve);
 psa_key_type_t shim_PSA_KEY_TYPE_ECC_PUBLIC_KEY(psa_ecc_curve_t curve);
 psa_key_type_t shim_PSA_KEY_TYPE_DH_KEY_PAIR(psa_dh_group_t group);
 psa_key_type_t shim_PSA_KEY_TYPE_DH_PUBLIC_KEY(psa_dh_group_t group);
+psa_key_type_t shim_PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(psa_key_type_t key_type);
+size_t shim_PSA_SIGN_OUTPUT_SIZE(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg);
+size_t shim_PSA_KEY_EXPORT_MAX_SIZE(psa_key_type_t key_type, size_t key_bits);

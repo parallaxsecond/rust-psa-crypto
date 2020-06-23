@@ -43,12 +43,15 @@ use crate::types::status::{Result, Status};
 /// #     0x94, 0x8E, 0x92, 0x50, 0x35, 0xC2, 0x8C, 0x5C, 0x3C, 0xCA, 0xFE, 0x18, 0xE8, 0x81, 0x37, 0x78,
 /// # ];
 /// psa_crypto::init().unwrap();
-/// let mut signature = vec![0; 256];
 /// let my_key = generate(attributes, None).unwrap();
-/// let size = sign_hash(my_key,
-///                      AsymmetricSignature::RsaPkcs1v15Sign {
+/// let alg = AsymmetricSignature::RsaPkcs1v15Sign {
 ///                          hash_alg: Hash::Sha256.into(),
-///                      },
+///                      };
+/// let buffer_size = attributes.sign_output_size(alg).unwrap();
+/// let mut signature = vec![0; buffer_size];
+///
+/// let size = sign_hash(my_key,
+///                      alg,
 ///                      &HASH,
 ///                      &mut signature).unwrap();
 /// signature.resize(size, 0);
@@ -112,10 +115,11 @@ pub fn sign_hash(
 /// #     0x94, 0x8E, 0x92, 0x50, 0x35, 0xC2, 0x8C, 0x5C, 0x3C, 0xCA, 0xFE, 0x18, 0xE8, 0x81, 0x37, 0x78,
 /// # ];
 /// psa_crypto::init().unwrap();
-/// let mut signature = vec![0; 256];
 /// let alg = AsymmetricSignature::RsaPkcs1v15Sign {
 ///     hash_alg: Hash::Sha256.into(),
 /// };
+/// let buffer_size = attributes.sign_output_size(alg).unwrap();
+/// let mut signature = vec![0; buffer_size];
 /// let my_key = generate(attributes, None).unwrap();
 /// let size = sign_hash(my_key,
 ///                      alg,
