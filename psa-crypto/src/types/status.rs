@@ -6,6 +6,7 @@
 //! This module defines success and error codes returned by any PSA function.
 
 use log::error;
+use zeroize::Zeroize;
 
 #[cfg(not(feature = "no-std"))]
 use std::fmt;
@@ -14,7 +15,7 @@ use std::fmt;
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Definition of a PSA status code
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Zeroize)]
 pub enum Status {
     /// Status code for success
     Success,
@@ -45,7 +46,7 @@ impl Status {
 }
 
 /// Definition of a PSA status code
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Zeroize)]
 pub enum Error {
     /// An error occurred that does not correspond to any defined failure cause
     GenericError,
