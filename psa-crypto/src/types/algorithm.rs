@@ -12,11 +12,12 @@ use core::convert::{TryFrom, TryInto};
 #[cfg(feature = "with-mbed-crypto")]
 use log::error;
 use serde::{Deserialize, Serialize};
+use zeroize::Zeroize;
 
 /// Enumeration of possible algorithm definitions.
 /// Each variant of the enum contains a main algorithm type (which is required for
 /// that variant).
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum Algorithm {
     /// An invalid algorithm identifier value.
     /// `None` does not allow any cryptographic operation with the key. The key can still be
@@ -62,7 +63,7 @@ impl Algorithm {
 }
 
 /// Enumeration of hash algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 #[allow(deprecated)]
 pub enum Hash {
     /// MD2
@@ -124,7 +125,7 @@ impl Hash {
 }
 
 /// Enumeration of untruncated MAC algorithms.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum FullLengthMac {
     /// HMAC algorithm
     Hmac {
@@ -138,7 +139,7 @@ pub enum FullLengthMac {
 }
 
 /// Enumeration of message authentication code algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum Mac {
     /// Untruncated MAC algorithm
     FullLength(FullLengthMac),
@@ -183,7 +184,7 @@ impl Mac {
 }
 
 /// Enumeration of symmetric encryption algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 // StreamCipher contains "Cipher" to differentiate with the other ones that are block cipher modes.
 #[allow(clippy::pub_enum_variant_names)]
 pub enum Cipher {
@@ -221,7 +222,7 @@ impl Cipher {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 /// AEAD algorithm with default length tag enumeration
 pub enum AeadWithDefaultLengthTag {
     /// The CCM authenticated encryption algorithm.
@@ -234,7 +235,7 @@ pub enum AeadWithDefaultLengthTag {
 
 /// Enumeration of authenticated encryption with additional data algorithms
 /// supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum Aead {
     /// AEAD algorithm with a default length tag
     AeadWithDefaultLengthTag(AeadWithDefaultLengthTag),
@@ -279,7 +280,7 @@ impl Aead {
 }
 
 /// Enumeration of hash algorithms used in "hash-and-sign" algorithms.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum SignHash {
     /// A specific hash algorithm to choose.
     Specific(Hash),
@@ -313,7 +314,7 @@ impl From<Hash> for SignHash {
 }
 
 /// Enumeration of asymmetric signing algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum AsymmetricSignature {
     /// RSA PKCS#1 v1.5 signature with hashing.
     RsaPkcs1v15Sign {
@@ -442,7 +443,7 @@ impl AsymmetricSignature {
 }
 
 /// Enumeration of asymmetric encryption algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum AsymmetricEncryption {
     /// RSA PKCS#1 v1.5 encryption.
     RsaPkcs1v15Crypt,
@@ -454,7 +455,7 @@ pub enum AsymmetricEncryption {
 }
 
 /// Key agreement algorithm enumeration.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum RawKeyAgreement {
     /// The finite-field Diffie-Hellman (DH) key agreement algorithm.
     Ffdh,
@@ -463,7 +464,7 @@ pub enum RawKeyAgreement {
 }
 
 /// Enumeration of key agreement algorithms supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum KeyAgreement {
     /// Key agreement only algorithm.
     Raw(RawKeyAgreement),
@@ -477,7 +478,7 @@ pub enum KeyAgreement {
 }
 
 /// Enumeration of key derivation functions supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum KeyDerivation {
     /// HKDF algorithm.
     Hkdf {
