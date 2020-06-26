@@ -560,8 +560,8 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Algorithm {
             let asym_sign: AsymmetricSignature = alg.try_into()?;
             Ok(asym_sign.into())
         } else if psa_crypto_sys::PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg) {
-            error!("Asymmetric Encryption algorithms are not supported.");
-            Err(Error::NotSupported)
+            let asym_encryption: AsymmetricEncryption = alg.try_into()?;
+            Ok(asym_encryption.into())
         } else if psa_crypto_sys::PSA_ALG_IS_KEY_AGREEMENT(alg) {
             error!("Key Agreement algorithms are not supported.");
             Err(Error::NotSupported)
@@ -583,6 +583,7 @@ impl TryFrom<Algorithm> for psa_crypto_sys::psa_algorithm_t {
             Algorithm::None => Ok(0),
             Algorithm::Hash(hash) => Ok(hash.into()),
             Algorithm::AsymmetricSignature(asym_sign) => Ok(asym_sign.into()),
+            Algorithm::AsymmetricEncryption(asym_encrypt) => Ok(asym_encrypt.into()),
             _ => {
                 error!("Algorithm not supported: {:?}.", alg);
                 Err(Error::NotSupported)
@@ -718,6 +719,38 @@ impl From<AsymmetricSignature> for psa_crypto_sys::psa_algorithm_t {
             AsymmetricSignature::DeterministicEcdsa { hash_alg } => {
                 psa_crypto_sys::PSA_ALG_DETERMINISTIC_ECDSA(hash_alg.into())
             }
+        }
+    }
+}
+
+#[cfg(feature = "with-mbed-crypto")]
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for AsymmetricEncryption {
+    type Error = Error;
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        if alg == psa_crypto_sys::PSA_ALG_RSA_PKCS1V15_CRYPT {
+            Ok(AsymmetricEncryption::RsaPkcs1v15Crypt)
+        } else if unsafe { psa_crypto_sys::PSA_ALG_IS_RSA_OAEP(alg) } {
+            Ok(AsymmetricEncryption::RsaOaep {
+                hash_alg: psa_crypto_sys::PSA_ALG_RSA_OAEP_GET_HASH(alg).try_into()?,
+            })
+        } else {
+            error!(
+                "Can not find a valid AsymmetricEncryption algorithm for {}.",
+                alg
+            );
+            Err(Error::InvalidArgument)
+        }
+    }
+}
+
+#[cfg(feature = "with-mbed-crypto")]
+impl From<AsymmetricEncryption> for psa_crypto_sys::psa_algorithm_t {
+    fn from(asym_encrypt: AsymmetricEncryption) -> Self {
+        match asym_encrypt {
+            AsymmetricEncryption::RsaPkcs1v15Crypt => psa_crypto_sys::PSA_ALG_RSA_PKCS1V15_CRYPT,
+            AsymmetricEncryption::RsaOaep { hash_alg } => unsafe {
+                psa_crypto_sys::PSA_ALG_RSA_OAEP(hash_alg.into())
+            },
         }
     }
 }

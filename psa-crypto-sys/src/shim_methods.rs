@@ -88,6 +88,10 @@ pub fn PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg: psa_algorithm_t) -> bool {
     unsafe { psa_crypto_binding::shim_PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg) == 1 }
 }
 
+pub unsafe fn PSA_ALG_IS_RSA_OAEP(alg: psa_algorithm_t) -> bool {
+    psa_crypto_binding::shim_PSA_ALG_IS_RSA_OAEP(alg) == 1
+}
+
 pub fn PSA_ALG_IS_KEY_AGREEMENT(alg: psa_algorithm_t) -> bool {
     unsafe { psa_crypto_binding::shim_PSA_ALG_IS_KEY_AGREEMENT(alg) == 1 }
 }
@@ -116,6 +120,10 @@ pub fn PSA_ALG_SIGN_GET_HASH(alg: psa_algorithm_t) -> psa_algorithm_t {
     unsafe { psa_crypto_binding::shim_PSA_ALG_SIGN_GET_HASH(alg) }
 }
 
+pub fn PSA_ALG_RSA_OAEP_GET_HASH(alg: psa_algorithm_t) -> psa_algorithm_t {
+    unsafe { psa_crypto_binding::shim_PSA_ALG_RSA_OAEP_GET_HASH(alg) }
+}
+
 pub fn PSA_ALG_RSA_PKCS1V15_SIGN(hash_alg: psa_algorithm_t) -> psa_algorithm_t {
     unsafe { psa_crypto_binding::shim_PSA_ALG_RSA_PKCS1V15_SIGN(hash_alg) }
 }
@@ -130,6 +138,10 @@ pub fn PSA_ALG_ECDSA(hash_alg: psa_algorithm_t) -> psa_algorithm_t {
 
 pub fn PSA_ALG_DETERMINISTIC_ECDSA(hash_alg: psa_algorithm_t) -> psa_algorithm_t {
     unsafe { psa_crypto_binding::shim_PSA_ALG_DETERMINISTIC_ECDSA(hash_alg) }
+}
+
+pub unsafe fn PSA_ALG_RSA_OAEP(hash_alg: psa_algorithm_t) -> psa_algorithm_t {
+    psa_crypto_binding::shim_PSA_ALG_RSA_OAEP(hash_alg)
 }
 
 pub fn PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type: psa_key_type_t) -> bool {
@@ -182,6 +194,22 @@ pub unsafe fn PSA_SIGN_OUTPUT_SIZE(
     alg: psa_algorithm_t,
 ) -> usize {
     psa_crypto_binding::shim_PSA_SIGN_OUTPUT_SIZE(key_type, key_bits, alg)
+}
+
+pub unsafe fn PSA_ASYMMETRIC_ENCRYPT_OUTPUT_SIZE(
+    key_type: psa_key_type_t,
+    key_bits: usize,
+    alg: psa_algorithm_t,
+) -> usize {
+    psa_crypto_binding::shim_PSA_ASYMMETRIC_ENCRYPT_OUTPUT_SIZE(key_type, key_bits, alg)
+}
+
+pub unsafe fn PSA_ASYMMETRIC_DECRYPT_OUTPUT_SIZE(
+    key_type: psa_key_type_t,
+    key_bits: usize,
+    alg: psa_algorithm_t,
+) -> usize {
+    psa_crypto_binding::shim_PSA_ASYMMETRIC_DECRYPT_OUTPUT_SIZE(key_type, key_bits, alg)
 }
 
 pub unsafe fn PSA_EXPORT_KEY_OUTPUT_SIZE(key_type: psa_key_type_t, key_bits: usize) -> usize {
