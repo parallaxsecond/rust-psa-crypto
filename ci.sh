@@ -60,3 +60,7 @@ popd
 # Build the driver, clean before to force dynamic linking
 cargo clean
 MBEDTLS_LIB_DIR=$(pwd)/mbedtls/library MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/include cargo build --release
+
+# Build the driver, clean before to force static linking
+cargo clean
+MBEDTLS_LIB_DIR=$(pwd)/mbedtls/library MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/include MBEDCRYPTO_STATIC=1 cargo build --release

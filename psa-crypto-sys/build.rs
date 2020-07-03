@@ -131,7 +131,7 @@ fn main() -> Result<()> {
     {
         lib = lib_dir;
         include = include_dir;
-        statically = cfg!(feature = "static");
+        statically = cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok();
     } else {
         println!("Did not find environment variables, building MbedTLS!");
         let mut mbed_lib_dir = compile_mbed_crypto()?;
