@@ -21,7 +21,8 @@ If the library and its headers folder are already installed locally you can
 specify their location (the full absolute path) using the `MBEDTLS_LIB_DIR` and
 `MBEDTLS_INCLUDE_DIR` environment variables at build time. By default dynamic
 linking is attempted - if you wish to link statically you can enable the
-`static` feature.
+`static` feature or pass the `MBEDCRYPTO_STATIC` environment variable, set to
+any value.
 
 Alternatively, the crate will attempt to build the library from scratch and
 link against it statically. In this use case enabling the `static` feature
