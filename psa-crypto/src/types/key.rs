@@ -6,9 +6,9 @@
 #![allow(deprecated)]
 #[cfg(feature = "with-mbed-crypto")]
 use crate::initialized;
-#[cfg(feature = "with-mbed-crypto")]
-use crate::types::algorithm::AsymmetricSignature;
 use crate::types::algorithm::{Algorithm, Cipher};
+#[cfg(feature = "with-mbed-crypto")]
+use crate::types::algorithm::{AsymmetricEncryption, AsymmetricSignature};
 #[cfg(feature = "with-mbed-crypto")]
 use crate::types::status::Status;
 use crate::types::status::{Error, Result};
@@ -108,6 +108,36 @@ impl Attributes {
             Ok(())
         } else {
             error!("Key attributes do not permit verifying hashes.");
+            Err(Error::NotPermitted)
+        }
+    }
+
+    /// Check if a key has permissions to encrypt a message
+    pub fn is_encrypt_permitted(self) -> bool {
+        self.policy.usage_flags.encrypt
+    }
+
+    /// Check encrypt permission in a fallible way
+    pub fn can_encrypt_message(self) -> Result<()> {
+        if self.is_encrypt_permitted() {
+            Ok(())
+        } else {
+            error!("Key attributes do not permit encrypting messages.");
+            Err(Error::NotPermitted)
+        }
+    }
+
+    /// Check if a key has permissions to decrypt a message
+    pub fn is_decrypt_permitted(self) -> bool {
+        self.policy.usage_flags.decrypt
+    }
+
+    /// Check decrypt permission in a fallible way
+    pub fn can_decrypt_message(self) -> Result<()> {
+        if self.is_decrypt_permitted() {
+            Ok(())
+        } else {
+            error!("Key attributes do not permit decrypting messages.");
             Err(Error::NotPermitted)
         }
     }
@@ -335,21 +365,44 @@ impl Attributes {
     /// Sufficient size for a buffer to export the given key type, if supported
     #[cfg(feature = "with-mbed-crypto")]
     fn export_key_output_size_base(key_type: Type, bits: usize) -> Result<usize> {
-        let size =
-            unsafe { psa_crypto_sys::PSA_EXPORT_KEY_OUTPUT_SIZE(key_type.try_into()?, bits) };
-        if size > 0 {
-            Ok(size)
-        } else {
-            Err(Error::NotSupported)
+        match unsafe { psa_crypto_sys::PSA_EXPORT_KEY_OUTPUT_SIZE(key_type.try_into()?, bits) } {
+            0 => Err(Error::NotSupported),
+            size => Ok(size),
         }
     }
 
     /// Sufficient buffer size for a signature using the given key, if the key is supported
     #[cfg(feature = "with-mbed-crypto")]
     pub fn sign_output_size(self, alg: AsymmetricSignature) -> Result<usize> {
-        self.compatible_with_alg(Algorithm::AsymmetricSignature(alg))?;
+        self.compatible_with_alg(alg.into())?;
         Ok(unsafe {
             psa_crypto_sys::PSA_SIGN_OUTPUT_SIZE(self.key_type.try_into()?, self.bits, alg.into())
+        })
+    }
+
+    /// Sufficient buffer size for an encrypted message using the given algorithm
+    #[cfg(feature = "with-mbed-crypto")]
+    pub fn asymmetric_encrypt_output_size(self, alg: AsymmetricEncryption) -> Result<usize> {
+        self.compatible_with_alg(alg.into())?;
+        Ok(unsafe {
+            psa_crypto_sys::PSA_ASYMMETRIC_ENCRYPT_OUTPUT_SIZE(
+                self.key_type.try_into()?,
+                self.bits,
+                alg.into(),
+            )
+        })
+    }
+
+    /// Sufficient buffer size for a decrypted message using the given algorithm
+    #[cfg(feature = "with-mbed-crypto")]
+    pub fn asymmetric_decrypt_output_size(self, alg: AsymmetricEncryption) -> Result<usize> {
+        self.compatible_with_alg(alg.into())?;
+        Ok(unsafe {
+            psa_crypto_sys::PSA_ASYMMETRIC_DECRYPT_OUTPUT_SIZE(
+                self.key_type.try_into()?,
+                self.bits,
+                alg.into(),
+            )
         })
     }
 }

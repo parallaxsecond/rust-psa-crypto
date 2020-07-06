@@ -1,6 +1,6 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
-
+#![allow(clippy::multiple_crate_versions)]
 use psa_crypto::types::algorithm::{Algorithm, AsymmetricSignature, Hash};
 use psa_crypto::types::key::{Attributes, Lifetime, Policy, Type, UsageFlags};
 

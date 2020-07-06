@@ -123,6 +123,11 @@ shim_PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(psa_algorithm_t alg) {
 }
 
 int
+shim_PSA_ALG_IS_RSA_OAEP(psa_algorithm_t alg) {
+    return PSA_ALG_IS_RSA_OAEP(alg);
+}
+
+int
 shim_PSA_ALG_IS_KEY_AGREEMENT(psa_algorithm_t alg) {
     return PSA_ALG_IS_KEY_AGREEMENT(alg);
 }
@@ -155,6 +160,11 @@ shim_PSA_ALG_IS_DETERMINISTIC_ECDSA(psa_algorithm_t alg) {
 psa_algorithm_t
 shim_PSA_ALG_SIGN_GET_HASH(psa_algorithm_t alg) {
     return PSA_ALG_SIGN_GET_HASH(alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_RSA_OAEP_GET_HASH(psa_algorithm_t alg) {
+    return PSA_ALG_RSA_OAEP_GET_HASH(alg);
 }
 
 psa_algorithm_t
@@ -199,6 +209,12 @@ int
 shim_PSA_KEY_TYPE_IS_DH_KEY_PAIR(psa_key_type_t key_type)
 {
 	return PSA_KEY_TYPE_IS_DH_KEY_PAIR(key_type);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_RSA_OAEP(psa_algorithm_t alg_type)
+{
+	return PSA_ALG_RSA_OAEP(alg_type);
 }
 
 psa_ecc_curve_t
@@ -247,6 +263,18 @@ size_t
 shim_PSA_SIGN_OUTPUT_SIZE(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg)
 {
     return PSA_SIGN_OUTPUT_SIZE(key_type, key_bits, alg);
+}
+
+size_t
+shim_PSA_ASYMMETRIC_ENCRYPT_OUTPUT_SIZE(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg)
+{
+    return PSA_ASYMMETRIC_ENCRYPT_OUTPUT_SIZE(key_type, key_bits, alg);
+}
+
+size_t
+shim_PSA_ASYMMETRIC_DECRYPT_OUTPUT_SIZE(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg)
+{
+    return PSA_ASYMMETRIC_DECRYPT_OUTPUT_SIZE(key_type, key_bits, alg);
 }
 
 size_t
