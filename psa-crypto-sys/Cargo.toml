@@ -1,6 +1,6 @@
 [package]
 name = "psa-crypto-sys"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Edmund Grimley Evans <edmund.grimley-evans@arm.com>",
            "Paul Howard <paul.howard@arm.com>",
            "Ionut Mihalcea <ionut.mihalcea@arm.com>",
