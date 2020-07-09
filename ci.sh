@@ -46,7 +46,7 @@ cargo build --no-default-features
 popd
 pushd psa-crypto
 cargo build --no-default-features
-cargo build --no-default-features --features with-mbed-crypto
+cargo build --no-default-features --features operations
 cargo build --no-default-features --features no-std
 
 # Test dynamic linking
@@ -57,10 +57,14 @@ git checkout mbedtls-2.22.0
 SHARED=1 make
 popd
 
-# Build the driver, clean before to force dynamic linking
+# Clean before to force dynamic linking
 cargo clean
 MBEDTLS_LIB_DIR=$(pwd)/mbedtls/library MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/include cargo build --release
 
-# Build the driver, clean before to force static linking
+# Clean before to force static linking
 cargo clean
 MBEDTLS_LIB_DIR=$(pwd)/mbedtls/library MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/include MBEDCRYPTO_STATIC=1 cargo build --release
+
+# Clean before to only build the interface
+cargo clean
+MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/include cargo build --release

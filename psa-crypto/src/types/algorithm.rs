@@ -5,11 +5,11 @@
 
 #![allow(deprecated)]
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 use crate::types::status::{Error, Result};
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 use core::convert::{TryFrom, TryInto};
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 use log::error;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroize;
@@ -538,7 +538,7 @@ impl From<KeyDerivation> for Algorithm {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Algorithm {
     type Error = Error;
     fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
@@ -575,7 +575,7 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Algorithm {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<Algorithm> for psa_crypto_sys::psa_algorithm_t {
     type Error = Error;
     fn try_from(alg: Algorithm) -> Result<Self> {
@@ -592,7 +592,7 @@ impl TryFrom<Algorithm> for psa_crypto_sys::psa_algorithm_t {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Hash {
     type Error = Error;
     fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
@@ -620,7 +620,7 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Hash {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl From<Hash> for psa_crypto_sys::psa_algorithm_t {
     fn from(hash: Hash) -> Self {
         match hash {
@@ -643,7 +643,7 @@ impl From<Hash> for psa_crypto_sys::psa_algorithm_t {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<psa_crypto_sys::psa_algorithm_t> for SignHash {
     type Error = Error;
     fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
@@ -655,7 +655,7 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for SignHash {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl From<SignHash> for psa_crypto_sys::psa_algorithm_t {
     fn from(sign_hash: SignHash) -> Self {
         match sign_hash {
@@ -665,7 +665,7 @@ impl From<SignHash> for psa_crypto_sys::psa_algorithm_t {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<psa_crypto_sys::psa_algorithm_t> for AsymmetricSignature {
     type Error = Error;
     fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
@@ -699,7 +699,7 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for AsymmetricSignature {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl From<AsymmetricSignature> for psa_crypto_sys::psa_algorithm_t {
     fn from(asym_sign: AsymmetricSignature) -> Self {
         match asym_sign {
@@ -723,7 +723,7 @@ impl From<AsymmetricSignature> for psa_crypto_sys::psa_algorithm_t {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<psa_crypto_sys::psa_algorithm_t> for AsymmetricEncryption {
     type Error = Error;
     fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
@@ -743,7 +743,7 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for AsymmetricEncryption {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl From<AsymmetricEncryption> for psa_crypto_sys::psa_algorithm_t {
     fn from(asym_encrypt: AsymmetricEncryption) -> Self {
         match asym_encrypt {

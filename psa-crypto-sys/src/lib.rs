@@ -21,7 +21,7 @@
     trivial_casts
 )]
 #[allow(clippy::all)]
-#[cfg(feature = "implementation-defined")]
+#[cfg(feature = "interface")]
 mod psa_crypto_binding {
     include!(concat!(env!("OUT_DIR"), "/shim_bindings.rs"));
 }
@@ -29,7 +29,7 @@ mod psa_crypto_binding {
 #[allow(dead_code)]
 mod constants;
 #[allow(dead_code)]
-#[cfg(feature = "implementation-defined")]
+#[cfg(feature = "interface")]
 mod shim_methods;
 #[allow(dead_code)]
 mod types;
@@ -37,20 +37,23 @@ mod types;
 pub use constants::*;
 pub use types::*;
 
-#[cfg(feature = "implementation-defined")]
+#[cfg(feature = "operations")]
 pub use psa_crypto_binding::{
     psa_asymmetric_decrypt, psa_asymmetric_encrypt, psa_close_key, psa_crypto_init,
     psa_destroy_key, psa_export_key, psa_export_public_key, psa_generate_key,
-    psa_get_key_attributes, psa_import_key, psa_key_attributes_t, psa_open_key,
-    psa_reset_key_attributes, psa_sign_hash, psa_verify_hash,
+    psa_get_key_attributes, psa_import_key, psa_open_key, psa_reset_key_attributes, psa_sign_hash,
+    psa_verify_hash,
 };
 
+#[cfg(feature = "interface")]
+pub use psa_crypto_binding::psa_key_attributes_t;
+
 // Secure Element Driver definitions
-#[cfg(feature = "implementation-defined")]
+#[cfg(feature = "interface")]
 pub use psa_crypto_binding::{
     psa_drv_se_asymmetric_t, psa_drv_se_context_t, psa_drv_se_key_management_t, psa_drv_se_t,
     psa_key_creation_method_t, psa_key_slot_number_t,
 };
 
-#[cfg(feature = "implementation-defined")]
+#[cfg(feature = "interface")]
 pub use shim_methods::*;

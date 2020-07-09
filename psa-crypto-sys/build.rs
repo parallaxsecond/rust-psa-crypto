@@ -98,15 +98,7 @@ fn compile_shim_library(include_dir: String) -> Result<()> {
         .flag("-Werror")
         .opt_level(2)
         .try_compile("libshim.a")
-        .or_else(|_| Err(Error::new(ErrorKind::Other, "compiling shim.c failed")))
-}
-
-fn link_to_lib(lib_path: String, link_statically: bool) -> Result<()> {
-    let link_type = if link_statically { "static" } else { "dylib" };
-
-    // Request rustc to link the Mbed Crypto library
-    println!("cargo:rustc-link-search=native={}", lib_path,);
-    println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
+        .or_else(|_| Err(Error::new(ErrorKind::Other, "compiling shim.c failed")))?;
 
     // Also link shim library
     println!(
@@ -118,35 +110,53 @@ fn link_to_lib(lib_path: String, link_statically: bool) -> Result<()> {
     Ok(())
 }
 
+fn link_to_lib(lib_path: String, link_statically: bool) {
+    let link_type = if link_statically { "static" } else { "dylib" };
+
+    // Request rustc to link the Mbed Crypto library
+    println!("cargo:rustc-link-search=native={}", lib_path,);
+    println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
+}
+
 fn main() -> Result<()> {
-    if !cfg!(feature = "implementation-defined") {
-        return Ok(());
-    }
-    let lib;
-    let include;
-    let statically;
+    if cfg!(feature = "operations") {
+        let lib;
+        let statically;
+        let include;
 
-    if let (Ok(lib_dir), Ok(include_dir)) =
-        (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))
-    {
-        lib = lib_dir;
-        include = include_dir;
-        statically = cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok();
+        if let (Ok(lib_dir), Ok(include_dir)) =
+            (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))
+        {
+            lib = lib_dir;
+            include = include_dir;
+            statically = cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok();
+        } else {
+            println!("Did not find environment variables, building MbedTLS!");
+            let mut mbed_lib_dir = compile_mbed_crypto()?;
+            let mut mbed_include_dir = mbed_lib_dir.clone();
+            mbed_lib_dir.push("lib");
+            mbed_include_dir.push("include");
+
+            lib = mbed_lib_dir.to_str().unwrap().to_owned();
+            include = mbed_include_dir.to_str().unwrap().to_owned();
+            statically = true;
+        }
+
+        // Linking to PSA Crypto library is only needed for the operations.
+        link_to_lib(lib, statically);
+        generate_mbed_crypto_bindings(include.clone())?;
+        compile_shim_library(include)
+    } else if cfg!(feature = "interface") {
+        if let Ok(include_dir) = env::var("MBEDTLS_INCLUDE_DIR") {
+            generate_mbed_crypto_bindings(include_dir.clone())?;
+            compile_shim_library(include_dir)
+        } else {
+            Err(Error::new(
+                ErrorKind::Other,
+                "interface feature necessitates MBEDTLS_INCLUDE_DIR environment variable",
+            ))
+        }
     } else {
-        println!("Did not find environment variables, building MbedTLS!");
-        let mut mbed_lib_dir = compile_mbed_crypto()?;
-        let mut mbed_include_dir = mbed_lib_dir.clone();
-        mbed_lib_dir.push("lib");
-        mbed_include_dir.push("include");
-
-        lib = mbed_lib_dir.to_str().unwrap().to_owned();
-        include = mbed_include_dir.to_str().unwrap().to_owned();
-        statically = true;
+        Ok(())
     }
-
-    generate_mbed_crypto_bindings(include.clone())?;
-    compile_shim_library(include)?;
-    link_to_lib(lib, statically)?;
-
-    Ok(())
 }

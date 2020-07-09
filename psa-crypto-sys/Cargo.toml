@@ -20,6 +20,7 @@ cc = "1.0.54"
 cmake = "0.1.44"
 
 [features]
-default = ["implementation-defined"]
+default = ["operations"]
 static = []
-implementation-defined = []
+interface = []
+operations = ["interface"]

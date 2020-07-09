@@ -92,6 +92,3 @@ pub const PSA_KEY_USAGE_VERIFY: psa_key_usage_t = 2048;
 pub const PSA_KEY_USAGE_DERIVE: psa_key_usage_t = 4096;
 pub const PSA_KEY_ID_USER_MIN: psa_key_id_t = 0x0000_0001;
 pub const PSA_KEY_ID_USER_MAX: psa_key_id_t = 0x3fff_ffff;
-
-#[cfg(feature = "implementation-defined")]
-pub const PSA_DRV_SE_HAL_VERSION: u32 = 5;
