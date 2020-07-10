@@ -228,8 +228,60 @@ pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
         )
     })
     .to_result();
-    key.close_handle(handle)?;
+    let handle_close_res = key.close_handle(handle);
     export_res?;
+    handle_close_res?;
+    Ok(data_length)
+}
+
+/// Export a key pair in binary format
+///
+/// The key is written in `data`. The functions returns the number of bytes written.
+/// Please check the PSA Crypto API for a more complete description on the format of `data`.
+///
+/// # Example
+///
+/// ```
+/// # use psa_crypto::operations::key_management;
+/// # use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
+/// # use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
+/// # let mut attributes = Attributes {
+/// #     key_type: Type::RsaKeyPair,
+/// #     bits: 1024,
+/// #     lifetime: Lifetime::Volatile,
+/// #     policy: Policy {
+/// #         usage_flags: UsageFlags {
+/// #             sign_hash: true,
+/// #             sign_message: true,
+/// #             verify_hash: true,
+/// #             verify_message: true,
+/// #             export: true,
+/// #             ..Default::default()
+/// #         },
+/// #         permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
+/// #             hash_alg: Hash::Sha256.into(),
+/// #         }.into(),
+/// #     },
+/// # };
+/// psa_crypto::init().unwrap();
+/// let buffer_size = attributes.export_key_output_size().unwrap();
+/// let mut data = vec![0; buffer_size];
+/// let my_key = key_management::generate(attributes, None).unwrap();
+/// let size = key_management::export_key(my_key, &mut data).unwrap();
+/// data.resize(size, 0);
+/// ```
+pub fn export_key(key: Id, data: &mut [u8]) -> Result<usize> {
+    initialized()?;
+    let handle = key.handle()?;
+    let mut data_length = 0;
+
+    let export_res = Status::from(unsafe {
+        psa_crypto_sys::psa_export_key(handle, data.as_mut_ptr(), data.len(), &mut data_length)
+    })
+    .to_result();
+    let handle_close_res = key.close_handle(handle);
+    export_res?;
+    handle_close_res?;
     Ok(data_length)
 }
 
