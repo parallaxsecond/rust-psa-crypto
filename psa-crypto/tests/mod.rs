@@ -78,9 +78,62 @@ fn import_integration_test() {
     }
 }
 
+#[test]
+fn export_key_pair_test() {
+    const PRIVATE_KEY: &str = "MIICWwIBAAKBgQCd+EKeRmZCKLmg7LasWqpKA9/01linY75ujilf6v/Kb8UP9r/E\
+cO75Pvi2YPnYhBadmVOVxMOqS2zmKm1a9VTegT8dN9Unf2s2KbKrKXupaQTXcrGG\
+SB/BmHeWeiqidEMw7i9ysjHK4KEuacmYmZpvKAnNWMyvQgjGgGNpsNzqawIDAQAB\
+AoGAcHlAxXyOdnCUqpWgAtuS/5v+q06qVJRaFFE3+ElT0oj+ID2pkG5wWBqT7xbh\
+DV4O1CtFLg+o2OlXIhH3RpoC0D0x3qfvDpY5nJUUhP/w7mtGOwvB08xhXBN2M9fk\
+PNqGdrzisvxTry3rp9qDduZlv1rTCsx8+ww3iI4Q0coD4fECQQD4KAMgIS7Vu+Vm\
+zQmJfVfzYCVdr4X3Z/JOEexb3eu9p1Qj904sLu9Ds5NO7atT+qtDYVxgH5kQIrKk\
+mFNAx3NdAkEAovZ+DaorhkDiL/gFVzwoShyc1A6AWkH791sDlns2ETZ1WwE/ccYu\
+uJill/5XA9RKw6whUDzzNTsv7bFkCruAZwJARP5y6ALxz5DfFfbZuPU1d7/6g5Ki\
+b4fh8VzAV0ZbHa6hESLYBCbEdRE/WolvwfiGl0RBd6QxXTAYdPS46ODLLQJARrz4\
+urXDbuN7S5c9ukBCvOjuqp4g2Q0LcrPvOsMBFTeueXJxN9HvNfIM741X+DGOwqFV\
+VJ8gc1rd0y/NXVtGwQJAc2w23nTmZ/olcMVRia1+AFsELcCnD+JqaJ2AEF1Ng6Ix\
+V/X2l32v6t3B57sw/8ce3LCheEdqLHlSOpQiaD7Qfw==";
+
+    let attributes = Attributes {
+        key_type: Type::RsaKeyPair,
+        bits: 1024,
+        lifetime: Lifetime::Volatile,
+        policy: Policy {
+            usage_flags: UsageFlags {
+                sign_hash: true,
+                verify_hash: true,
+                sign_message: true,
+                verify_message: true,
+                export: true,
+                encrypt: false,
+                decrypt: false,
+                cache: false,
+                copy: false,
+                derive: false,
+            },
+            permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
+                hash_alg: Hash::Sha256.into(),
+            }
+            .into(),
+        },
+    };
+    psa_crypto::init().unwrap();
+    let mut test_client = test_tools::TestClient::new();
+    let decoded_pk = base64::decode(PRIVATE_KEY).unwrap();
+
+    let id = test_client.import(attributes, 201, &decoded_pk);
+
+    let buffer_size = attributes.export_key_output_size().unwrap();
+    let mut data = vec![0; buffer_size];
+    let size = test_client.export_key_pair(id, &mut data).unwrap();
+    data.resize(size, 0);
+    assert_eq!(decoded_pk, data);
+}
+
 mod test_tools {
     use psa_crypto::operations::key_management;
     use psa_crypto::types::key::{Attributes, Id};
+    use psa_crypto::types::status::Result;
 
     pub struct TestClient {
         keys: Vec<Id>,
@@ -92,14 +145,20 @@ mod test_tools {
             TestClient { keys: Vec::new() }
         }
 
-        pub fn generate(&mut self, attributes: Attributes, key_id: u32) {
-            self.keys
-                .push(key_management::generate(attributes, Some(key_id)).unwrap());
+        pub fn generate(&mut self, attributes: Attributes, key_id: u32) -> Id {
+            let id = key_management::generate(attributes, Some(key_id)).unwrap();
+            self.keys.push(id);
+            id
         }
 
-        pub fn import(&mut self, attributes: Attributes, key_id: u32, key_data: &[u8]) {
-            self.keys
-                .push(key_management::import(attributes, Some(key_id), key_data).unwrap());
+        pub fn import(&mut self, attributes: Attributes, key_id: u32, key_data: &[u8]) -> Id {
+            let id = key_management::import(attributes, Some(key_id), key_data).unwrap();
+            self.keys.push(id);
+            id
+        }
+
+        pub fn export_key_pair(&mut self, key_id: Id, key_data: &mut [u8]) -> Result<usize> {
+            key_management::export_key(key_id, key_data)
         }
     }
 
