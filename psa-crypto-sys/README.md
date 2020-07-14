@@ -31,8 +31,12 @@ requirements for configuring and building MbedTLS can be found
 [on their repository homepage](https://github.com/ARMmbed/mbedtls#tool-versions).
 
 Linking and generating implementation-specific APIs is controlled by the
-`implementation-defined` feature that is enabled by default. Therefore, if you
-require only the spec-defined bits of the API (namely the constants and types)
+`operations` feature that is enabled by default. Therefore, if you
+require only the specification-defined bits of the API (namely the constants and types)
 you can simply disable default features.
 
-Currently the version of MbedTLS built is 2.22.0
+You might want to only use the interface part (including the
+implementation-defined bits) of this crate to build for example a PSA Secure
+Element Driver. With the feature `interface`, this crate will only produce the
+implementation-defined types and their helpers/accessors using the
+`MBEDTLS_INCLUDE_DIR` variable that you need to pass.

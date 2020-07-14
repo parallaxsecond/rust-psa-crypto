@@ -4,15 +4,15 @@
 //! # PSA Key types
 
 #![allow(deprecated)]
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "operations")]
 use crate::initialized;
 use crate::types::algorithm::{Algorithm, Cipher};
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 use crate::types::algorithm::{AsymmetricEncryption, AsymmetricSignature};
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "operations")]
 use crate::types::status::Status;
 use crate::types::status::{Error, Result};
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 use core::convert::{TryFrom, TryInto};
 use log::error;
 pub use psa_crypto_sys::{self, psa_key_id_t, PSA_KEY_ID_USER_MAX, PSA_KEY_ID_USER_MIN};
@@ -286,7 +286,7 @@ impl Attributes {
         }
     }
 
-    #[cfg(feature = "with-mbed-crypto")]
+    #[cfg(feature = "operations")]
     pub(crate) fn reset(attributes: &mut psa_crypto_sys::psa_key_attributes_t) {
         unsafe { psa_crypto_sys::psa_reset_key_attributes(attributes) };
     }
@@ -323,7 +323,7 @@ impl Attributes {
     /// //...
     /// let key_attributes = Attributes::from_key_id(my_key_id);
     /// ```
-    #[cfg(feature = "with-mbed-crypto")]
+    #[cfg(feature = "operations")]
     pub fn from_key_id(key_id: Id) -> Result<Self> {
         initialized()?;
         let mut key_attributes = unsafe { psa_crypto_sys::psa_key_attributes_init() };
@@ -340,13 +340,13 @@ impl Attributes {
     }
 
     /// Sufficient size for a buffer to export the key, if supported
-    #[cfg(feature = "with-mbed-crypto")]
+    #[cfg(feature = "interface")]
     pub fn export_key_output_size(self) -> Result<usize> {
         Attributes::export_key_output_size_base(self.key_type, self.bits)
     }
 
     /// Sufficient size for a buffer to export the public key, if supported
-    #[cfg(feature = "with-mbed-crypto")]
+    #[cfg(feature = "interface")]
     pub fn export_public_key_output_size(self) -> Result<usize> {
         match self.key_type {
             Type::RsaKeyPair
@@ -363,7 +363,7 @@ impl Attributes {
     }
 
     /// Sufficient size for a buffer to export the given key type, if supported
-    #[cfg(feature = "with-mbed-crypto")]
+    #[cfg(feature = "interface")]
     fn export_key_output_size_base(key_type: Type, bits: usize) -> Result<usize> {
         match unsafe { psa_crypto_sys::PSA_EXPORT_KEY_OUTPUT_SIZE(key_type.try_into()?, bits) } {
             0 => Err(Error::NotSupported),
@@ -372,7 +372,7 @@ impl Attributes {
     }
 
     /// Sufficient buffer size for a signature using the given key, if the key is supported
-    #[cfg(feature = "with-mbed-crypto")]
+    #[cfg(feature = "interface")]
     pub fn sign_output_size(self, alg: AsymmetricSignature) -> Result<usize> {
         self.compatible_with_alg(alg.into())?;
         Ok(unsafe {
@@ -381,7 +381,7 @@ impl Attributes {
     }
 
     /// Sufficient buffer size for an encrypted message using the given algorithm
-    #[cfg(feature = "with-mbed-crypto")]
+    #[cfg(feature = "interface")]
     pub fn asymmetric_encrypt_output_size(self, alg: AsymmetricEncryption) -> Result<usize> {
         self.compatible_with_alg(alg.into())?;
         Ok(unsafe {
@@ -394,7 +394,7 @@ impl Attributes {
     }
 
     /// Sufficient buffer size for a decrypted message using the given algorithm
-    #[cfg(feature = "with-mbed-crypto")]
+    #[cfg(feature = "interface")]
     pub fn asymmetric_decrypt_output_size(self, alg: AsymmetricEncryption) -> Result<usize> {
         self.compatible_with_alg(alg.into())?;
         Ok(unsafe {
@@ -509,7 +509,7 @@ impl Type {
     }
 
     /// If key is public or key pair, returns the corresponding public key type.
-    #[cfg(feature = "with-mbed-crypto")]
+    #[cfg(feature = "interface")]
     pub fn key_type_public_key_of_key_pair(self) -> Result<Type> {
         match self {
             Type::RsaKeyPair
@@ -641,14 +641,13 @@ pub struct UsageFlags {
 }
 
 /// Definition of the key ID.
-#[cfg(feature = "with-mbed-crypto")]
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub struct Id {
     pub(crate) id: psa_key_id_t,
     pub(crate) handle: Option<psa_crypto_sys::psa_key_handle_t>,
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "operations")]
 impl Id {
     pub(crate) fn handle(self) -> Result<psa_crypto_sys::psa_key_handle_t> {
         Ok(match self.handle {
@@ -672,7 +671,6 @@ impl Id {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
 impl Id {
     /// Create a new Id from a persistent key ID
     pub fn from_persistent_key_id(id: u32) -> Self {
@@ -680,7 +678,7 @@ impl Id {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<Attributes> for psa_crypto_sys::psa_key_attributes_t {
     type Error = Error;
     fn try_from(attributes: Attributes) -> Result<Self> {
@@ -705,7 +703,7 @@ impl TryFrom<Attributes> for psa_crypto_sys::psa_key_attributes_t {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<psa_crypto_sys::psa_key_attributes_t> for Attributes {
     type Error = Error;
     fn try_from(attributes: psa_crypto_sys::psa_key_attributes_t) -> Result<Self> {
@@ -723,7 +721,7 @@ impl TryFrom<psa_crypto_sys::psa_key_attributes_t> for Attributes {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl From<Lifetime> for psa_crypto_sys::psa_key_lifetime_t {
     fn from(lifetime: Lifetime) -> Self {
         match lifetime {
@@ -734,7 +732,7 @@ impl From<Lifetime> for psa_crypto_sys::psa_key_lifetime_t {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl From<psa_crypto_sys::psa_key_lifetime_t> for Lifetime {
     fn from(lifetime: psa_crypto_sys::psa_key_lifetime_t) -> Self {
         match lifetime {
@@ -745,7 +743,7 @@ impl From<psa_crypto_sys::psa_key_lifetime_t> for Lifetime {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl From<UsageFlags> for psa_crypto_sys::psa_key_usage_t {
     fn from(flags: UsageFlags) -> Self {
         let mut usage_flags = 0;
@@ -771,7 +769,7 @@ impl From<UsageFlags> for psa_crypto_sys::psa_key_usage_t {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl From<psa_crypto_sys::psa_key_usage_t> for UsageFlags {
     fn from(flags: psa_crypto_sys::psa_key_usage_t) -> Self {
         UsageFlags {
@@ -789,7 +787,7 @@ impl From<psa_crypto_sys::psa_key_usage_t> for UsageFlags {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<EccFamily> for psa_crypto_sys::psa_ecc_curve_t {
     type Error = Error;
     fn try_from(family: EccFamily) -> Result<Self> {
@@ -807,7 +805,7 @@ impl TryFrom<EccFamily> for psa_crypto_sys::psa_ecc_curve_t {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<psa_crypto_sys::psa_ecc_curve_t> for EccFamily {
     type Error = Error;
     fn try_from(family: psa_crypto_sys::psa_ecc_curve_t) -> Result<Self> {
@@ -828,7 +826,7 @@ impl TryFrom<psa_crypto_sys::psa_ecc_curve_t> for EccFamily {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl From<DhFamily> for psa_crypto_sys::psa_dh_group_t {
     fn from(group: DhFamily) -> Self {
         match group {
@@ -837,7 +835,7 @@ impl From<DhFamily> for psa_crypto_sys::psa_dh_group_t {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<psa_crypto_sys::psa_dh_group_t> for DhFamily {
     type Error = Error;
     fn try_from(group: psa_crypto_sys::psa_dh_group_t) -> Result<Self> {
@@ -851,7 +849,7 @@ impl TryFrom<psa_crypto_sys::psa_dh_group_t> for DhFamily {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<Type> for psa_crypto_sys::psa_key_type_t {
     type Error = Error;
     fn try_from(key_type: Type) -> Result<Self> {
@@ -882,7 +880,7 @@ impl TryFrom<Type> for psa_crypto_sys::psa_key_type_t {
     }
 }
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "interface")]
 impl TryFrom<psa_crypto_sys::psa_key_type_t> for Type {
     type Error = Error;
     fn try_from(key_type: psa_crypto_sys::psa_key_type_t) -> Result<Self> {

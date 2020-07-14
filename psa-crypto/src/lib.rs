@@ -41,19 +41,18 @@
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "operations")]
 pub mod operations;
 pub mod types;
 
-#[cfg(feature = "with-mbed-crypto")]
 pub use psa_crypto_sys as ffi;
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "operations")]
 use core::sync::atomic::{AtomicBool, Ordering};
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "operations")]
 use types::status::{Error, Result, Status};
 
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "operations")]
 static INITIALISED: AtomicBool = AtomicBool::new(false);
 
 /// Initialize the PSA Crypto library
@@ -71,7 +70,7 @@ static INITIALISED: AtomicBool = AtomicBool::new(false);
 /// // Can be called twice
 /// init().unwrap();
 /// ```
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "operations")]
 pub fn init() -> Result<()> {
     // It is not a problem to call psa_crypto_init more than once.
     Status::from(unsafe { psa_crypto_sys::psa_crypto_init() }).to_result()?;
@@ -89,7 +88,7 @@ pub fn init() -> Result<()> {
 /// init().unwrap();
 /// initialized().unwrap();
 /// ```
-#[cfg(feature = "with-mbed-crypto")]
+#[cfg(feature = "operations")]
 pub fn initialized() -> Result<()> {
     if INITIALISED.load(Ordering::Relaxed) {
         Ok(())

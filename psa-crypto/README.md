@@ -11,10 +11,13 @@ This is the higher-level, more Rust-friendly interface.
 
 ## Mbed Crypto backing
 
-The `psa-crypto` comes by default with Mbed Crypto backing for
-the interface exposed. If the functionality of the library is
-not important/relevant, the interface type system (that offers
-functionality for identifying cryptographic algorithms and
-modelling key metadata) can be used independently by disabling
-the default features of the crate. The feature adding the Mbed
-Crypto support is `with-mbed-crypto`.
+The features of this crate can modify what is compiled in from the PSA Crypto
+specification:
+* `operations`: everything is included. The `psa-crypto-sys` crate statically
+  links by default Mbed Crypto. See the documentation of [that
+crate](https://github.com/parallaxsecond/rust-psa-crypto/tree/master/psa-crypto-sys)
+to see how to modify the linking options. This feature is activated by default.
+* `interface`: only the abstraction over the PSA Crypto interface (types,
+  helper methods) are included. The `MBEDTLS_INCLUDE_DIR` environment variable
+is needed to produce Rust shims around PSA Crypto macros.
+* without any of the above: only the specification-defined parts are included.
