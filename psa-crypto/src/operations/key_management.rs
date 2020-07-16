@@ -7,6 +7,8 @@ use crate::initialized;
 use crate::types::key::{Attributes, Id, Lifetime};
 use crate::types::status::{Result, Status};
 use core::convert::TryFrom;
+#[cfg(feature = "interface")]
+use log::error;
 use psa_crypto_sys::{psa_key_handle_t, psa_key_id_t};
 
 /// Generate a key or a key pair
@@ -25,23 +27,23 @@ use psa_crypto_sys::{psa_key_handle_t, psa_key_id_t};
 /// use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
 /// use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
 ///
-/// let mut attributes = Attributes {
-///     key_type: Type::RsaKeyPair,
-///     bits: 1024,
-///     lifetime: Lifetime::Volatile,
-///     policy: Policy {
-///         usage_flags: UsageFlags {
-///             sign_hash: true,
-///             sign_message: true,
-///             verify_hash: true,
-///             verify_message: true,
-///             ..Default::default()
-///         },
-///         permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
-///             hash_alg: Hash::Sha256.into(),
-///         }.into(),
-///     },
-/// };
+/// # let mut attributes = Attributes {
+/// #     key_type: Type::RsaKeyPair,
+/// #     bits: 1024,
+/// #     lifetime: Lifetime::Volatile,
+/// #     policy: Policy {
+/// #         usage_flags: UsageFlags {
+/// #             sign_hash: true,
+/// #             sign_message: true,
+/// #             verify_hash: true,
+/// #             verify_message: true,
+/// #             ..Default::default()
+/// #         },
+/// #         permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
+/// #             hash_alg: Hash::Sha256.into(),
+/// #         }.into(),
+/// #     },
+/// # };
 ///
 /// psa_crypto::init().unwrap();
 /// let _my_key = key_management::generate(attributes, None).unwrap();
@@ -79,9 +81,9 @@ pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
 /// # Example
 ///
 /// ```
-/// # use psa_crypto::operations::key_management;
-/// # use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
-/// # use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
+/// use psa_crypto::operations::key_management;
+/// use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
+/// use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
 /// # let mut attributes = Attributes {
 /// #     key_type: Type::RsaKeyPair,
 /// #     bits: 1024,
@@ -136,23 +138,23 @@ pub unsafe fn destroy(key: Id) -> Result<()> {
 /// use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
 /// use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
 ///
-/// let mut attributes = Attributes {
-///     key_type: Type::RsaPublicKey,
-///     bits: 1024,
-///     lifetime: Lifetime::Volatile,
-///     policy: Policy {
-///         usage_flags: UsageFlags {
-///             sign_hash: true,
-///             sign_message: true,
-///             verify_hash: true,
-///             verify_message: true,
-///             ..Default::default()
-///         },
-///         permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
-///             hash_alg: Hash::Sha256.into(),
-///         }.into(),
-///     },
-/// };
+/// # let mut attributes = Attributes {
+/// #     key_type: Type::RsaPublicKey,
+/// #     bits: 1024,
+/// #     lifetime: Lifetime::Volatile,
+/// #     policy: Policy {
+/// #         usage_flags: UsageFlags {
+/// #             sign_hash: true,
+/// #             sign_message: true,
+/// #             verify_hash: true,
+/// #             verify_message: true,
+/// #             ..Default::default()
+/// #         },
+/// #         permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
+/// #             hash_alg: Hash::Sha256.into(),
+/// #         }.into(),
+/// #     },
+/// # };
 ///
 /// psa_crypto::init().unwrap();
 /// let _my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
@@ -187,9 +189,9 @@ pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id
 /// # Example
 ///
 /// ```
-/// # use psa_crypto::operations::key_management;
-/// # use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
-/// # use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
+/// use psa_crypto::operations::key_management;
+/// use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
+/// use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
 /// # let mut attributes = Attributes {
 /// #     key_type: Type::RsaKeyPair,
 /// #     bits: 1024,
@@ -236,15 +238,15 @@ pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
 
 /// Export a key pair in binary format
 ///
-/// The key is written in `data`. The functions returns the number of bytes written.
+/// The key is written in `data`. The function returns the number of bytes written.
 /// Please check the PSA Crypto API for a more complete description on the format of `data`.
 ///
 /// # Example
 ///
 /// ```
-/// # use psa_crypto::operations::key_management;
-/// # use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
-/// # use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
+/// use psa_crypto::operations::key_management;
+/// use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
+/// use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
 /// # let mut attributes = Attributes {
 /// #     key_type: Type::RsaKeyPair,
 /// #     bits: 1024,
@@ -267,10 +269,10 @@ pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
 /// let buffer_size = attributes.export_key_output_size().unwrap();
 /// let mut data = vec![0; buffer_size];
 /// let my_key = key_management::generate(attributes, None).unwrap();
-/// let size = key_management::export_key(my_key, &mut data).unwrap();
+/// let size = key_management::export(my_key, &mut data).unwrap();
 /// data.resize(size, 0);
 /// ```
-pub fn export_key(key: Id, data: &mut [u8]) -> Result<usize> {
+pub fn export(key: Id, data: &mut [u8]) -> Result<usize> {
     initialized()?;
     let handle = key.handle()?;
     let mut data_length = 0;
@@ -290,7 +292,7 @@ pub fn export_key(key: Id, data: &mut [u8]) -> Result<usize> {
 /// If key is not `Volatile` (`Persistent` or `Custom(u32)`), handle is closed.
 ///
 /// If a key is `Volatile`, `Id` returned contains the key `handle`. Otherwise, it does not.
-fn complete_new_key_operation(
+pub(crate) fn complete_new_key_operation(
     key_lifetime: Lifetime,
     id: psa_key_id_t,
     handle: psa_key_handle_t,
@@ -306,4 +308,101 @@ fn complete_new_key_operation(
             None
         },
     })
+}
+
+/// Copy key material from one location to another
+/// The function returns the key ID of the newly created key `Id` can be set to `None` when creating a volatile key.
+/// When generating a persistent key with a specific ID, the `Id` structure can be created after
+/// reset with the `from_persistent_key_id` constructor on `Id`.
+///
+/// The originating key must have the usage flag `copy` set.
+///
+/// # Example
+///
+/// ```
+/// use psa_crypto::operations::key_management;
+/// use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
+/// use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
+/// # let mut attributes = Attributes {
+/// #     key_type: Type::RsaKeyPair,
+/// #     bits: 1024,
+/// #     lifetime: Lifetime::Volatile,
+/// #     policy: Policy {
+/// #         usage_flags: UsageFlags {
+/// #             copy: true,
+/// #             ..Default::default()
+/// #         },
+/// #         permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
+/// #             hash_alg: Hash::Sha256.into(),
+/// #         }.into(),
+/// #     },
+/// # };
+/// psa_crypto::init().unwrap();
+/// let my_key = key_management::generate(attributes, None).unwrap();
+/// let my_key_copy = key_management::copy(my_key, attributes, None);
+/// ```
+pub fn copy(key_id_to_copy: Id, attributes: Attributes, id: Option<u32>) -> Result<Id> {
+    initialized()?;
+    let key_handle_to_copy = key_id_to_copy.handle()?;
+
+    let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
+    let id = if let Some(id) = id {
+        unsafe { psa_crypto_sys::psa_set_key_id(&mut key_attributes, id) };
+        id
+    } else {
+        0
+    };
+    let mut handle_for_new_key = 0;
+
+    let copy_res = Status::from(unsafe {
+        psa_crypto_sys::psa_copy_key(key_handle_to_copy, &key_attributes, &mut handle_for_new_key)
+    })
+    .to_result();
+    Attributes::reset(&mut key_attributes);
+    copy_res?;
+    complete_new_key_operation(attributes.lifetime, id, handle_for_new_key)
+}
+
+/// Remove non-essential copies of key material from memory
+///
+/// This function will remove these extra copies of the key material from memory.
+///
+/// This function is not required to remove key material from memory in any of the following situations:
+///     The key is currently in use in a cryptographic operation.
+///     The key is volatile.
+///
+/// # Example
+///
+/// ```
+/// use psa_crypto::operations::key_management;
+/// use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
+/// use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
+/// # let mut attributes = Attributes {
+/// #     key_type: Type::RsaKeyPair,
+/// #     bits: 1024,
+/// #     lifetime: Lifetime::Volatile,
+/// #     policy: Policy {
+/// #         usage_flags: UsageFlags {
+/// #             cache: true,
+/// #             ..Default::default()
+/// #         },
+/// #         permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
+/// #             hash_alg: Hash::Sha256.into(),
+/// #         }.into(),
+/// #     },
+/// # };
+/// psa_crypto::init().unwrap();
+/// //let my_key = key_management::generate(attributes, None).unwrap();
+/// //let size = key_management::purge(my_key).unwrap();
+/// ```
+pub fn purge(/*key_id: Id*/) /*-> Result<()>*/
+{
+    error!("This operation is not yet supported by Mbed Crypto. Once it is supported, uncomment and remove this notice");
+    // Also uncomment the example
+    /*initialized()?;
+    let handle = key_id.handle()?;
+    let purge_res = Status::from(psa_crypto_sys::psa_purge_key(handle)).to_result()
+    let close_handle_res = key_id.close_handle(handle);
+    purge_res?;
+    close_handle_res*/
 }

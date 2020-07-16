@@ -548,8 +548,8 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Algorithm {
             let hash: Hash = alg.try_into()?;
             Ok(hash.into())
         } else if psa_crypto_sys::PSA_ALG_IS_MAC(alg) {
-            error!("MAC algorithms are not supported.");
-            Err(Error::NotSupported)
+            let mac: Mac = alg.try_into()?;
+            Ok(mac.into())
         } else if psa_crypto_sys::PSA_ALG_IS_CIPHER(alg) {
             error!("Cipher algorithms are not supported.");
             Err(Error::NotSupported)
@@ -584,6 +584,10 @@ impl TryFrom<Algorithm> for psa_crypto_sys::psa_algorithm_t {
             Algorithm::Hash(hash) => Ok(hash.into()),
             Algorithm::AsymmetricSignature(asym_sign) => Ok(asym_sign.into()),
             Algorithm::AsymmetricEncryption(asym_encrypt) => Ok(asym_encrypt.into()),
+            Algorithm::Mac(mac) => Ok(mac.into()),
+            Algorithm::KeyAgreement(key_agreement) => Ok(key_agreement.into()),
+            Algorithm::KeyDerivation(key_derivation) => Ok(key_derivation.into()),
+            Algorithm::Aead(aead) => Ok(aead.into()),
             _ => {
                 error!("Algorithm not supported: {:?}.", alg);
                 Err(Error::NotSupported)
@@ -750,6 +754,211 @@ impl From<AsymmetricEncryption> for psa_crypto_sys::psa_algorithm_t {
             AsymmetricEncryption::RsaPkcs1v15Crypt => psa_crypto_sys::PSA_ALG_RSA_PKCS1V15_CRYPT,
             AsymmetricEncryption::RsaOaep { hash_alg } => unsafe {
                 psa_crypto_sys::PSA_ALG_RSA_OAEP(hash_alg.into())
+            },
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Mac {
+    type Error = Error;
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        if psa_crypto_sys::PSA_ALG_IS_MAC(alg) {
+            if unsafe { psa_crypto_sys::PSA_ALG_FULL_LENGTH_MAC(alg) } == alg {
+                Ok(Mac::FullLength(alg.try_into()?))
+            } else {
+                let mac_length = unsafe { psa_crypto_sys::PSA_MAC_TRUNCATED_LENGTH(alg) };
+                let mac_alg: FullLengthMac =
+                    unsafe { psa_crypto_sys::PSA_ALG_FULL_LENGTH_MAC(alg) }.try_into()?;
+                Ok(Mac::Truncated {
+                    mac_alg,
+                    mac_length,
+                })
+            }
+        } else {
+            error!("Can not find a valid MAC algorithm for {}.", alg);
+            Err(Error::InvalidArgument)
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for FullLengthMac {
+    type Error = Error;
+
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        if psa_crypto_sys::PSA_ALG_IS_HMAC(alg) {
+            Ok(FullLengthMac::Hmac {
+                hash_alg: psa_crypto_sys::PSA_ALG_HMAC_GET_HASH(alg).try_into()?,
+            })
+        } else if alg == psa_crypto_sys::PSA_ALG_CBC_MAC {
+            Ok(FullLengthMac::CbcMac)
+        } else if alg == psa_crypto_sys::PSA_ALG_CMAC {
+            Ok(FullLengthMac::Cmac)
+        } else {
+            error!("Can not find a valid MAC algorithm for {}.", alg);
+            Err(Error::InvalidArgument)
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl From<Mac> for psa_crypto_sys::psa_algorithm_t {
+    fn from(mac: Mac) -> Self {
+        match mac {
+            Mac::FullLength(full_length_mac) => full_length_mac.into(),
+            Mac::Truncated {
+                mac_alg: alg,
+                mac_length: length,
+                // The following call is NOT currently checked. If length is invalid, the return of this call is unspecified
+            } => unsafe { psa_crypto_sys::PSA_ALG_TRUNCATED_MAC(alg.into(), length) },
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl From<FullLengthMac> for Mac {
+    fn from(full_length_mac: FullLengthMac) -> Self {
+        Mac::FullLength(full_length_mac)
+    }
+}
+
+#[cfg(feature = "interface")]
+impl From<FullLengthMac> for psa_crypto_sys::psa_algorithm_t {
+    fn from(full_length_mac: FullLengthMac) -> Self {
+        match full_length_mac {
+            FullLengthMac::CbcMac => psa_crypto_sys::PSA_ALG_CBC_MAC,
+            FullLengthMac::Cmac => psa_crypto_sys::PSA_ALG_CMAC,
+            FullLengthMac::Hmac { hash_alg } => unsafe {
+                psa_crypto_sys::PSA_ALG_HMAC(hash_alg.into())
+            },
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Aead {
+    type Error = Error;
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        if let Ok(aead_with_default_length_tag) = AeadWithDefaultLengthTag::try_from(alg) {
+            Ok(Aead::AeadWithDefaultLengthTag(aead_with_default_length_tag))
+        } else {
+            // Must be shortened tag
+            let aead_alg = AeadWithDefaultLengthTag::try_from(unsafe {
+                psa_crypto_sys::PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(alg)
+            })?;
+            let tag_length = psa_crypto_sys::PSA_ALG_AEAD_TAG_TRUNCATED_LENGTH(alg);
+            Ok(Aead::AeadWithShortenedTag {
+                aead_alg,
+                tag_length,
+            })
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for AeadWithDefaultLengthTag {
+    type Error = Error;
+
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        if alg
+            == unsafe {
+                psa_crypto_sys::PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(psa_crypto_sys::PSA_ALG_CCM)
+            }
+        {
+            Ok(AeadWithDefaultLengthTag::Ccm)
+        } else if alg
+            == unsafe {
+                psa_crypto_sys::PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(psa_crypto_sys::PSA_ALG_GCM)
+            }
+        {
+            Ok(AeadWithDefaultLengthTag::Gcm)
+        } else if alg
+            == unsafe {
+                psa_crypto_sys::PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(
+                    psa_crypto_sys::PSA_ALG_CHACHA20_POLY1305,
+                )
+            }
+        {
+            Ok(AeadWithDefaultLengthTag::Chacha20Poly1305)
+        } else {
+            error!("Can not find a valid Aead algorithm for {}.", alg);
+            Err(Error::InvalidArgument)
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl From<Aead> for psa_crypto_sys::psa_algorithm_t {
+    fn from(aead: Aead) -> Self {
+        match aead {
+            Aead::AeadWithDefaultLengthTag(aead_with_default_length_mac) => {
+                aead_with_default_length_mac.into()
+            }
+            // The following call is NOT currently checked. If length is invalid, the return of this call is unspecified
+            Aead::AeadWithShortenedTag {
+                aead_alg,
+                tag_length,
+            } => unsafe {
+                psa_crypto_sys::PSA_ALG_AEAD_WITH_SHORTENED_TAG(aead_alg.into(), tag_length)
+            },
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl From<AeadWithDefaultLengthTag> for psa_crypto_sys::psa_algorithm_t {
+    fn from(aead_with_default_length_tag: AeadWithDefaultLengthTag) -> Self {
+        match aead_with_default_length_tag {
+            AeadWithDefaultLengthTag::Ccm => unsafe {
+                psa_crypto_sys::PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(psa_crypto_sys::PSA_ALG_CCM)
+            },
+            AeadWithDefaultLengthTag::Gcm => unsafe {
+                psa_crypto_sys::PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(psa_crypto_sys::PSA_ALG_GCM)
+            },
+            AeadWithDefaultLengthTag::Chacha20Poly1305 => unsafe {
+                psa_crypto_sys::PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(
+                    psa_crypto_sys::PSA_ALG_CHACHA20_POLY1305,
+                )
+            },
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl From<KeyAgreement> for psa_crypto_sys::psa_algorithm_t {
+    fn from(key_agreement: KeyAgreement) -> Self {
+        match key_agreement {
+            KeyAgreement::Raw(raw_key_agreement) => raw_key_agreement.into(),
+            KeyAgreement::WithKeyDerivation { ka_alg, kdf_alg } => unsafe {
+                psa_crypto_sys::PSA_ALG_KEY_AGREEMENT(ka_alg.into(), kdf_alg.into())
+            },
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl From<RawKeyAgreement> for psa_crypto_sys::psa_algorithm_t {
+    fn from(raw_key_agreement: RawKeyAgreement) -> Self {
+        match raw_key_agreement {
+            RawKeyAgreement::Ecdh => psa_crypto_sys::PSA_ALG_ECDH,
+            RawKeyAgreement::Ffdh => psa_crypto_sys::PSA_ALG_FFDH,
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl From<KeyDerivation> for psa_crypto_sys::psa_algorithm_t {
+    fn from(key_derivation: KeyDerivation) -> Self {
+        match key_derivation {
+            KeyDerivation::Hkdf { hash_alg, .. } => unsafe {
+                psa_crypto_sys::PSA_ALG_HKDF(hash_alg.into())
+            },
+            KeyDerivation::Tls12Prf { hash_alg, .. } => unsafe {
+                psa_crypto_sys::PSA_ALG_TLS12_PRF(hash_alg.into())
+            },
+            KeyDerivation::Tls12PskToMs { hash_alg, .. } => unsafe {
+                psa_crypto_sys::PSA_ALG_TLS12_PSK_TO_MS(hash_alg.into())
             },
         }
     }

@@ -158,7 +158,7 @@ mod test_tools {
         }
 
         pub fn export_key_pair(&mut self, key_id: Id, key_data: &mut [u8]) -> Result<usize> {
-            key_management::export_key(key_id, key_data)
+            key_management::export(key_id, key_data)
         }
     }
 
