@@ -149,6 +149,21 @@ shim_PSA_ALG_IS_KEY_AGREEMENT(psa_algorithm_t alg) {
 }
 
 int
+shim_PSA_ALG_IS_RAW_KEY_AGREEMENT (psa_algorithm_t alg) {
+    return PSA_ALG_IS_RAW_KEY_AGREEMENT(alg);
+}
+
+int
+shim_PSA_ALG_IS_FFDH(psa_algorithm_t alg) {
+    return PSA_ALG_IS_FFDH(alg);
+}
+
+int
+shim_PSA_ALG_IS_ECDH(psa_algorithm_t alg) {
+    return PSA_ALG_IS_ECDH(alg);
+}
+
+int
 shim_PSA_ALG_IS_KEY_DERIVATION(psa_algorithm_t alg) {
     return PSA_ALG_IS_KEY_DERIVATION(alg);
 }
@@ -216,6 +231,16 @@ shim_PSA_ALG_TLS12_PRF_GET_HASH(psa_algorithm_t tls12_prf_alg) {
 psa_algorithm_t
 shim_PSA_ALG_TLS12_PSK_TO_MS_GET_HASH(psa_algorithm_t tls12_psk_to_ms_alg) {
     return PSA_ALG_TLS12_PSK_TO_MS_GET_HASH(tls12_psk_to_ms_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_KEY_AGREEMENT_GET_BASE(psa_algorithm_t alg) {
+    return PSA_ALG_KEY_AGREEMENT_GET_BASE(alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_KEY_AGREEMENT_GET_KDF(psa_algorithm_t alg) {
+    return PSA_ALG_KEY_AGREEMENT_GET_KDF(alg);
 }
 
 psa_algorithm_t
