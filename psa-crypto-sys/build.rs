@@ -74,6 +74,7 @@ fn generate_mbed_crypto_bindings(mbed_include_dir: String) -> Result<()> {
         .clang_arg(format!("-I{}", mbed_include_dir))
         .rustfmt_bindings(true)
         .header("src/c/shim.h")
+        .blacklist_type("max_align_t")
         .generate_comments(false)
         .size_t_is_usize(true)
         .generate()
