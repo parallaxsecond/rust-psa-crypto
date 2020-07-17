@@ -30,6 +30,7 @@ This project uses the following third party crates:
 * cc (MIT and Apache-2.0)
 * log (MIT and Apache-2.0)
 * serde (MIT and Apache-2.0)
+* walkdir (MIT or UNLICENSE)
 
 ## Contributing
 

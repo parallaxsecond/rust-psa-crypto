@@ -33,6 +33,7 @@ use cmake::Config;
 use std::env;
 use std::io::{Error, ErrorKind, Result};
 use std::path::PathBuf;
+use walkdir::WalkDir;
 
 fn compile_mbed_crypto() -> Result<PathBuf> {
     let mbedtls_dir = String::from("./vendor");
@@ -54,6 +55,18 @@ fn compile_mbed_crypto() -> Result<PathBuf> {
             ErrorKind::Other,
             "config.py returned an error status",
         ));
+    }
+
+    // Rerun build if anything file under the vendor directory has changed.
+    for entry in WalkDir::new("vendor")
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+    {
+        if let Ok(metadata) = entry.metadata() {
+            if metadata.is_file() {
+                println!("cargo:rerun-if-changed={}", entry.path().display());
+            }
+        }
     }
 
     // Build the MbedTLS libraries
