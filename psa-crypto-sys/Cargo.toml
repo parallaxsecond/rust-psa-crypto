@@ -18,6 +18,7 @@ links = "mbedcrypto"
 bindgen = "0.54.0"
 cc = "1.0.54"
 cmake = "0.1.44"
+walkdir = "2"
 
 [features]
 default = ["operations"]
