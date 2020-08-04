@@ -6,7 +6,7 @@
 #![allow(deprecated)]
 #[cfg(feature = "operations")]
 use crate::initialized;
-use crate::types::algorithm::{Algorithm, Cipher};
+use crate::types::algorithm::{Algorithm, Cipher, KeyAgreement, RawKeyAgreement};
 #[cfg(feature = "interface")]
 use crate::types::algorithm::{AsymmetricEncryption, AsymmetricSignature, Mac};
 #[cfg(feature = "operations")]
@@ -259,15 +259,22 @@ impl Attributes {
                     false
                 }
             }
-            Type::EccKeyPair { .. } | Type::EccPublicKey { .. } => {
-                if let Algorithm::AsymmetricSignature(sign_alg) = alg {
-                    sign_alg.is_ecc_alg()
-                } else {
-                    false
-                }
-            }
+            Type::EccKeyPair { .. } | Type::EccPublicKey { .. } => match alg {
+                Algorithm::KeyAgreement(KeyAgreement::Raw(RawKeyAgreement::Ecdh))
+                | Algorithm::KeyAgreement(KeyAgreement::WithKeyDerivation {
+                    ka_alg: RawKeyAgreement::Ecdh,
+                    ..
+                }) => true,
+                Algorithm::AsymmetricSignature(sign_alg) => sign_alg.is_ecc_alg(),
+                _ => false,
+            },
             Type::DhKeyPair { .. } | Type::DhPublicKey { .. } => {
-                if let Algorithm::KeyAgreement(_) = alg {
+                if let Algorithm::KeyAgreement(KeyAgreement::Raw(RawKeyAgreement::Ffdh))
+                | Algorithm::KeyAgreement(KeyAgreement::WithKeyDerivation {
+                    ka_alg: RawKeyAgreement::Ffdh,
+                    ..
+                }) = alg
+                {
                     true
                 } else {
                     false
@@ -773,6 +780,9 @@ impl From<UsageFlags> for psa_crypto_sys::psa_key_usage_t {
         }
         if flags.derive {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_DERIVE;
+        }
+        if flags.copy {
+            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_COPY;
         }
         usage_flags
     }

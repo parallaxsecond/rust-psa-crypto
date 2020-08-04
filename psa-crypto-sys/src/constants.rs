@@ -88,6 +88,7 @@ pub const PSA_ALG_RSA_PKCS1V15_CRYPT: psa_algorithm_t = 302_120_960;
 pub const PSA_KEY_LIFETIME_VOLATILE: psa_key_lifetime_t = 0;
 pub const PSA_KEY_LIFETIME_PERSISTENT: psa_key_lifetime_t = 1;
 pub const PSA_KEY_USAGE_EXPORT: psa_key_usage_t = 1;
+pub const PSA_KEY_USAGE_COPY: psa_key_usage_t = 2;
 pub const PSA_KEY_USAGE_ENCRYPT: psa_key_usage_t = 256;
 pub const PSA_KEY_USAGE_DECRYPT: psa_key_usage_t = 512;
 pub const PSA_KEY_USAGE_SIGN: psa_key_usage_t = 1024;

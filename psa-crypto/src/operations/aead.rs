@@ -38,7 +38,7 @@ use crate::types::status::{Result, Status};
 /// };
 /// psa_crypto::init().unwrap();
 /// let my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
-/// let output_buffer_size = unsafe { psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg.into(), INPUT_DATA.len()) };
+/// let output_buffer_size = psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg.into(), INPUT_DATA.len());
 /// let mut output_buffer = vec![0; output_buffer_size];
 /// let length = aead::encrypt(my_key, alg, &NONCE, &ADDITIONAL_DATA, &INPUT_DATA, &mut output_buffer).unwrap();
 /// output_buffer.resize(length, 0);
