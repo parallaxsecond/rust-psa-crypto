@@ -8,7 +8,7 @@
 use crate::initialized;
 use crate::types::algorithm::{Algorithm, Cipher};
 #[cfg(feature = "interface")]
-use crate::types::algorithm::{AsymmetricEncryption, AsymmetricSignature};
+use crate::types::algorithm::{AsymmetricEncryption, AsymmetricSignature, Mac};
 #[cfg(feature = "operations")]
 use crate::types::status::Status;
 use crate::types::status::{Error, Result};
@@ -403,6 +403,15 @@ impl Attributes {
                 self.bits,
                 alg.into(),
             )
+        })
+    }
+
+    /// Sufficient buffer size for the MAC of the specified algorithm, if compatible
+    #[cfg(feature = "interface")]
+    pub fn mac_length(self, mac_alg: Mac) -> Result<usize> {
+        self.compatible_with_alg(mac_alg.into())?;
+        Ok(unsafe {
+            psa_crypto_sys::PSA_MAC_LENGTH(self.key_type.try_into()?, self.bits, mac_alg.into())
         })
     }
 }

@@ -49,6 +49,12 @@ shim_key_attributes_init(void)
     return psa_key_attributes_init();
 }
 
+psa_key_derivation_operation_t
+shim_key_derivation_operation_init(void)
+{
+    return psa_key_derivation_operation_init();
+}
+
 void
 shim_set_key_algorithm(psa_key_attributes_t *attributes,
                        psa_algorithm_t alg)
@@ -100,6 +106,16 @@ shim_PSA_ALG_IS_HASH(psa_algorithm_t alg)
 int
 shim_PSA_ALG_IS_MAC(psa_algorithm_t alg) {
     return PSA_ALG_IS_MAC(alg);
+}
+
+int
+shim_PSA_ALG_IS_HMAC(psa_algorithm_t alg) {
+    return PSA_ALG_IS_HMAC(alg);
+}
+
+int
+shim_PSA_ALG_IS_BLOCK_CIPHER_MAC (psa_algorithm_t alg) {
+    return PSA_ALG_IS_BLOCK_CIPHER_MAC (alg);
 }
 
 int
@@ -157,14 +173,49 @@ shim_PSA_ALG_IS_DETERMINISTIC_ECDSA(psa_algorithm_t alg) {
     return PSA_ALG_IS_DETERMINISTIC_ECDSA(alg);
 }
 
-psa_algorithm_t
-shim_PSA_ALG_SIGN_GET_HASH(psa_algorithm_t alg) {
-    return PSA_ALG_SIGN_GET_HASH(alg);
+int
+shim_PSA_ALG_IS_HKDF(psa_algorithm_t alg) {
+    return PSA_ALG_IS_HKDF(alg);
+}
+
+int
+shim_PSA_ALG_IS_TLS12_PRF(psa_algorithm_t alg) {
+    return PSA_ALG_IS_TLS12_PRF(alg);
+}
+
+int
+shim_PSA_ALG_IS_TLS12_PSK_TO_MS(psa_algorithm_t alg) {
+    return PSA_ALG_IS_TLS12_PSK_TO_MS(alg);
 }
 
 psa_algorithm_t
-shim_PSA_ALG_RSA_OAEP_GET_HASH(psa_algorithm_t alg) {
-    return PSA_ALG_RSA_OAEP_GET_HASH(alg);
+shim_PSA_ALG_SIGN_GET_HASH(psa_algorithm_t sign_alg) {
+    return PSA_ALG_SIGN_GET_HASH(sign_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_RSA_OAEP_GET_HASH(psa_algorithm_t rsa_oaep_alg) {
+    return PSA_ALG_RSA_OAEP_GET_HASH(rsa_oaep_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_HMAC_GET_HASH(psa_algorithm_t hmac_alg) {
+    return PSA_ALG_HMAC_GET_HASH(hmac_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_HKDF_GET_HASH(psa_algorithm_t hkdf_alg) {
+    return PSA_ALG_HKDF_GET_HASH(hkdf_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_TLS12_PRF_GET_HASH(psa_algorithm_t tls12_prf_alg) {
+    return PSA_ALG_TLS12_PRF_GET_HASH(tls12_prf_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_TLS12_PSK_TO_MS_GET_HASH(psa_algorithm_t tls12_psk_to_ms_alg) {
+    return PSA_ALG_TLS12_PSK_TO_MS_GET_HASH(tls12_psk_to_ms_alg);
 }
 
 psa_algorithm_t
@@ -185,6 +236,51 @@ shim_PSA_ALG_ECDSA(psa_algorithm_t hash_alg) {
 psa_algorithm_t
 shim_PSA_ALG_DETERMINISTIC_ECDSA(psa_algorithm_t hash_alg) {
 	return PSA_ALG_DETERMINISTIC_ECDSA(hash_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_HMAC(psa_algorithm_t hash_alg) {
+    return PSA_ALG_HMAC(hash_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_TRUNCATED_MAC(psa_algorithm_t mac_alg, size_t mac_length) {
+    return PSA_ALG_TRUNCATED_MAC(mac_alg, mac_length);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_FULL_LENGTH_MAC(psa_algorithm_t mac_alg) {
+    return PSA_ALG_FULL_LENGTH_MAC(mac_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(psa_algorithm_t aead_alg) {
+    return PSA_ALG_AEAD_WITH_DEFAULT_TAG_LENGTH(aead_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_AEAD_WITH_SHORTENED_TAG(psa_algorithm_t aead_alg, size_t tag_length) {
+    return PSA_ALG_AEAD_WITH_TAG_LENGTH(aead_alg, tag_length);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_HKDF(psa_algorithm_t hash_alg) {
+    return PSA_ALG_HKDF(hash_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_TLS12_PRF(psa_algorithm_t hash_alg) {
+    return PSA_ALG_TLS12_PRF(hash_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_TLS12_PSK_TO_MS(psa_algorithm_t hash_alg) {
+    return PSA_ALG_TLS12_PSK_TO_MS(hash_alg);
+}
+
+psa_algorithm_t
+shim_PSA_ALG_KEY_AGREEMENT(psa_algorithm_t raw_key_agreement, psa_algorithm_t key_derivation) {
+    return PSA_ALG_KEY_AGREEMENT(raw_key_agreement, key_derivation);
 }
 
 int
@@ -212,9 +308,9 @@ shim_PSA_KEY_TYPE_IS_DH_KEY_PAIR(psa_key_type_t key_type)
 }
 
 psa_algorithm_t
-shim_PSA_ALG_RSA_OAEP(psa_algorithm_t alg_type)
+shim_PSA_ALG_RSA_OAEP(psa_algorithm_t hash_alg)
 {
-	return PSA_ALG_RSA_OAEP(alg_type);
+	return PSA_ALG_RSA_OAEP(hash_alg);
 }
 
 psa_ecc_curve_t
@@ -281,4 +377,34 @@ size_t
 shim_PSA_KEY_EXPORT_MAX_SIZE(psa_key_type_t key_type, size_t key_bits)
 {
     return PSA_KEY_EXPORT_MAX_SIZE(key_type, key_bits);
+}
+
+size_t
+shim_PSA_HASH_LENGTH(psa_algorithm_t alg)
+{
+    return PSA_HASH_SIZE(alg);
+}
+
+size_t
+shim_PSA_MAC_LENGTH(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg)
+{
+    return PSA_MAC_FINAL_SIZE(key_type, key_bits, alg);
+}
+
+size_t
+shim_PSA_MAC_TRUNCATED_LENGTH(psa_algorithm_t alg)
+{
+    return PSA_MAC_TRUNCATED_LENGTH(alg);
+}
+
+size_t
+shim_PSA_AEAD_ENCRYPT_OUTPUT_SIZE(psa_algorithm_t aead_alg, size_t plaintext_bytes)
+{
+    return PSA_AEAD_ENCRYPT_OUTPUT_SIZE(aead_alg, plaintext_bytes);
+}
+
+size_t
+shim_PSA_AEAD_DECRYPT_OUTPUT_SIZE(psa_algorithm_t aead_alg, size_t ciphertext_bytes)
+{
+    return PSA_AEAD_DECRYPT_OUTPUT_SIZE(aead_alg, ciphertext_bytes);
 }
