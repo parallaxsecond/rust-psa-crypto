@@ -816,7 +816,6 @@ impl From<Mac> for psa_crypto_sys::psa_algorithm_t {
     }
 }
 
-#[cfg(feature = "interface")]
 impl From<FullLengthMac> for Mac {
     fn from(full_length_mac: FullLengthMac) -> Self {
         Mac::FullLength(full_length_mac)
@@ -925,6 +924,12 @@ impl From<AeadWithDefaultLengthTag> for psa_crypto_sys::psa_algorithm_t {
     }
 }
 
+impl From<AeadWithDefaultLengthTag> for Aead {
+    fn from(aead_with_default_tag_length: AeadWithDefaultLengthTag) -> Self {
+        Aead::AeadWithDefaultLengthTag(aead_with_default_tag_length)
+    }
+}
+
 #[cfg(feature = "interface")]
 impl From<KeyAgreement> for psa_crypto_sys::psa_algorithm_t {
     fn from(key_agreement: KeyAgreement) -> Self {
@@ -944,6 +949,12 @@ impl From<RawKeyAgreement> for psa_crypto_sys::psa_algorithm_t {
             RawKeyAgreement::Ecdh => psa_crypto_sys::PSA_ALG_ECDH,
             RawKeyAgreement::Ffdh => psa_crypto_sys::PSA_ALG_FFDH,
         }
+    }
+}
+
+impl From<RawKeyAgreement> for KeyAgreement {
+    fn from(raw_key_agreement: RawKeyAgreement) -> Self {
+        KeyAgreement::Raw(raw_key_agreement)
     }
 }
 
