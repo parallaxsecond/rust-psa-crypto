@@ -114,6 +114,18 @@ pub fn PSA_ALG_IS_KEY_AGREEMENT(alg: psa_algorithm_t) -> bool {
     unsafe { psa_crypto_binding::shim_PSA_ALG_IS_KEY_AGREEMENT(alg) == 1 }
 }
 
+pub fn PSA_ALG_IS_RAW_KEY_AGREEMENT(alg: psa_algorithm_t) -> bool {
+    unsafe { psa_crypto_binding::shim_PSA_ALG_IS_RAW_KEY_AGREEMENT(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_FFDH(alg: psa_algorithm_t) -> bool {
+    unsafe { psa_crypto_binding::shim_PSA_ALG_IS_FFDH(alg) == 1 }
+}
+
+pub fn PSA_ALG_IS_ECDH(alg: psa_algorithm_t) -> bool {
+    unsafe { psa_crypto_binding::shim_PSA_ALG_IS_FFDH(alg) == 1 }
+}
+
 pub fn PSA_ALG_IS_KEY_DERIVATION(alg: psa_algorithm_t) -> bool {
     unsafe { psa_crypto_binding::shim_PSA_ALG_IS_KEY_DERIVATION(alg) == 1 }
 }
@@ -168,6 +180,14 @@ pub fn PSA_ALG_TLS12_PRF_GET_HASH(tls12_prf_alg: psa_algorithm_t) -> psa_algorit
 
 pub fn PSA_ALG_TLS12_PSK_TO_MS_GET_HASH(tls12_psk_to_ms_alg: psa_algorithm_t) -> psa_algorithm_t {
     unsafe { psa_crypto_binding::shim_PSA_ALG_TLS12_PSK_TO_MS_GET_HASH(tls12_psk_to_ms_alg) }
+}
+
+pub unsafe fn PSA_ALG_KEY_AGREEMENT_GET_BASE(alg: psa_algorithm_t) -> psa_algorithm_t {
+    psa_crypto_binding::shim_PSA_ALG_KEY_AGREEMENT_GET_BASE(alg)
+}
+
+pub unsafe fn PSA_ALG_KEY_AGREEMENT_GET_KDF(alg: psa_algorithm_t) -> psa_algorithm_t {
+    psa_crypto_binding::shim_PSA_ALG_KEY_AGREEMENT_GET_KDF(alg)
 }
 
 pub fn PSA_ALG_RSA_PKCS1V15_SIGN(hash_alg: psa_algorithm_t) -> psa_algorithm_t {

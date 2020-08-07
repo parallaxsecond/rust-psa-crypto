@@ -563,11 +563,11 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Algorithm {
             let asym_encryption: AsymmetricEncryption = alg.try_into()?;
             Ok(asym_encryption.into())
         } else if psa_crypto_sys::PSA_ALG_IS_KEY_AGREEMENT(alg) {
-            error!("Key Agreement algorithms are not supported.");
-            Err(Error::NotSupported)
+            let key_agreement: KeyAgreement = alg.try_into()?;
+            Ok(key_agreement.into())
         } else if psa_crypto_sys::PSA_ALG_IS_KEY_DERIVATION(alg) {
-            error!("Key Derivation algorithms are not supported.");
-            Err(Error::NotSupported)
+            let key_derivation: KeyDerivation = alg.try_into()?;
+            Ok(key_derivation.into())
         } else {
             error!("Can not find a valid Algorithm for {}.", alg);
             Err(Error::NotSupported)
@@ -943,6 +943,46 @@ impl From<KeyAgreement> for psa_crypto_sys::psa_algorithm_t {
 }
 
 #[cfg(feature = "interface")]
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for KeyAgreement {
+    type Error = Error;
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        if psa_crypto_sys::PSA_ALG_IS_KEY_AGREEMENT(alg) {
+            if psa_crypto_sys::PSA_ALG_IS_RAW_KEY_AGREEMENT(alg) {
+                Ok(KeyAgreement::Raw(alg.try_into()?))
+            } else {
+                Ok(KeyAgreement::WithKeyDerivation {
+                    ka_alg: unsafe { psa_crypto_sys::PSA_ALG_KEY_AGREEMENT_GET_BASE(alg) }
+                        .try_into()?,
+                    kdf_alg: unsafe { psa_crypto_sys::PSA_ALG_KEY_AGREEMENT_GET_KDF(alg) }
+                        .try_into()?,
+                })
+            }
+        } else {
+            error!("Can not find a valid KeyAgreement algorithm for {}.", alg);
+            Err(Error::InvalidArgument)
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for RawKeyAgreement {
+    type Error = Error;
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        if psa_crypto_sys::PSA_ALG_IS_FFDH(alg) {
+            Ok(RawKeyAgreement::Ffdh)
+        } else if psa_crypto_sys::PSA_ALG_IS_ECDH(alg) {
+            Ok(RawKeyAgreement::Ecdh)
+        } else {
+            error!(
+                "Can not find a valid RawKeyAgreement algorithm for {}.",
+                alg
+            );
+            Err(Error::InvalidArgument)
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
 impl From<RawKeyAgreement> for psa_crypto_sys::psa_algorithm_t {
     fn from(raw_key_agreement: RawKeyAgreement) -> Self {
         match raw_key_agreement {
@@ -971,6 +1011,29 @@ impl From<KeyDerivation> for psa_crypto_sys::psa_algorithm_t {
             KeyDerivation::Tls12PskToMs { hash_alg, .. } => unsafe {
                 psa_crypto_sys::PSA_ALG_TLS12_PSK_TO_MS(hash_alg.into())
             },
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl TryFrom<psa_crypto_sys::psa_algorithm_t> for KeyDerivation {
+    type Error = Error;
+    fn try_from(alg: psa_crypto_sys::psa_algorithm_t) -> Result<Self> {
+        if psa_crypto_sys::PSA_ALG_IS_HKDF(alg) {
+            Ok(KeyDerivation::Hkdf {
+                hash_alg: psa_crypto_sys::PSA_ALG_HKDF_GET_HASH(alg).try_into()?,
+            })
+        } else if psa_crypto_sys::PSA_ALG_IS_TLS12_PRF(alg) {
+            Ok(KeyDerivation::Tls12Prf {
+                hash_alg: psa_crypto_sys::PSA_ALG_TLS12_PRF_GET_HASH(alg).try_into()?,
+            })
+        } else if psa_crypto_sys::PSA_ALG_IS_TLS12_PSK_TO_MS(alg) {
+            Ok(KeyDerivation::Tls12PskToMs {
+                hash_alg: psa_crypto_sys::PSA_ALG_TLS12_PSK_TO_MS_GET_HASH(alg).try_into()?,
+            })
+        } else {
+            error!("Can not find a valid KeyDerivation algorithm for {}.", alg);
+            Err(Error::InvalidArgument)
         }
     }
 }
