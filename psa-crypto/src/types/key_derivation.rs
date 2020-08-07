@@ -3,7 +3,7 @@
 
 //! # PSA Key Derivation Operation types
 
-use super::algorithm::{Hash, KeyDerivation};
+use super::algorithm::{Hash, KeyDerivation, RawKeyAgreement};
 use super::key::Id;
 #[cfg(feature = "interface")]
 use super::status::{Error, Result, Status};
@@ -32,7 +32,7 @@ pub enum Inputs<'a> {
         /// Secret, used in the "extract" step. This is typically a key of type `Derive` , or the shared secret
         /// resulting from a key agreement, using `Input::KeyAgreement`.
         /// Must be a key or key agreement input if used with `psa_key_derivation_output_key`.
-        secret: Input<'a>,
+        secret: InputSecret<'a>,
         /// Info, used in the "expand" step. Typically a direct input, can also be a key of type `RawData`.
         info: Input<'a>,
     },
@@ -45,7 +45,7 @@ pub enum Inputs<'a> {
         /// Secret, used in the "extract" step. This is typically a key of type `Derive` , or the shared secret
         /// resulting from a key agreement, using `Input::KeyAgreement`.
         /// Must be a key or key agreement input if used with `psa_key_derivation_output_key`.
-        secret: Input<'a>,
+        secret: InputSecret<'a>,
         /// Label. Typically a direct input, can also be a key of type `RawData`.
         label: Input<'a>,
     },
@@ -59,7 +59,7 @@ pub enum Inputs<'a> {
         /// resulting from a key agreement, using `Input::KeyAgreement`.
         /// Must be a key or key agreement input if used with `psa_key_derivation_output_key`.
         /// Must not be larger than `PSA_TLS12_PSK_TO_MS_PSK_MAX_SIZE`.
-        secret: Input<'a>,
+        secret: InputSecret<'a>,
         /// Label. Typically a direct input, can also be a key of type `RawData`.
         label: Input<'a>,
     },
@@ -133,7 +133,7 @@ impl Inputs<'_> {
                 if let Some(salt) = salt {
                     Inputs::apply_input_step_to_op(op, DerivationStep::Salt, salt)?;
                 }
-                Inputs::apply_input_step_to_op(op, DerivationStep::Secret, secret)?;
+                Inputs::apply_input_secret_step_to_op(op, secret)?;
                 Inputs::apply_input_step_to_op(op, DerivationStep::Info, info)
             }
             Inputs::Tls12Prf {
@@ -149,7 +149,7 @@ impl Inputs<'_> {
                 ..
             } => {
                 Inputs::apply_input_step_to_op(op, DerivationStep::Seed, seed)?;
-                Inputs::apply_input_step_to_op(op, DerivationStep::Secret, secret)?;
+                Inputs::apply_input_secret_step_to_op(op, secret)?;
                 Inputs::apply_input_step_to_op(op, DerivationStep::Label, label)
             }
         }
@@ -179,22 +179,37 @@ impl Inputs<'_> {
                 .to_result()?;
                 key_id.close_handle(handle)
             }
-            Input::KeyAgreement {
+        }
+    }
+
+    #[cfg(feature = "interface")]
+    fn apply_input_secret_step_to_op(
+        op: &mut psa_crypto_sys::psa_key_derivation_operation_t,
+        secret: &InputSecret,
+    ) -> Result<()> {
+        match secret {
+            InputSecret::Input(input) => {
+                Inputs::apply_input_step_to_op(op, DerivationStep::Secret, &input)
+            }
+            InputSecret::KeyAgreement {
                 private_key,
                 peer_key,
+                ..
             } => {
                 let handle = private_key.handle()?;
-                Status::from(unsafe {
+                let key_agreement_res = Status::from(unsafe {
                     psa_crypto_sys::psa_key_derivation_key_agreement(
                         op,
-                        step.into(),
+                        DerivationStep::Secret.into(),
                         handle,
-                        peer_key.as_ptr(),
+                        (**peer_key).as_ptr(),
                         peer_key.len(),
                     )
                 })
-                .to_result()?;
-                private_key.close_handle(handle)
+                .to_result();
+                let close_handle_res = private_key.close_handle(handle);
+                key_agreement_res?;
+                close_handle_res
             }
         }
     }
@@ -207,14 +222,29 @@ pub enum Input<'a> {
     Bytes(&'a [u8]),
     /// Key input for key derivation
     Key(Id),
+}
+
+/// Enumeration of supported input data for different input steps
+#[derive(Debug, Clone, Copy)]
+pub enum InputSecret<'a> {
+    /// Regular input of bytes or a key ID
+    Input(Input<'a>),
     /// Output of a key agreement
     KeyAgreement {
+        /// Key agreement algorithm to use
+        alg: RawKeyAgreement,
         /// Private key to use in key agreement
         private_key: Id,
-        /// Public key data of peer key to use. Must be in the same format that `psa_import_key()` accepts for the public key
+        /// Public key data of peer key to use. Must be in the same format that `key_management::import` accepts for the public key
         /// corresponding to the type of private key.
         peer_key: &'a [u8],
     },
+}
+
+impl<'a> From<Input<'a>> for InputSecret<'a> {
+    fn from(input: Input<'a>) -> Self {
+        InputSecret::<'a>::Input(input)
+    }
 }
 
 #[cfg(feature = "interface")]
@@ -224,11 +254,23 @@ impl TryFrom<Operation<'_>> for psa_crypto_sys::psa_key_derivation_operation_t {
     fn try_from(operation: Operation) -> Result<Self> {
         let mut op = psa_crypto_sys::psa_key_derivation_operation_init();
         let mut setup_deriv_op = || -> Result<()> {
+            let mut key_derivation_alg: psa_crypto_sys::psa_algorithm_t =
+                operation.inputs.key_derivation().into();
+
+            // If key agreement is used as the input for secret step, extract key agreement alg and combine it with key derivation alg
+            let secret = match operation.inputs {
+                Inputs::Hkdf { secret, .. }
+                | Inputs::Tls12Prf { secret, .. }
+                | Inputs::Tls12PskToMs { secret, .. } => secret,
+            };
+            if let InputSecret::KeyAgreement { alg, .. } = secret {
+                key_derivation_alg = unsafe {
+                    psa_crypto_sys::PSA_ALG_KEY_AGREEMENT(alg.into(), key_derivation_alg)
+                };
+            }
+
             Status::from(unsafe {
-                psa_crypto_sys::psa_key_derivation_setup(
-                    &mut op,
-                    operation.inputs.key_derivation().into(),
-                )
+                psa_crypto_sys::psa_key_derivation_setup(&mut op, key_derivation_alg)
             })
             .to_result()?;
             operation.inputs.apply_inputs_to_op(&mut op)
