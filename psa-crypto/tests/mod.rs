@@ -1,8 +1,14 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 #![allow(clippy::multiple_crate_versions)]
+
+use psa_crypto::operations::key_management;
 use psa_crypto::types::algorithm::{Algorithm, AsymmetricSignature, Hash};
-use psa_crypto::types::key::{Attributes, Lifetime, Policy, Type, UsageFlags};
+use psa_crypto::types::key::{Attributes, EccFamily, Lifetime, Policy, Type, UsageFlags};
+
+mod aead;
+mod hash;
+mod key_agreement;
 
 #[test]
 fn generate_integration_test() {
@@ -34,7 +40,7 @@ fn generate_integration_test() {
 
     // Ensure that a large number of keys can be generated
     for key_index in 1..101u32 {
-        test_client.generate(attributes, key_index);
+        test_client.generate(attributes, Some(key_index));
     }
 }
 
@@ -130,6 +136,74 @@ V/X2l32v6t3B57sw/8ce3LCheEdqLHlSOpQiaD7Qfw==";
     assert_eq!(decoded_pk, data);
 }
 
+#[test]
+fn copy_key_success() {
+    let attributes = Attributes {
+        key_type: Type::RsaKeyPair,
+        bits: 1024,
+        lifetime: Lifetime::Volatile,
+        policy: Policy {
+            usage_flags: UsageFlags {
+                copy: true,
+                export: true,
+                ..Default::default()
+            },
+            permitted_algorithms: Algorithm::None,
+        },
+    };
+    let mut test_client = test_tools::TestClient::new();
+
+    let key_id = test_client.generate(attributes, None);
+    let copied_key_id = test_client.copy_key(key_id, attributes, None);
+    let mut original_key_material = vec![0; attributes.export_key_output_size().unwrap()];
+    let mut copied_key_material = vec![0; attributes.export_key_output_size().unwrap()];
+    test_client
+        .export_key_pair(key_id, &mut original_key_material)
+        .unwrap();
+    test_client
+        .export_key_pair(copied_key_id, &mut copied_key_material)
+        .unwrap();
+    assert_eq!(original_key_material, copied_key_material);
+}
+
+#[test]
+fn copy_key_incompatible_copy_attrs() {
+    let attributes = Attributes {
+        key_type: Type::RsaKeyPair,
+        bits: 1024,
+        lifetime: Lifetime::Volatile,
+        policy: Policy {
+            usage_flags: UsageFlags {
+                copy: true,
+                export: true,
+                ..Default::default()
+            },
+            permitted_algorithms: Algorithm::None,
+        },
+    };
+
+    let incompatible_copy_attrs = Attributes {
+        key_type: Type::EccKeyPair {
+            curve_family: EccFamily::SecpR1,
+        },
+        bits: 448,
+        lifetime: Lifetime::Volatile,
+        policy: Policy {
+            usage_flags: UsageFlags {
+                copy: true,
+                export: true,
+                ..Default::default()
+            },
+            permitted_algorithms: Algorithm::None,
+        },
+    };
+
+    let mut test_client = test_tools::TestClient::new();
+
+    let key_id = test_client.generate(attributes, None);
+    let _copied_key_id = key_management::copy(key_id, incompatible_copy_attrs, None).unwrap_err();
+}
+
 mod test_tools {
     use psa_crypto::operations::key_management;
     use psa_crypto::types::key::{Attributes, Id};
@@ -145,8 +219,8 @@ mod test_tools {
             TestClient { keys: Vec::new() }
         }
 
-        pub fn generate(&mut self, attributes: Attributes, key_id: u32) -> Id {
-            let id = key_management::generate(attributes, Some(key_id)).unwrap();
+        pub fn generate(&mut self, attributes: Attributes, key_id: Option<u32>) -> Id {
+            let id = key_management::generate(attributes, key_id).unwrap();
             self.keys.push(id);
             id
         }
@@ -159,6 +233,17 @@ mod test_tools {
 
         pub fn export_key_pair(&mut self, key_id: Id, key_data: &mut [u8]) -> Result<usize> {
             key_management::export(key_id, key_data)
+        }
+
+        pub fn copy_key(
+            &mut self,
+            key_id: Id,
+            attributes: Attributes,
+            id_for_new_persistent_key: Option<u32>,
+        ) -> Id {
+            let id = key_management::copy(key_id, attributes, id_for_new_persistent_key).unwrap();
+            self.keys.push(id);
+            id
         }
     }
 
