@@ -142,6 +142,21 @@ impl Attributes {
         }
     }
 
+    /// Check if a key has permissions to be derived from
+    pub fn is_derivable(self) -> bool {
+        self.policy.usage_flags.derive
+    }
+
+    /// Check derive permission of a fallible way
+    pub fn can_derive_from(self) -> Result<()> {
+        if self.is_derivable() {
+            Ok(())
+        } else {
+            error!("Key attributes do not permit derivation.");
+            Err(Error::NotPermitted)
+        }
+    }
+
     /// Check if the alg given for a cryptographic operation is permitted to be used with the key
     pub fn is_alg_permitted(self, alg: Algorithm) -> bool {
         match self.policy.permitted_algorithms {
@@ -992,6 +1007,10 @@ mod tests {
         assert!(attributes.is_exportable());
         assert!(attributes.is_hash_signable());
         assert!(attributes.is_hash_verifiable());
+
+        assert!(!attributes.is_derivable());
+        attributes.policy.usage_flags.derive = true;
+        assert!(attributes.is_derivable())
     }
 
     #[test]
