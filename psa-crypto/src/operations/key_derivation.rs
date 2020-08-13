@@ -19,7 +19,7 @@ use core::convert::{TryFrom, TryInto};
 /// use psa_crypto::operations::{key_derivation, key_management};
 /// use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
 /// use psa_crypto::types::algorithm::{Hash, KeyDerivation};
-/// use psa_crypto::types::key_derivation::{Operation, Inputs, Input};
+/// use psa_crypto::types::key_derivation::{Operation, Inputs, Input, InputSecret};
 ///
 /// # const KEY_DATA: [u8; 23] = [0; 23];
 /// # let mut attributes = Attributes {
@@ -59,7 +59,7 @@ use core::convert::{TryFrom, TryInto};
 ///     inputs: Inputs::Hkdf {
 ///         hash_alg: Hash::Sha256,
 ///         salt: None,
-///         secret: Input::Key(my_key),
+///         secret: InputSecret::Input(Input::Key(my_key)),
 ///         info: Input::Bytes(&info),
 /// },
 ///     capacity: None,
