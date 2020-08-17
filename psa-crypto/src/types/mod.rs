@@ -6,4 +6,6 @@
 pub mod algorithm;
 pub mod key;
 pub mod key_derivation;
+#[cfg(feature = "key-material-interface")]
+pub mod key_material;
 pub mod status;
