@@ -6,9 +6,9 @@
 #![allow(deprecated)]
 #[cfg(feature = "operations")]
 use crate::initialized;
-use crate::types::algorithm::{Algorithm, Cipher, KeyAgreement, RawKeyAgreement};
 #[cfg(feature = "interface")]
-use crate::types::algorithm::{AsymmetricEncryption, AsymmetricSignature, Mac};
+use crate::types::algorithm::{Aead, AsymmetricEncryption, AsymmetricSignature, Mac};
+use crate::types::algorithm::{Algorithm, Cipher, KeyAgreement, RawKeyAgreement};
 #[cfg(feature = "operations")]
 use crate::types::status::Status;
 use crate::types::status::{Error, Result};
@@ -402,7 +402,7 @@ impl Attributes {
         })
     }
 
-    /// Sufficient buffer size for an encrypted message using the given algorithm
+    /// Sufficient buffer size for an encrypted message using the given asymmetric encryption algorithm
     #[cfg(feature = "interface")]
     pub fn asymmetric_encrypt_output_size(self, alg: AsymmetricEncryption) -> Result<usize> {
         self.compatible_with_alg(alg.into())?;
@@ -415,7 +415,7 @@ impl Attributes {
         })
     }
 
-    /// Sufficient buffer size for a decrypted message using the given algorithm
+    /// Sufficient buffer size for a decrypted message using the given asymmetric encryption algorithm
     #[cfg(feature = "interface")]
     pub fn asymmetric_decrypt_output_size(self, alg: AsymmetricEncryption) -> Result<usize> {
         self.compatible_with_alg(alg.into())?;
@@ -434,6 +434,47 @@ impl Attributes {
         self.compatible_with_alg(mac_alg.into())?;
         Ok(unsafe {
             psa_crypto_sys::PSA_MAC_LENGTH(self.key_type.try_into()?, self.bits, mac_alg.into())
+        })
+    }
+
+    /// Sufficient buffer size for an encrypted message using the given aead algorithm
+    #[cfg(feature = "interface")]
+    pub fn aead_encrypt_output_size(self, alg: Aead, plaintext_len: usize) -> Result<usize> {
+        self.compatible_with_alg(alg.into())?;
+        Ok(unsafe {
+            psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(
+                /*self.key_type.try_into() PSA API specifies including this parameter*/
+                alg.into(),
+                plaintext_len,
+            )
+        })
+    }
+
+    /// Sufficient buffer size for an encrypted message using the given aead algorithm
+    #[cfg(feature = "interface")]
+    pub fn aead_decrypt_output_size(self, alg: Aead, ciphertext_len: usize) -> Result<usize> {
+        self.compatible_with_alg(alg.into())?;
+        Ok(unsafe {
+            psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(
+                /*self.key_type.try_into() PSA API specifies including this parameter*/
+                alg.into(),
+                ciphertext_len,
+            )
+        })
+    }
+
+    /// Sufficient buffer size for the resulting shared secret from a raw key agreement
+    #[cfg(feature = "interface")]
+    pub fn raw_key_agreement_output_size(self, alg: RawKeyAgreement) -> Result<usize> {
+        if alg == RawKeyAgreement::Ffdh {
+            return Err(Error::NotSupported);
+        }
+        self.compatible_with_alg(KeyAgreement::Raw(alg).into())?;
+        Ok(unsafe {
+            psa_crypto_sys::PSA_RAW_ECDH_KEY_AGREEMENT_OUTPUT_SIZE(
+                self.key_type.try_into()?,
+                self.bits,
+            )
         })
     }
 }

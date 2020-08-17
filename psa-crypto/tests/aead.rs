@@ -41,7 +41,7 @@ fn aead_encrypt_aes_ccm() {
     psa_crypto::init().unwrap();
     let my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
     let output_buffer_size =
-        psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg.into(), DECRYPTED_DATA.len());
+        unsafe { psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg.into(), DECRYPTED_DATA.len()) };
     let mut output_buffer = vec![0; output_buffer_size];
     let length = aead::encrypt(
         my_key,
@@ -73,7 +73,7 @@ fn aead_encrypt_aes_ccm_no_encrypt_usage_flag() {
     psa_crypto::init().unwrap();
     let my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
     let output_buffer_size =
-        psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg.into(), DECRYPTED_DATA.len());
+        unsafe { psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg.into(), DECRYPTED_DATA.len()) };
     let mut output_buffer = vec![0; output_buffer_size];
     let result = aead::encrypt(
         my_key,
@@ -104,7 +104,7 @@ fn aead_decrypt_aes_ccm() {
     psa_crypto::init().unwrap();
     let my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
     let output_buffer_size =
-        psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg.into(), ENCRYPTED_DATA.len());
+        unsafe { psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg.into(), ENCRYPTED_DATA.len()) };
     let mut output_buffer = vec![0; output_buffer_size];
     let length = aead::decrypt(
         my_key,
@@ -136,7 +136,7 @@ fn aead_decrypt_aes_ccm_no_decrypt_usage_flag() {
     psa_crypto::init().unwrap();
     let my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
     let output_buffer_size =
-        psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg.into(), ENCRYPTED_DATA.len());
+        unsafe { psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg.into(), ENCRYPTED_DATA.len()) };
     let mut output_buffer = vec![0; output_buffer_size];
     let result = aead::decrypt(
         my_key,
@@ -170,8 +170,9 @@ fn aead_decrypt_aes_ccm_invalid_signature() {
     };
     psa_crypto::init().unwrap();
     let my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
-    let output_buffer_size =
-        psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg.into(), RANDOM_INPUT_DATA.len());
+    let output_buffer_size = unsafe {
+        psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg.into(), RANDOM_INPUT_DATA.len())
+    };
     let mut output_buffer = vec![0; output_buffer_size];
     let result = aead::decrypt(
         my_key,
