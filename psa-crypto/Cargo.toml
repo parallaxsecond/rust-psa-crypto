@@ -19,6 +19,7 @@ log = "0.4.8"
 serde = { version = "1.0.110", features = ["derive"] }
 zeroize = { version = "1.1.0", features = ["zeroize_derive"] }
 picky-asn1 = { version = "0.2.1", optional = true }
+picky-asn1-der = { version = "0.2.1", optional = true }
 
 [dev-dependencies]
 rsa = "0.3.0"
@@ -30,4 +31,4 @@ default = ["operations", "no-std"]
 operations = ["psa-crypto-sys/operations", "interface"]
 interface = ["psa-crypto-sys/interface"]
 no-std = []
-key-material-interface = ["picky-asn1"]
+key-material-interface = ["picky-asn1", "picky-asn1-der"]
