@@ -26,7 +26,7 @@ use crate::types::status::{Result, Status};
 /// let alg = RawKeyAgreement::Ecdh;
 /// # let attributes = Attributes {
 /// #     key_type: Type::EccKeyPair {curve_family: EccFamily::SecpR1 },
-/// #     bits: 0,
+/// #     bits: 256,
 /// #     lifetime: Lifetime::Volatile,
 /// #     policy: Policy {
 /// #         usage_flags: UsageFlags {
@@ -39,7 +39,7 @@ use crate::types::status::{Result, Status};
 ///
 /// psa_crypto::init().unwrap();
 /// let my_key = key_management::import(attributes, None, &OUR_KEY_DATA).unwrap();
-/// let mut output = vec![0; 1024];
+/// let mut output = vec![0; attributes.raw_key_agreement_output_size(alg).unwrap()];
 /// let size = key_agreement::raw_key_agreement(alg, my_key, &PEER_PUBLIC_KEY, &mut output).unwrap();
 /// output.resize(size, 0);
 /// ```

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #![allow(non_snake_case)]
 /// Additional functionality required that PSA Crypto does not provide
-use crate::types::psa_algorithm_t;
+use crate::types::{psa_algorithm_t, psa_key_type_t};
 
 /// Retrieves the tag length from an aead_alg.
 /// Note: `aead_alg` is an AEAD algorithm, such that `PSA_ALG_IS_AEAD(aead_alg)` is `true`.
@@ -13,6 +13,27 @@ pub fn PSA_ALG_AEAD_TAG_TRUNCATED_LENGTH(aead_alg: psa_algorithm_t) -> usize {
     let pre_mask_tag_length = aead_alg >> PSA_V1_0_0_TAG_LENGTH_START_BIT;
 
     (pre_mask_tag_length & TAG_LENGTH_MASK) as usize
+}
+
+/// Retrieves the output size of an ECDH raw key agreement operation shared secret.
+/// Caller must ensure key type is compatible.
+/// Returns 0 if key size is too large.
+/// This does not match any PSA macro, it will be replaces by PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE once
+/// mbedTLS adds support for it.
+pub unsafe fn PSA_RAW_ECDH_KEY_AGREEMENT_OUTPUT_SIZE(
+    _key_type: psa_key_type_t,
+    key_bits: usize,
+) -> usize {
+    /*
+    The size of the shared secret is always `ceiling(m/8)` bytes long where `m` is the bit size associated with the curve,
+    i.e. the bit size of the order of the curve's coordinate field. When m is not a multiple of 8, the byte containing the most
+    significant bit of the shared secret is padded with zero bits.
+    */
+    if let Some(numerator) = key_bits.checked_add(7) {
+        numerator / 8
+    } else {
+        0
+    }
 }
 
 #[test]

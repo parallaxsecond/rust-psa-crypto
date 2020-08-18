@@ -344,10 +344,10 @@ pub unsafe fn PSA_MAC_TRUNCATED_LENGTH(alg: psa_algorithm_t) -> usize {
     psa_crypto_binding::shim_PSA_MAC_TRUNCATED_LENGTH(alg)
 }
 
-pub fn PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg: psa_algorithm_t, plaintext_bytes: usize) -> usize {
-    unsafe { psa_crypto_binding::shim_PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg, plaintext_bytes) }
+pub unsafe fn PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg: psa_algorithm_t, plaintext_bytes: usize) -> usize {
+    psa_crypto_binding::shim_PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg, plaintext_bytes)
 }
 
-pub fn PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg: psa_algorithm_t, ciphertext_bytes: usize) -> usize {
-    unsafe { psa_crypto_binding::shim_PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg, ciphertext_bytes) }
+pub unsafe fn PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg: psa_algorithm_t, ciphertext_bytes: usize) -> usize {
+    psa_crypto_binding::shim_PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg, ciphertext_bytes)
 }
