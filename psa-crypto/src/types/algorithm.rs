@@ -554,8 +554,8 @@ impl TryFrom<psa_crypto_sys::psa_algorithm_t> for Algorithm {
             error!("Cipher algorithms are not supported.");
             Err(Error::NotSupported)
         } else if psa_crypto_sys::PSA_ALG_IS_AEAD(alg) {
-            error!("AEAD algorithms are not supported.");
-            Err(Error::NotSupported)
+            let aead: Aead = alg.try_into()?;
+            Ok(aead.into())
         } else if psa_crypto_sys::PSA_ALG_IS_SIGN(alg) {
             let asym_sign: AsymmetricSignature = alg.try_into()?;
             Ok(asym_sign.into())
