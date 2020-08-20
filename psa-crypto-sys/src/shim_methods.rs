@@ -123,7 +123,7 @@ pub fn PSA_ALG_IS_FFDH(alg: psa_algorithm_t) -> bool {
 }
 
 pub fn PSA_ALG_IS_ECDH(alg: psa_algorithm_t) -> bool {
-    unsafe { psa_crypto_binding::shim_PSA_ALG_IS_FFDH(alg) == 1 }
+    unsafe { psa_crypto_binding::shim_PSA_ALG_IS_ECDH(alg) == 1 }
 }
 
 pub fn PSA_ALG_IS_KEY_DERIVATION(alg: psa_algorithm_t) -> bool {
@@ -342,6 +342,20 @@ pub unsafe fn PSA_MAC_LENGTH(
 pub unsafe fn PSA_MAC_TRUNCATED_LENGTH(alg: psa_algorithm_t) -> usize {
     // No longer in PSA spec but required to convert form psa_algorithm_to to algorithm/Mac
     psa_crypto_binding::shim_PSA_MAC_TRUNCATED_LENGTH(alg)
+}
+
+pub fn PSA_AEAD_TAG_LENGTH(
+    /*key_type: psa_key_type_t,
+    key_bits: usize,
+    Spec states these are requried
+     */
+    alg: psa_algorithm_t,
+) -> usize {
+    unsafe {
+        psa_crypto_binding::shim_PSA_AEAD_TAG_LENGTH(
+            /*key_type, key_bits, Spec states these are required */ alg,
+        )
+    }
 }
 
 pub unsafe fn PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg: psa_algorithm_t, plaintext_bytes: usize) -> usize {

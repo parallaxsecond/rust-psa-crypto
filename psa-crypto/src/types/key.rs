@@ -463,6 +463,16 @@ impl Attributes {
         })
     }
 
+    /// The length of a tag for an AEAD algorithm
+    #[cfg(feature = "interface")]
+    pub fn aead_tag_length(self, alg: Aead) -> Result<usize> {
+        self.compatible_with_alg(alg.into())?;
+        Ok(psa_crypto_sys::PSA_AEAD_TAG_LENGTH(
+            /*self.key_type.try_into()?, self.bits, Spec states these are requried */
+            alg.into(),
+        ))
+    }
+
     /// Sufficient buffer size for the resulting shared secret from a raw key agreement
     #[cfg(feature = "interface")]
     pub fn raw_key_agreement_output_size(self, alg: RawKeyAgreement) -> Result<usize> {

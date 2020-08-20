@@ -55,7 +55,6 @@ pub fn encrypt(
 
     let key_handle = key_id.handle()?;
     let mut ciphertext_size = 0;
-
     let encrypt_res = Status::from(unsafe {
         psa_crypto_sys::psa_aead_encrypt(
             key_handle,

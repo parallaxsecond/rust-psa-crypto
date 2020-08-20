@@ -423,6 +423,12 @@ shim_PSA_MAC_TRUNCATED_LENGTH(psa_algorithm_t alg)
 }
 
 size_t
+shim_PSA_AEAD_TAG_LENGTH(/*psa_key_type_t key_type, size_t key_bits, Spec states these are required */psa_algorithm_t alg)
+{
+    return PSA_AEAD_TAG_LENGTH(/*key_type, key_bits, Spec states these are required*/ alg);
+}
+
+size_t
 shim_PSA_AEAD_ENCRYPT_OUTPUT_SIZE(psa_algorithm_t aead_alg, size_t plaintext_bytes)
 {
     return PSA_AEAD_ENCRYPT_OUTPUT_SIZE(aead_alg, plaintext_bytes);
