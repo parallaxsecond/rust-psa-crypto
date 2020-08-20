@@ -1,6 +1,6 @@
 [package]
 name = "psa-crypto"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Edmund Grimley Evans <edmund.grimley-evans@arm.com>",
            "Paul Howard <paul.howard@arm.com>",
            "Ionut Mihalcea <ionut.mihalcea@arm.com>",
@@ -14,7 +14,7 @@ license = "Apache-2.0"
 repository = "https://github.com/parallaxsecond/rust-psa-crypto"
 
 [dependencies]
-psa-crypto-sys = { path = "../psa-crypto-sys", version = "0.4.0", default-features = false }
+psa-crypto-sys = { path = "../psa-crypto-sys", version = "0.5.0", default-features = false }
 log = "0.4.8"
 serde = { version = "1.0.110", features = ["derive"] }
 zeroize = { version = "1.1.0", features = ["zeroize_derive"] }
