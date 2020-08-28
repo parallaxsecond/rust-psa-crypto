@@ -7,7 +7,13 @@ jobs:
     name: All tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+      - name: Install latest Rust
+        uses: actions-rs/toolchain@v1
+          with:
+            profile: minimal
+            override: true
+            toolchain: stable
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
