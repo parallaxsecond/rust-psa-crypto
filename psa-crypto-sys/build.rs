@@ -138,6 +138,13 @@ fn main() -> Result<()> {
         let statically;
         let include;
 
+        if env::var("MBEDTLS_LIB_DIR").is_err() ^ env::var("MBEDTLS_INCLUDE_DIR").is_err() {
+            return Err(Error::new(
+                ErrorKind::Other,
+                "both environment variables MBEDTLS_LIB_DIR and MBEDTLS_INCLUDE_DIR need to be set for operations feature",
+            ));
+        }
+
         if let (Ok(lib_dir), Ok(include_dir)) =
             (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))
         {
