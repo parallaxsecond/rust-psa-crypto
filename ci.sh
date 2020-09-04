@@ -67,4 +67,4 @@ MBEDTLS_LIB_DIR=$(pwd)/mbedtls/library MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/includ
 
 # Clean before to only build the interface
 cargo clean
-MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/include cargo build --release
+MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/include cargo build --release --no-default-features --features interface

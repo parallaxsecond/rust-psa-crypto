@@ -5,9 +5,9 @@
 
 use super::algorithm::{Hash, KeyDerivation, RawKeyAgreement};
 use super::key::Id;
-#[cfg(feature = "interface")]
+#[cfg(feature = "operations")]
 use super::status::{Error, Result, Status};
-#[cfg(feature = "interface")]
+#[cfg(feature = "operations")]
 use core::convert::{From, TryFrom};
 
 /// Key derivation operation for deriving keys from existing sources
@@ -66,7 +66,7 @@ pub enum Inputs<'a> {
 }
 
 /// Enumeration of the step of a key derivation.
-#[cfg(feature = "interface")]
+#[cfg(feature = "operations")]
 #[derive(Debug, Clone, Copy)]
 enum DerivationStep {
     /// A secret input for key derivation.
@@ -83,7 +83,7 @@ enum DerivationStep {
     Seed,
 }
 
-#[cfg(feature = "interface")]
+#[cfg(feature = "operations")]
 impl From<DerivationStep> for psa_crypto_sys::psa_key_derivation_step_t {
     fn from(derivation_step: DerivationStep) -> Self {
         match derivation_step {
@@ -120,7 +120,7 @@ impl Inputs<'_> {
         }
     }
 
-    #[cfg(feature = "interface")]
+    #[cfg(feature = "operations")]
     pub(crate) fn apply_inputs_to_op(
         &self,
         op: &mut psa_crypto_sys::psa_key_derivation_operation_t,
@@ -154,7 +154,7 @@ impl Inputs<'_> {
         }
     }
 
-    #[cfg(feature = "interface")]
+    #[cfg(feature = "operations")]
     fn apply_input_step_to_op(
         op: &mut psa_crypto_sys::psa_key_derivation_operation_t,
         step: DerivationStep,
@@ -181,7 +181,7 @@ impl Inputs<'_> {
         }
     }
 
-    #[cfg(feature = "interface")]
+    #[cfg(feature = "operations")]
     fn apply_input_secret_step_to_op(
         op: &mut psa_crypto_sys::psa_key_derivation_operation_t,
         secret: &InputSecret,
@@ -246,7 +246,7 @@ impl<'a> From<Input<'a>> for InputSecret<'a> {
     }
 }
 
-#[cfg(feature = "interface")]
+#[cfg(feature = "operations")]
 impl TryFrom<Operation<'_>> for psa_crypto_sys::psa_key_derivation_operation_t {
     type Error = Error;
 
@@ -292,7 +292,7 @@ impl TryFrom<Operation<'_>> for psa_crypto_sys::psa_key_derivation_operation_t {
 
 impl Operation<'_> {
     /// Clears operation C struct and consumes KeyDerivationOperation struct
-    #[cfg(feature = "interface")]
+    #[cfg(feature = "operations")]
     pub(crate) fn abort(mut op: psa_crypto_sys::psa_key_derivation_operation_t) -> Result<()> {
         Status::from(unsafe { psa_crypto_sys::psa_key_derivation_abort(&mut op) }).to_result()
     }
