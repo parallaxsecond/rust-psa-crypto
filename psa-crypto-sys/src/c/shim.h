@@ -93,7 +93,6 @@ int shim_PSA_ALG_IS_HASH(psa_algorithm_t alg);
 int shim_PSA_ALG_IS_MAC(psa_algorithm_t alg);
 int shim_PSA_ALG_IS_HMAC(psa_algorithm_t alg);
 int shim_PSA_ALG_IS_BLOCK_CIPHER_MAC(psa_algorithm_t alg);
-int shim_PSA_ALG_IS_FULL_LENGTH_MAC(psa_algorithm_t alg);
 int shim_PSA_ALG_IS_CIPHER(psa_algorithm_t alg);
 int shim_PSA_ALG_IS_AEAD(psa_algorithm_t alg);
 int shim_PSA_ALG_IS_SIGN(psa_algorithm_t alg);
