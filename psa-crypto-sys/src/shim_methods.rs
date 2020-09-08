@@ -85,11 +85,6 @@ pub fn PSA_ALG_IS_BLOCK_CIPHER_MAC(alg: psa_algorithm_t) -> bool {
     unsafe { psa_crypto_binding::shim_PSA_ALG_IS_BLOCK_CIPHER_MAC(alg) == 1 }
 }
 
-pub fn PSA_ALG_IS_FULL_LENGTH_MAC(alg: psa_algorithm_t) -> bool {
-    // Not in PSA spec but required to convert from psa_alg_t to algorithm/Mac
-    unsafe { psa_crypto_binding::shim_PSA_ALG_IS_FULL_LENGTH_MAC(alg) == 1 }
-}
-
 pub fn PSA_ALG_IS_CIPHER(alg: psa_algorithm_t) -> bool {
     unsafe { psa_crypto_binding::shim_PSA_ALG_IS_CIPHER(alg) == 1 }
 }
