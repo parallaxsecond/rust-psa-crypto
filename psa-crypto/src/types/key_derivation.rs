@@ -106,7 +106,7 @@ impl From<Inputs<'_>> for psa_crypto_sys::psa_algorithm_t {
 
 impl Inputs<'_> {
     /// Retrieve key derivation algorithm without inputs
-    pub const fn key_derivation(&self) -> KeyDerivation {
+    pub fn key_derivation(&self) -> KeyDerivation {
         match self {
             Inputs::Hkdf { hash_alg, .. } => KeyDerivation::Hkdf {
                 hash_alg: *hash_alg,
