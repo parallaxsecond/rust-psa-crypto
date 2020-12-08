@@ -29,111 +29,153 @@
 )]
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
-use cmake::Config;
-use std::env;
-use std::io::{Error, ErrorKind, Result};
-use std::path::PathBuf;
-use walkdir::WalkDir;
 
-fn compile_mbed_crypto() -> Result<PathBuf> {
-    let mbedtls_dir = String::from("./vendor");
-    println!("cargo:rerun-if-changed=src/c/shim.c");
-    println!("cargo:rerun-if-changed=src/c/shim.h");
+fn main() -> std::io::Result<()> {
+    #[cfg(feature = "operations")]
+    return operations::script_operations();
 
-    let out_dir = env::var("OUT_DIR").unwrap();
+    #[cfg(all(feature = "interface", not(feature = "operations")))]
+    return interface::script_interface();
 
-    // Configure the MbedTLS build for making Mbed Crypto
-    if !::std::process::Command::new(mbedtls_dir + "/scripts/config.py")
-        .arg("--write")
-        .arg(&(out_dir.clone() + "/config.h"))
-        .arg("crypto")
-        .status()
-        .or_else(|_| Err(Error::new(ErrorKind::Other, "configuring mbedtls failed")))?
-        .success()
-    {
-        return Err(Error::new(
-            ErrorKind::Other,
-            "config.py returned an error status",
-        ));
-    }
-
-    // Rerun build if anything file under the vendor directory has changed.
-    for entry in WalkDir::new("vendor")
-        .into_iter()
-        .filter_map(|entry| entry.ok())
-    {
-        if let Ok(metadata) = entry.metadata() {
-            if metadata.is_file() {
-                println!("cargo:rerun-if-changed={}", entry.path().display());
-            }
-        }
-    }
-
-    // Build the MbedTLS libraries
-    let mbed_build_path = Config::new("vendor")
-        .cflag(format!("-I{}", out_dir))
-        .cflag("-DMBEDTLS_CONFIG_FILE='<config.h>'")
-        .build();
-
-    Ok(mbed_build_path)
+    #[cfg(not(any(feature = "interface", feature = "operations")))]
+    Ok(())
 }
 
-fn generate_mbed_crypto_bindings(mbed_include_dir: String) -> Result<()> {
-    let header = mbed_include_dir.clone() + "/psa/crypto.h";
+#[cfg(any(feature = "interface", feature = "operations"))]
+mod common {
+    use std::env;
+    use std::io::{Error, ErrorKind, Result};
+    use std::path::PathBuf;
 
-    println!("cargo:rerun-if-changed={}", header);
+    pub fn generate_mbed_crypto_bindings(mbed_include_dir: String) -> Result<()> {
+        let header = mbed_include_dir.clone() + "/psa/crypto.h";
 
-    let shim_bindings = bindgen::Builder::default()
-        .clang_arg(format!("-I{}", mbed_include_dir))
-        .rustfmt_bindings(true)
-        .header("src/c/shim.h")
-        .blacklist_type("max_align_t")
-        .generate_comments(false)
-        .size_t_is_usize(true)
-        .generate()
-        .or_else(|_| {
+        println!("cargo:rerun-if-changed={}", header);
+
+        let shim_bindings = bindgen::Builder::default()
+            .clang_arg(format!("-I{}", mbed_include_dir))
+            .rustfmt_bindings(true)
+            .header("src/c/shim.h")
+            .blacklist_type("max_align_t")
+            .generate_comments(false)
+            .size_t_is_usize(true)
+            .generate()
+            .or_else(|_| {
+                Err(Error::new(
+                        ErrorKind::Other,
+                        "Unable to generate bindings to mbed crypto",
+                        ))
+            })?;
+        let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+        shim_bindings.write_to_file(out_path.join("shim_bindings.rs"))?;
+
+        Ok(())
+    }
+
+    pub fn compile_shim_library(include_dir: String) -> Result<()> {
+        // Compile and package the shim library
+        cc::Build::new()
+            .include(include_dir)
+            .file("./src/c/shim.c")
+            .warnings(true)
+            .flag("-Werror")
+            .opt_level(2)
+            .try_compile("libshim.a")
+            .or_else(|_| Err(Error::new(ErrorKind::Other, "compiling shim.c failed")))?;
+
+        // Also link shim library
+        println!(
+            "cargo:rustc-link-search=native={}",
+            env::var("OUT_DIR").unwrap()
+            );
+        println!("cargo:rustc-link-lib=static=shim");
+
+        Ok(())
+    }
+}
+
+#[cfg(all(feature = "interface", not(feature = "operations")))]
+mod interface {
+    use super::common;
+    use std::io::{Error, ErrorKind, Result};
+    use std::env;
+
+    // Build script when the interface feature is on and not the operations one
+    pub fn script_interface() -> Result<()> {
+        if let Ok(include_dir) = env::var("MBEDTLS_INCLUDE_DIR") {
+            common::generate_mbed_crypto_bindings(include_dir.clone())?;
+            common::compile_shim_library(include_dir)
+        } else {
             Err(Error::new(
                 ErrorKind::Other,
-                "Unable to generate bindings to mbed crypto",
+                "interface feature necessitates MBEDTLS_INCLUDE_DIR environment variable",
             ))
-        })?;
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    shim_bindings.write_to_file(out_path.join("shim_bindings.rs"))?;
-
-    Ok(())
+        }
+    }
 }
 
-fn compile_shim_library(include_dir: String) -> Result<()> {
-    // Compile and package the shim library
-    cc::Build::new()
-        .include(include_dir)
-        .file("./src/c/shim.c")
-        .warnings(true)
-        .flag("-Werror")
-        .opt_level(2)
-        .try_compile("libshim.a")
-        .or_else(|_| Err(Error::new(ErrorKind::Other, "compiling shim.c failed")))?;
+#[cfg(feature = "operations")]
+mod operations {
+    use cmake::Config;
+    use std::env;
+    use std::io::{Error, ErrorKind, Result};
+    use std::path::PathBuf;
+    use walkdir::WalkDir;
+    use super::common;
 
-    // Also link shim library
-    println!(
-        "cargo:rustc-link-search=native={}",
-        env::var("OUT_DIR").unwrap()
-    );
-    println!("cargo:rustc-link-lib=static=shim");
+    fn compile_mbed_crypto() -> Result<PathBuf> {
+        let mbedtls_dir = String::from("./vendor");
+        println!("cargo:rerun-if-changed=src/c/shim.c");
+        println!("cargo:rerun-if-changed=src/c/shim.h");
 
-    Ok(())
-}
+        let out_dir = env::var("OUT_DIR").unwrap();
 
-fn link_to_lib(lib_path: String, link_statically: bool) {
-    let link_type = if link_statically { "static" } else { "dylib" };
+        // Configure the MbedTLS build for making Mbed Crypto
+        if !::std::process::Command::new(mbedtls_dir + "/scripts/config.py")
+            .arg("--write")
+                .arg(&(out_dir.clone() + "/config.h"))
+                .arg("crypto")
+                .status()
+                .or_else(|_| Err(Error::new(ErrorKind::Other, "configuring mbedtls failed")))?
+                .success()
+                {
+                    return Err(Error::new(
+                            ErrorKind::Other,
+                            "config.py returned an error status",
+                            ));
+                }
 
-    // Request rustc to link the Mbed Crypto library
-    println!("cargo:rustc-link-search=native={}", lib_path,);
-    println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
-}
+        // Rerun build if anything file under the vendor directory has changed.
+        for entry in WalkDir::new("vendor")
+            .into_iter()
+                .filter_map(|entry| entry.ok())
+                {
+                    if let Ok(metadata) = entry.metadata() {
+                        if metadata.is_file() {
+                            println!("cargo:rerun-if-changed={}", entry.path().display());
+                        }
+                    }
+                }
 
-fn main() -> Result<()> {
-    if cfg!(feature = "operations") {
+        // Build the MbedTLS libraries
+        let mbed_build_path = Config::new("vendor")
+            .cflag(format!("-I{}", out_dir))
+            .cflag("-DMBEDTLS_CONFIG_FILE='<config.h>'")
+            .build();
+
+        Ok(mbed_build_path)
+    }
+
+    fn link_to_lib(lib_path: String, link_statically: bool) {
+        let link_type = if link_statically { "static" } else { "dylib" };
+
+        // Request rustc to link the Mbed Crypto library
+        println!("cargo:rustc-link-search=native={}", lib_path,);
+        println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
+    }
+
+    // Build script when the operations feature is on
+    pub fn script_operations() -> Result<()> {
         let lib;
         let statically;
         let include;
@@ -165,19 +207,7 @@ fn main() -> Result<()> {
 
         // Linking to PSA Crypto library is only needed for the operations.
         link_to_lib(lib, statically);
-        generate_mbed_crypto_bindings(include.clone())?;
-        compile_shim_library(include)
-    } else if cfg!(feature = "interface") {
-        if let Ok(include_dir) = env::var("MBEDTLS_INCLUDE_DIR") {
-            generate_mbed_crypto_bindings(include_dir.clone())?;
-            compile_shim_library(include_dir)
-        } else {
-            Err(Error::new(
-                ErrorKind::Other,
-                "interface feature necessitates MBEDTLS_INCLUDE_DIR environment variable",
-            ))
-        }
-    } else {
-        Ok(())
+        common::generate_mbed_crypto_bindings(include.clone())?;
+        common::compile_shim_library(include)
     }
 }
