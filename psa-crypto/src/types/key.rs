@@ -229,11 +229,7 @@ impl Attributes {
             Type::RawData => false,
             Type::Hmac => alg.is_hmac(),
             Type::Derive => {
-                if let Algorithm::KeyDerivation(_) = alg {
-                    true
-                } else {
-                    false
-                }
+                matches!(alg, Algorithm::KeyDerivation(_))
             }
             Type::Aes | Type::Camellia => {
                 if let Algorithm::Mac(mac_alg) = alg {
@@ -268,10 +264,8 @@ impl Attributes {
             Type::RsaPublicKey | Type::RsaKeyPair => {
                 if let Algorithm::AsymmetricSignature(sign_alg) = alg {
                     sign_alg.is_rsa_alg()
-                } else if let Algorithm::AsymmetricEncryption(_) = alg {
-                    true
                 } else {
-                    false
+                    matches!(alg, Algorithm::AsymmetricEncryption(_))
                 }
             }
             Type::EccKeyPair { .. } | Type::EccPublicKey { .. } => match alg {
@@ -284,16 +278,14 @@ impl Attributes {
                 _ => false,
             },
             Type::DhKeyPair { .. } | Type::DhPublicKey { .. } => {
-                if let Algorithm::KeyAgreement(KeyAgreement::Raw(RawKeyAgreement::Ffdh))
-                | Algorithm::KeyAgreement(KeyAgreement::WithKeyDerivation {
-                    ka_alg: RawKeyAgreement::Ffdh,
-                    ..
-                }) = alg
-                {
-                    true
-                } else {
-                    false
-                }
+                matches!(
+                    alg,
+                    Algorithm::KeyAgreement(KeyAgreement::Raw(RawKeyAgreement::Ffdh))
+                    | Algorithm::KeyAgreement(KeyAgreement::WithKeyDerivation {
+                        ka_alg: RawKeyAgreement::Ffdh,
+                        ..
+                    })
+                )
             }
         }
     }
@@ -552,10 +544,7 @@ pub enum Type {
 impl Type {
     /// Checks if a key type is ECC key pair with any curve family inside.
     pub fn is_ecc_key_pair(self) -> bool {
-        match self {
-            Type::EccKeyPair { .. } => true,
-            _ => false,
-        }
+        matches!( self, Type::EccKeyPair { .. })
     }
 
     /// Checks if a key type is ECC public key with any curve family inside.
@@ -568,26 +557,17 @@ impl Type {
     /// assert!(Type::EccPublicKey { curve_family: EccFamily::SecpK1}.is_ecc_public_key());
     /// ```
     pub fn is_ecc_public_key(self) -> bool {
-        match self {
-            Type::EccPublicKey { .. } => true,
-            _ => false,
-        }
+        matches!(self, Type::EccPublicKey { .. })
     }
 
     /// Checks if a key type is DH public key with any group family inside.
     pub fn is_dh_public_key(self) -> bool {
-        match self {
-            Type::DhPublicKey { .. } => true,
-            _ => false,
-        }
+        matches!( self, Type::DhPublicKey { .. } )
     }
 
     /// Checks if a key type is DH key pair with any group family inside.
     pub fn is_dh_key_pair(self) -> bool {
-        match self {
-            Type::DhKeyPair { .. } => true,
-            _ => false,
-        }
+        matches!( self, Type::DhKeyPair { .. } )
     }
 
     /// If key is public or key pair, returns the corresponding public key type.
