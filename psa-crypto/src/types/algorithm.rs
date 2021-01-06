@@ -155,19 +155,17 @@ pub enum Mac {
 impl Mac {
     /// Check if the MAC algorithm is a HMAC algorithm, truncated or not
     pub fn is_hmac(self) -> bool {
-        match self {
+        matches!(
+            self,
             Mac::FullLength(FullLengthMac::Hmac { .. })
-            | Mac::Truncated {
-                mac_alg: FullLengthMac::Hmac { .. },
-                ..
-            } => true,
-            _ => false,
-        }
+            | Mac::Truncated { mac_alg: FullLengthMac::Hmac { .. }, .. }
+        )
     }
 
     /// Check if the MAC algorithm is a construction over a block cipher
     pub fn is_block_cipher_needed(self) -> bool {
-        match self {
+        matches!(
+            self,
             Mac::FullLength(FullLengthMac::CbcMac)
             | Mac::FullLength(FullLengthMac::Cmac)
             | Mac::Truncated {
@@ -177,9 +175,8 @@ impl Mac {
             | Mac::Truncated {
                 mac_alg: FullLengthMac::Cmac,
                 ..
-            } => true,
-            _ => false,
-        }
+            }
+        )
     }
 }
 
@@ -209,16 +206,16 @@ pub enum Cipher {
 impl Cipher {
     /// Check is the cipher algorithm is a mode of a block cipher.
     pub fn is_block_cipher_mode(self) -> bool {
-        match self {
+        matches!(
+            self,
             Cipher::Ctr
-            | Cipher::Cfb
-            | Cipher::Ofb
-            | Cipher::Xts
-            | Cipher::EcbNoPadding
-            | Cipher::CbcNoPadding
-            | Cipher::CbcPkcs7 => true,
-            _ => false,
-        }
+                | Cipher::Cfb
+                | Cipher::Ofb
+                | Cipher::Xts
+                | Cipher::EcbNoPadding
+                | Cipher::CbcNoPadding
+                | Cipher::CbcPkcs7
+        )
     }
 }
 
@@ -251,7 +248,8 @@ pub enum Aead {
 impl Aead {
     /// Check if the Aead algorithm needs a block cipher
     pub fn is_aead_on_block_cipher(self) -> bool {
-        match self {
+        matches!(
+            self,
             Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm)
             | Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Gcm)
             | Aead::AeadWithShortenedTag {
@@ -261,21 +259,20 @@ impl Aead {
             | Aead::AeadWithShortenedTag {
                 aead_alg: AeadWithDefaultLengthTag::Gcm,
                 ..
-            } => true,
-            _ => false,
-        }
+            }
+        )
     }
 
     /// Check if this AEAD algorithm is the (truncated or not) Chacha20-Poly1305 AEAD algorithm.
     pub fn is_chacha20_poly1305_alg(self) -> bool {
-        match self {
+        matches!(
+            self,
             Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Chacha20Poly1305)
             | Aead::AeadWithShortenedTag {
                 aead_alg: AeadWithDefaultLengthTag::Chacha20Poly1305,
                 ..
-            } => true,
-            _ => false,
-        }
+            }
+        )
     }
 }
 
@@ -406,22 +403,22 @@ impl AsymmetricSignature {
 
     /// Check if this is a RSA algorithm
     pub fn is_rsa_alg(self) -> bool {
-        match self {
+        matches!(
+            self,
             AsymmetricSignature::RsaPkcs1v15Sign { .. }
             | AsymmetricSignature::RsaPkcs1v15SignRaw
-            | AsymmetricSignature::RsaPss { .. } => true,
-            _ => false,
-        }
+            | AsymmetricSignature::RsaPss { .. }
+        )
     }
 
     /// Check if this is an ECC algorithm
     pub fn is_ecc_alg(self) -> bool {
-        match self {
+        matches!(
+            self,
             AsymmetricSignature::Ecdsa { .. }
             | AsymmetricSignature::EcdsaAny
-            | AsymmetricSignature::DeterministicEcdsa { .. } => true,
-            _ => false,
-        }
+            | AsymmetricSignature::DeterministicEcdsa { .. }
+        )
     }
 
     /// Determines if the given hash length is compatible with the asymmetric signature scheme
