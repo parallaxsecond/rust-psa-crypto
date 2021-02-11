@@ -437,6 +437,19 @@ impl AsymmetricSignature {
             }
         }
     }
+
+    /// Retrieves the specific hash that the `AsymmetricSignature` algorithm is restricted to.
+    ///
+    /// For algorithms that do not specify a hash, `None` is returned.
+    pub fn hash(self) -> Option<SignHash> {
+        match self {
+            AsymmetricSignature::EcdsaAny | AsymmetricSignature::RsaPkcs1v15SignRaw => None,
+            AsymmetricSignature::DeterministicEcdsa { hash_alg }
+            | AsymmetricSignature::RsaPkcs1v15Sign { hash_alg }
+            | AsymmetricSignature::Ecdsa { hash_alg }
+            | AsymmetricSignature::RsaPss { hash_alg } => Some(hash_alg),
+        }
+    }
 }
 
 /// Enumeration of asymmetric encryption algorithms supported.
