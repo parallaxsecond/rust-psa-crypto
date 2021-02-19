@@ -158,7 +158,10 @@ impl Mac {
         matches!(
             self,
             Mac::FullLength(FullLengthMac::Hmac { .. })
-            | Mac::Truncated { mac_alg: FullLengthMac::Hmac { .. }, .. }
+                | Mac::Truncated {
+                    mac_alg: FullLengthMac::Hmac { .. },
+                    ..
+                }
         )
     }
 
@@ -167,15 +170,15 @@ impl Mac {
         matches!(
             self,
             Mac::FullLength(FullLengthMac::CbcMac)
-            | Mac::FullLength(FullLengthMac::Cmac)
-            | Mac::Truncated {
-                mac_alg: FullLengthMac::CbcMac,
-                ..
-            }
-            | Mac::Truncated {
-                mac_alg: FullLengthMac::Cmac,
-                ..
-            }
+                | Mac::FullLength(FullLengthMac::Cmac)
+                | Mac::Truncated {
+                    mac_alg: FullLengthMac::CbcMac,
+                    ..
+                }
+                | Mac::Truncated {
+                    mac_alg: FullLengthMac::Cmac,
+                    ..
+                }
         )
     }
 }
@@ -251,15 +254,15 @@ impl Aead {
         matches!(
             self,
             Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm)
-            | Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Gcm)
-            | Aead::AeadWithShortenedTag {
-                aead_alg: AeadWithDefaultLengthTag::Ccm,
-                ..
-            }
-            | Aead::AeadWithShortenedTag {
-                aead_alg: AeadWithDefaultLengthTag::Gcm,
-                ..
-            }
+                | Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Gcm)
+                | Aead::AeadWithShortenedTag {
+                    aead_alg: AeadWithDefaultLengthTag::Ccm,
+                    ..
+                }
+                | Aead::AeadWithShortenedTag {
+                    aead_alg: AeadWithDefaultLengthTag::Gcm,
+                    ..
+                }
         )
     }
 
@@ -268,10 +271,10 @@ impl Aead {
         matches!(
             self,
             Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Chacha20Poly1305)
-            | Aead::AeadWithShortenedTag {
-                aead_alg: AeadWithDefaultLengthTag::Chacha20Poly1305,
-                ..
-            }
+                | Aead::AeadWithShortenedTag {
+                    aead_alg: AeadWithDefaultLengthTag::Chacha20Poly1305,
+                    ..
+                }
         )
     }
 }
@@ -406,8 +409,8 @@ impl AsymmetricSignature {
         matches!(
             self,
             AsymmetricSignature::RsaPkcs1v15Sign { .. }
-            | AsymmetricSignature::RsaPkcs1v15SignRaw
-            | AsymmetricSignature::RsaPss { .. }
+                | AsymmetricSignature::RsaPkcs1v15SignRaw
+                | AsymmetricSignature::RsaPss { .. }
         )
     }
 
@@ -416,8 +419,8 @@ impl AsymmetricSignature {
         matches!(
             self,
             AsymmetricSignature::Ecdsa { .. }
-            | AsymmetricSignature::EcdsaAny
-            | AsymmetricSignature::DeterministicEcdsa { .. }
+                | AsymmetricSignature::EcdsaAny
+                | AsymmetricSignature::DeterministicEcdsa { .. }
         )
     }
 

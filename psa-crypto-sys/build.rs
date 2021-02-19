@@ -60,11 +60,11 @@ mod common {
             .generate_comments(false)
             .size_t_is_usize(true)
             .generate()
-            .or_else(|_| {
-                Err(Error::new(
-                        ErrorKind::Other,
-                        "Unable to generate bindings to mbed crypto",
-                        ))
+            .map_err(|_| {
+                Error::new(
+                    ErrorKind::Other,
+                    "Unable to generate bindings to mbed crypto",
+                )
             })?;
         let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
         shim_bindings.write_to_file(out_path.join("shim_bindings.rs"))?;
@@ -81,13 +81,13 @@ mod common {
             .flag("-Werror")
             .opt_level(2)
             .try_compile("libshim.a")
-            .or_else(|_| Err(Error::new(ErrorKind::Other, "compiling shim.c failed")))?;
+            .map_err(|_| Error::new(ErrorKind::Other, "compiling shim.c failed"))?;
 
         // Also link shim library
         println!(
             "cargo:rustc-link-search=native={}",
             env::var("OUT_DIR").unwrap()
-            );
+        );
         println!("cargo:rustc-link-lib=static=shim");
 
         Ok(())
@@ -97,8 +97,8 @@ mod common {
 #[cfg(all(feature = "interface", not(feature = "operations")))]
 mod interface {
     use super::common;
-    use std::io::{Error, ErrorKind, Result};
     use std::env;
+    use std::io::{Error, ErrorKind, Result};
 
     // Build script when the interface feature is on and not the operations one
     pub fn script_interface() -> Result<()> {
@@ -116,12 +116,12 @@ mod interface {
 
 #[cfg(feature = "operations")]
 mod operations {
+    use super::common;
     use cmake::Config;
     use std::env;
     use std::io::{Error, ErrorKind, Result};
     use std::path::PathBuf;
     use walkdir::WalkDir;
-    use super::common;
 
     fn compile_mbed_crypto() -> Result<PathBuf> {
         let mbedtls_dir = String::from("./vendor");
@@ -133,29 +133,29 @@ mod operations {
         // Configure the MbedTLS build for making Mbed Crypto
         if !::std::process::Command::new(mbedtls_dir + "/scripts/config.py")
             .arg("--write")
-                .arg(&(out_dir.clone() + "/config.h"))
-                .arg("crypto")
-                .status()
-                .or_else(|_| Err(Error::new(ErrorKind::Other, "configuring mbedtls failed")))?
-                .success()
-                {
-                    return Err(Error::new(
-                            ErrorKind::Other,
-                            "config.py returned an error status",
-                            ));
-                }
+            .arg(&(out_dir.clone() + "/config.h"))
+            .arg("crypto")
+            .status()
+            .map_err(|_| Error::new(ErrorKind::Other, "configuring mbedtls failed"))?
+            .success()
+        {
+            return Err(Error::new(
+                ErrorKind::Other,
+                "config.py returned an error status",
+            ));
+        }
 
         // Rerun build if anything file under the vendor directory has changed.
         for entry in WalkDir::new("vendor")
             .into_iter()
-                .filter_map(|entry| entry.ok())
-                {
-                    if let Ok(metadata) = entry.metadata() {
-                        if metadata.is_file() {
-                            println!("cargo:rerun-if-changed={}", entry.path().display());
-                        }
-                    }
+            .filter_map(|entry| entry.ok())
+        {
+            if let Ok(metadata) = entry.metadata() {
+                if metadata.is_file() {
+                    println!("cargo:rerun-if-changed={}", entry.path().display());
                 }
+            }
+        }
 
         // Build the MbedTLS libraries
         let mbed_build_path = Config::new("vendor")

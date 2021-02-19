@@ -74,7 +74,7 @@ static INITIALISED: AtomicBool = AtomicBool::new(false);
 pub fn init() -> Result<()> {
     // It is not a problem to call psa_crypto_init more than once.
     Status::from(unsafe { psa_crypto_sys::psa_crypto_init() }).to_result()?;
-    let _ = INITIALISED.compare_and_swap(false, true, Ordering::Relaxed);
+    let _ = INITIALISED.store(true, Ordering::Relaxed);
 
     Ok(())
 }

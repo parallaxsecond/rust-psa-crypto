@@ -14,6 +14,7 @@ use crate::types::status::Status;
 use crate::types::status::{Error, Result};
 #[cfg(feature = "interface")]
 use core::convert::{TryFrom, TryInto};
+use core::fmt;
 use log::error;
 pub use psa_crypto_sys::{self, psa_key_id_t, PSA_KEY_ID_USER_MAX, PSA_KEY_ID_USER_MIN};
 use serde::{Deserialize, Serialize};
@@ -281,10 +282,10 @@ impl Attributes {
                 matches!(
                     alg,
                     Algorithm::KeyAgreement(KeyAgreement::Raw(RawKeyAgreement::Ffdh))
-                    | Algorithm::KeyAgreement(KeyAgreement::WithKeyDerivation {
-                        ka_alg: RawKeyAgreement::Ffdh,
-                        ..
-                    })
+                        | Algorithm::KeyAgreement(KeyAgreement::WithKeyDerivation {
+                            ka_alg: RawKeyAgreement::Ffdh,
+                            ..
+                        })
                 )
             }
         }
@@ -541,10 +542,37 @@ pub enum Type {
     },
 }
 
+impl fmt::Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Type::RawData => write!(f, "Raw data"),
+            Type::Hmac => write!(f, "HMAC key"),
+            Type::Derive => write!(f, "Derivation key"),
+            Type::Aes => write!(f, "Key for an algorithm based on AES"),
+            Type::Des => write!(f, "Key for an algorithm based on DES or 3DES"),
+            Type::Camellia => write!(f, "Key for an algorithm based on Camellia"),
+            Type::Arc4 => write!(f, "Key for the RC4 stream cipher"),
+            Type::Chacha20 => write!(f, "Key for an algorithm based on ChaCha20"),
+            Type::RsaPublicKey => write!(f, "RSA public key"),
+            Type::RsaKeyPair => write!(f, "RSA key pair"),
+            Type::EccKeyPair { curve_family } => write!(f, "ECC key pair (using {})", curve_family),
+            Type::EccPublicKey { curve_family } => {
+                write!(f, "ECC public key (using {})", curve_family)
+            }
+            Type::DhKeyPair { group_family } => {
+                write!(f, "Diffie-Hellman key pair (using {})", group_family)
+            }
+            Type::DhPublicKey { group_family } => {
+                write!(f, "Diffie-Hellman public key (using {})", group_family)
+            }
+        }
+    }
+}
+
 impl Type {
     /// Checks if a key type is ECC key pair with any curve family inside.
     pub fn is_ecc_key_pair(self) -> bool {
-        matches!( self, Type::EccKeyPair { .. })
+        matches!(self, Type::EccKeyPair { .. })
     }
 
     /// Checks if a key type is ECC public key with any curve family inside.
@@ -562,12 +590,12 @@ impl Type {
 
     /// Checks if a key type is DH public key with any group family inside.
     pub fn is_dh_public_key(self) -> bool {
-        matches!( self, Type::DhPublicKey { .. } )
+        matches!(self, Type::DhPublicKey { .. })
     }
 
     /// Checks if a key type is DH key pair with any group family inside.
     pub fn is_dh_key_pair(self) -> bool {
-        matches!( self, Type::DhKeyPair { .. } )
+        matches!(self, Type::DhKeyPair { .. })
     }
 
     /// If key is public or key pair, returns the corresponding public key type.
@@ -659,6 +687,22 @@ pub enum EccFamily {
     Montgomery,
 }
 
+impl fmt::Display for EccFamily {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            EccFamily::SecpK1 => write!(f, "SEC Koblitz curves over prime fields"),
+            EccFamily::SecpR1 => write!(f, "SEC random curves over prime fields"),
+            EccFamily::SecpR2 => write!(f, "SEC additional random curves over prime fields"),
+            EccFamily::SectK1 => write!(f, "SEC Koblitz curves over binary fields"),
+            EccFamily::SectR1 => write!(f, "SEC random curves over binary fields"),
+            EccFamily::SectR2 => write!(f, "SEC additional random curves over binary fields"),
+            EccFamily::BrainpoolPR1 => write!(f, "Brainpool P random curves"),
+            EccFamily::Frp => write!(f, "FRP curve"),
+            EccFamily::Montgomery => write!(f, "Montgomery curve"),
+        }
+    }
+}
+
 /// Enumeration of Diffie Hellman group families supported.
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
 pub enum DhFamily {
@@ -666,6 +710,14 @@ pub enum DhFamily {
     /// This family includes groups with the following `bits`: 2048, 3072, 4096, 6144, 8192.
     /// An implementation can support all of these sizes or only a subset.
     Rfc7919,
+}
+
+impl fmt::Display for DhFamily {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DhFamily::Rfc7919 => write!(f, "Diffie-Hellman groups defined in RFC 7919 Appendix A"),
+        }
+    }
 }
 
 /// Definition of the key policy, what is permitted to do with the key.
