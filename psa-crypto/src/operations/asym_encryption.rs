@@ -60,17 +60,15 @@ pub fn encrypt(
 ) -> Result<usize> {
     initialized()?;
 
-    let handle = key_id.handle()?;
-
     let mut output_length = 0;
     let (salt_ptr, salt_len) = match salt {
         Some(salt) => (salt.as_ptr(), salt.len()),
         None => (core::ptr::null(), 0),
     };
 
-    let encrypt_res = Status::from(unsafe {
+    Status::from(unsafe {
         psa_crypto_sys::psa_asymmetric_encrypt(
-            handle,
+            key_id.0,
             alg.into(),
             plaintext.as_ptr(),
             plaintext.len(),
@@ -81,10 +79,7 @@ pub fn encrypt(
             &mut output_length,
         )
     })
-    .to_result();
-    let close_key_handle_res = key_id.close_handle(handle);
-    encrypt_res?;
-    close_key_handle_res?;
+    .to_result()?;
     Ok(output_length)
 }
 
@@ -145,17 +140,15 @@ pub fn decrypt(
 ) -> Result<usize> {
     initialized()?;
 
-    let handle = key_id.handle()?;
-
     let mut output_length = 0;
     let (salt_ptr, salt_len) = match salt {
         Some(salt) => (salt.as_ptr(), salt.len()),
         None => (core::ptr::null(), 0),
     };
 
-    let decrypt_res = Status::from(unsafe {
+    Status::from(unsafe {
         psa_crypto_sys::psa_asymmetric_decrypt(
-            handle,
+            key_id.0,
             alg.into(),
             encrypted_message.as_ptr(),
             encrypted_message.len(),
@@ -166,9 +159,6 @@ pub fn decrypt(
             &mut output_length,
         )
     })
-    .to_result();
-    let close_handle_res = key_id.close_handle(handle);
-    decrypt_res?;
-    close_handle_res?;
+    .to_result()?;
     Ok(output_length)
 }

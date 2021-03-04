@@ -50,12 +50,11 @@ pub fn raw_key_agreement(
     output: &mut [u8],
 ) -> Result<usize> {
     initialized()?;
-    let key_handle = key_id.handle()?;
     let mut output_size = 0;
-    let key_agreement_res = Status::from(unsafe {
+    Status::from(unsafe {
         psa_crypto_sys::psa_raw_key_agreement(
             alg.into(),
-            key_handle,
+            key_id.0,
             peer_key.as_ptr(),
             peer_key.len(),
             output.as_mut_ptr(),
@@ -63,10 +62,7 @@ pub fn raw_key_agreement(
             &mut output_size,
         )
     })
-    .to_result();
+    .to_result()?;
 
-    let handle_close_res = key_id.close_handle(key_handle);
-    key_agreement_res?;
-    handle_close_res?;
     Ok(output_size)
 }

@@ -26,14 +26,11 @@ mod psa_crypto_binding {
     include!(concat!(env!("OUT_DIR"), "/shim_bindings.rs"));
 }
 
-#[allow(dead_code)]
 mod constants;
 #[cfg(feature = "interface")]
 mod extras;
-#[allow(dead_code)]
 #[cfg(feature = "interface")]
-mod shim_methods;
-#[allow(dead_code)]
+mod shim;
 mod types;
 
 pub use constants::*;
@@ -64,4 +61,4 @@ pub use psa_crypto_binding::{
 #[cfg(feature = "interface")]
 pub use extras::*;
 #[cfg(feature = "interface")]
-pub use shim_methods::*;
+pub use shim::*;

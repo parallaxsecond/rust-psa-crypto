@@ -1,7 +1,7 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 #![allow(non_snake_case)]
-/// Additional functionality required that PSA Crypto does not provide
+//! Additional functionality required that PSA Crypto does not provide
 use crate::types::{psa_algorithm_t, psa_key_type_t};
 
 /// Retrieves the tag length from an aead_alg.
