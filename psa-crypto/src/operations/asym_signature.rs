@@ -65,11 +65,10 @@ pub fn sign_hash(
     initialized()?;
 
     let mut signature_length = 0;
-    let handle = key.handle()?;
 
-    let sign_res = Status::from(unsafe {
+    Status::from(unsafe {
         psa_crypto_sys::psa_sign_hash(
-            handle,
+            key.0,
             alg.into(),
             hash.as_ptr(),
             hash.len(),
@@ -78,9 +77,7 @@ pub fn sign_hash(
             &mut signature_length,
         )
     })
-    .to_result();
-    key.close_handle(handle)?;
-    sign_res?;
+    .to_result()?;
     Ok(signature_length)
 }
 
@@ -131,11 +128,9 @@ pub fn sign_hash(
 pub fn verify_hash(key: Id, alg: AsymmetricSignature, hash: &[u8], signature: &[u8]) -> Result<()> {
     initialized()?;
 
-    let handle = key.handle()?;
-
-    let verify_res = Status::from(unsafe {
+    Status::from(unsafe {
         psa_crypto_sys::psa_verify_hash(
-            handle,
+            key.0,
             alg.into(),
             hash.as_ptr(),
             hash.len(),
@@ -143,7 +138,5 @@ pub fn verify_hash(key: Id, alg: AsymmetricSignature, hash: &[u8], signature: &[
             signature.len(),
         )
     })
-    .to_result();
-    key.close_handle(handle)?;
-    verify_res
+    .to_result()
 }

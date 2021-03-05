@@ -342,16 +342,13 @@ impl Attributes {
     pub fn from_key_id(key_id: Id) -> Result<Self> {
         initialized()?;
         let mut key_attributes = unsafe { psa_crypto_sys::psa_key_attributes_init() };
-        let handle = key_id.handle()?;
-        let get_attributes_res = Status::from(unsafe {
-            psa_crypto_sys::psa_get_key_attributes(handle, &mut key_attributes)
+        Status::from(unsafe {
+            psa_crypto_sys::psa_get_key_attributes(key_id.0, &mut key_attributes)
         })
-        .to_result();
+        .to_result()?;
         let attributes = Attributes::try_from(key_attributes);
         Attributes::reset(&mut key_attributes);
-        key_id.close_handle(handle)?;
-        get_attributes_res?;
-        Ok(attributes?)
+        attributes
     }
 
     /// Sufficient size for a buffer to export the key, if supported
@@ -756,39 +753,16 @@ pub struct UsageFlags {
 
 /// Definition of the key ID.
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
-pub struct Id {
-    pub(crate) id: psa_key_id_t,
-    pub(crate) handle: Option<psa_crypto_sys::psa_key_handle_t>,
-}
-
-#[cfg(feature = "operations")]
-impl Id {
-    pub(crate) fn handle(self) -> Result<psa_crypto_sys::psa_key_handle_t> {
-        Ok(match self.handle {
-            Some(handle) => handle,
-            None => {
-                let mut handle = 0;
-                Status::from(unsafe { psa_crypto_sys::psa_open_key(self.id, &mut handle) })
-                    .to_result()?;
-
-                handle
-            }
-        })
-    }
-
-    pub(crate) fn close_handle(self, handle: psa_crypto_sys::psa_key_handle_t) -> Result<()> {
-        if self.handle.is_none() {
-            Status::from(unsafe { psa_crypto_sys::psa_close_key(handle) }).to_result()
-        } else {
-            Ok(())
-        }
-    }
-}
+pub struct Id(pub(crate) psa_key_id_t);
 
 impl Id {
     /// Create a new Id from a persistent key ID
-    pub fn from_persistent_key_id(id: u32) -> Self {
-        Id { id, handle: None }
+    #[cfg(feature = "operations")]
+    pub fn from_persistent_key_id(id: u32) -> Result<Self> {
+        // Checking if the id is one of a persistent key that exists by fetching its attributes.
+        let _ = Attributes::from_key_id(Id(id))?;
+
+        Ok(Id(id))
     }
 }
 
@@ -870,11 +844,18 @@ impl From<UsageFlags> for psa_crypto_sys::psa_key_usage_t {
         if flags.decrypt {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_DECRYPT;
         }
-        if flags.sign_message && flags.sign_hash {
-            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN;
+        //TODO: not yet implemented in Mbed Crypto, uncomment when added
+        //if flags.sign_message {
+        //usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN_MESSAGE;
+        //}
+        if flags.sign_hash {
+            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN_HASH;
         }
-        if flags.verify_message && flags.verify_hash {
-            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY;
+        //if flags.verify_message {
+        //usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY_MESSAGE;
+        //}
+        if flags.verify_hash {
+            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY_HASH;
         }
         if flags.derive {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_DERIVE;
@@ -895,17 +876,17 @@ impl From<psa_crypto_sys::psa_key_usage_t> for UsageFlags {
             cache: false,
             encrypt: flags & psa_crypto_sys::PSA_KEY_USAGE_ENCRYPT > 0,
             decrypt: flags & psa_crypto_sys::PSA_KEY_USAGE_DECRYPT > 0,
-            sign_message: flags & psa_crypto_sys::PSA_KEY_USAGE_SIGN > 0,
-            verify_message: flags & psa_crypto_sys::PSA_KEY_USAGE_VERIFY > 0,
-            sign_hash: flags & psa_crypto_sys::PSA_KEY_USAGE_SIGN > 0,
-            verify_hash: flags & psa_crypto_sys::PSA_KEY_USAGE_VERIFY > 0,
+            sign_message: flags & psa_crypto_sys::PSA_KEY_USAGE_SIGN_MESSAGE > 0,
+            verify_message: flags & psa_crypto_sys::PSA_KEY_USAGE_VERIFY_MESSAGE > 0,
+            sign_hash: flags & psa_crypto_sys::PSA_KEY_USAGE_SIGN_HASH > 0,
+            verify_hash: flags & psa_crypto_sys::PSA_KEY_USAGE_VERIFY_HASH > 0,
             derive: flags & psa_crypto_sys::PSA_KEY_USAGE_DERIVE > 0,
         }
     }
 }
 
 #[cfg(feature = "interface")]
-impl TryFrom<EccFamily> for psa_crypto_sys::psa_ecc_curve_t {
+impl TryFrom<EccFamily> for psa_crypto_sys::psa_ecc_family_t {
     type Error = Error;
     fn try_from(family: EccFamily) -> Result<Self> {
         match family {
@@ -923,9 +904,9 @@ impl TryFrom<EccFamily> for psa_crypto_sys::psa_ecc_curve_t {
 }
 
 #[cfg(feature = "interface")]
-impl TryFrom<psa_crypto_sys::psa_ecc_curve_t> for EccFamily {
+impl TryFrom<psa_crypto_sys::psa_ecc_family_t> for EccFamily {
     type Error = Error;
-    fn try_from(family: psa_crypto_sys::psa_ecc_curve_t) -> Result<Self> {
+    fn try_from(family: psa_crypto_sys::psa_ecc_family_t) -> Result<Self> {
         match family {
             psa_crypto_sys::PSA_ECC_FAMILY_SECP_K1 => Ok(EccFamily::SecpK1),
             psa_crypto_sys::PSA_ECC_FAMILY_SECP_R1 => Ok(EccFamily::SecpR1),
@@ -944,7 +925,7 @@ impl TryFrom<psa_crypto_sys::psa_ecc_curve_t> for EccFamily {
 }
 
 #[cfg(feature = "interface")]
-impl From<DhFamily> for psa_crypto_sys::psa_dh_group_t {
+impl From<DhFamily> for psa_crypto_sys::psa_dh_family_t {
     fn from(group: DhFamily) -> Self {
         match group {
             DhFamily::Rfc7919 => psa_crypto_sys::PSA_DH_FAMILY_RFC7919,
@@ -953,9 +934,9 @@ impl From<DhFamily> for psa_crypto_sys::psa_dh_group_t {
 }
 
 #[cfg(feature = "interface")]
-impl TryFrom<psa_crypto_sys::psa_dh_group_t> for DhFamily {
+impl TryFrom<psa_crypto_sys::psa_dh_family_t> for DhFamily {
     type Error = Error;
-    fn try_from(group: psa_crypto_sys::psa_dh_group_t) -> Result<Self> {
+    fn try_from(group: psa_crypto_sys::psa_dh_family_t) -> Result<Self> {
         match group {
             psa_crypto_sys::PSA_DH_FAMILY_RFC7919 => Ok(DhFamily::Rfc7919),
             f => {
@@ -1014,22 +995,26 @@ impl TryFrom<psa_crypto_sys::psa_key_type_t> for Type {
             psa_crypto_sys::PSA_KEY_TYPE_RSA_KEY_PAIR => Ok(Type::RsaKeyPair),
             key_type if psa_crypto_sys::PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) => {
                 Ok(Type::EccKeyPair {
-                    curve_family: psa_crypto_sys::PSA_KEY_TYPE_GET_CURVE(key_type).try_into()?,
+                    curve_family: psa_crypto_sys::PSA_KEY_TYPE_ECC_GET_FAMILY(key_type)
+                        .try_into()?,
                 })
             }
             key_type if psa_crypto_sys::PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type) => {
                 Ok(Type::EccPublicKey {
-                    curve_family: psa_crypto_sys::PSA_KEY_TYPE_GET_CURVE(key_type).try_into()?,
+                    curve_family: psa_crypto_sys::PSA_KEY_TYPE_ECC_GET_FAMILY(key_type)
+                        .try_into()?,
                 })
             }
             key_type if psa_crypto_sys::PSA_KEY_TYPE_IS_DH_PUBLIC_KEY(key_type) => {
                 Ok(Type::DhPublicKey {
-                    group_family: psa_crypto_sys::PSA_KEY_TYPE_GET_GROUP(key_type).try_into()?,
+                    group_family: psa_crypto_sys::PSA_KEY_TYPE_DH_GET_FAMILY(key_type)
+                        .try_into()?,
                 })
             }
             key_type if psa_crypto_sys::PSA_KEY_TYPE_IS_DH_KEY_PAIR(key_type) => {
                 Ok(Type::DhKeyPair {
-                    group_family: psa_crypto_sys::PSA_KEY_TYPE_GET_GROUP(key_type).try_into()?,
+                    group_family: psa_crypto_sys::PSA_KEY_TYPE_DH_GET_FAMILY(key_type)
+                        .try_into()?,
                 })
             }
             key_type => {
@@ -1400,7 +1385,8 @@ mod tests {
         unsafe {
             psa_crypto_sys::psa_set_key_usage_flags(
                 &mut attrs,
-                psa_crypto_sys::PSA_KEY_USAGE_SIGN | psa_crypto_sys::PSA_KEY_USAGE_VERIFY,
+                psa_crypto_sys::PSA_KEY_USAGE_SIGN_MESSAGE
+                    | psa_crypto_sys::PSA_KEY_USAGE_VERIFY_MESSAGE,
             )
         };
         unsafe {
@@ -1433,8 +1419,8 @@ mod tests {
                         decrypt: false,
                         sign_message: true,
                         verify_message: true,
-                        sign_hash: true,
-                        verify_hash: true,
+                        sign_hash: false,
+                        verify_hash: false,
                         derive: false,
                     },
                     permitted_algorithms: AsymmetricSignature::Ecdsa {

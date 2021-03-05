@@ -52,7 +52,7 @@ cargo build --no-default-features --features no-std
 # Test dynamic linking
 git clone https://github.com/ARMmbed/mbedtls.git
 pushd mbedtls
-git checkout mbedtls-2.22.0
+git checkout mbedtls-2.25.0
 ./scripts/config.py crypto
 SHARED=1 make
 popd

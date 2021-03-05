@@ -3,7 +3,6 @@
 
 //! # Key Derivation operations
 
-use super::key_management::complete_new_key_operation;
 use crate::initialized;
 use crate::types::key::Attributes;
 use crate::types::key::Id;
@@ -70,21 +69,14 @@ pub fn output_key(operation: Operation, attributes: Attributes, id: Option<u32>)
     initialized()?;
 
     let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
-    let id = if let Some(id) = id {
+    if let Some(id) = id {
         unsafe { psa_crypto_sys::psa_set_key_id(&mut key_attributes, id) };
-        id
-    } else {
-        0
-    };
-    let mut handle_for_new_key = 0;
+    }
+    let mut id_for_new_key = 0;
 
     let mut op: psa_crypto_sys::psa_key_derivation_operation_t = operation.try_into()?;
     let key_deriv_res = Status::from(unsafe {
-        psa_crypto_sys::psa_key_derivation_output_key(
-            &key_attributes,
-            &mut op,
-            &mut handle_for_new_key,
-        )
+        psa_crypto_sys::psa_key_derivation_output_key(&key_attributes, &mut op, &mut id_for_new_key)
     })
     .to_result();
     if key_deriv_res == Err(Error::InsufficientData) {
@@ -92,5 +84,5 @@ pub fn output_key(operation: Operation, attributes: Attributes, id: Option<u32>)
     } // InsufficientData is only error that does not require abort
     Operation::abort(op)?;
     key_deriv_res?; // All other error can now return after abort
-    complete_new_key_operation(attributes.lifetime, id, handle_for_new_key)
+    Ok(Id(id_for_new_key))
 }

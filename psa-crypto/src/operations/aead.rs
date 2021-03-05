@@ -53,11 +53,10 @@ pub fn encrypt(
 ) -> Result<usize> {
     initialized()?;
 
-    let key_handle = key_id.handle()?;
     let mut ciphertext_size = 0;
-    let encrypt_res = Status::from(unsafe {
+    Status::from(unsafe {
         psa_crypto_sys::psa_aead_encrypt(
-            key_handle,
+            key_id.0,
             aead_alg.into(),
             nonce.as_ptr(),
             nonce.len(),
@@ -70,10 +69,7 @@ pub fn encrypt(
             &mut ciphertext_size,
         )
     })
-    .to_result();
-    let key_close_handle_res = key_id.close_handle(key_handle);
-    encrypt_res?;
-    key_close_handle_res?;
+    .to_result()?;
     Ok(ciphertext_size)
 }
 
@@ -120,12 +116,11 @@ pub fn decrypt(
 ) -> Result<usize> {
     initialized()?;
 
-    let key_handle = key_id.handle()?;
     let mut plaintext_size = 0;
 
-    let decrypt_res = Status::from(unsafe {
+    Status::from(unsafe {
         psa_crypto_sys::psa_aead_decrypt(
-            key_handle,
+            key_id.0,
             aead_alg.into(),
             nonce.as_ptr(),
             nonce.len(),
@@ -138,9 +133,6 @@ pub fn decrypt(
             &mut plaintext_size,
         )
     })
-    .to_result();
-    let key_close_handle_res = key_id.close_handle(key_handle);
-    decrypt_res?;
-    key_close_handle_res?;
+    .to_result()?;
     Ok(plaintext_size)
 }

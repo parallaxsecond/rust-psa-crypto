@@ -170,14 +170,10 @@ impl Inputs<'_> {
                 )
             })
             .to_result(),
-            Input::Key(key_id) => {
-                let handle = key_id.handle()?;
-                Status::from(unsafe {
-                    psa_crypto_sys::psa_key_derivation_input_key(op, step.into(), handle)
-                })
-                .to_result()?;
-                key_id.close_handle(handle)
-            }
+            Input::Key(key_id) => Status::from(unsafe {
+                psa_crypto_sys::psa_key_derivation_input_key(op, step.into(), key_id.0)
+            })
+            .to_result(),
         }
     }
 
@@ -194,22 +190,16 @@ impl Inputs<'_> {
                 private_key,
                 peer_key,
                 ..
-            } => {
-                let handle = private_key.handle()?;
-                let key_agreement_res = Status::from(unsafe {
-                    psa_crypto_sys::psa_key_derivation_key_agreement(
-                        op,
-                        DerivationStep::Secret.into(),
-                        handle,
-                        (**peer_key).as_ptr(),
-                        peer_key.len(),
-                    )
-                })
-                .to_result();
-                let close_handle_res = private_key.close_handle(handle);
-                key_agreement_res?;
-                close_handle_res
-            }
+            } => Status::from(unsafe {
+                psa_crypto_sys::psa_key_derivation_key_agreement(
+                    op,
+                    DerivationStep::Secret.into(),
+                    private_key.0,
+                    (**peer_key).as_ptr(),
+                    peer_key.len(),
+                )
+            })
+            .to_result(),
         }
     }
 }

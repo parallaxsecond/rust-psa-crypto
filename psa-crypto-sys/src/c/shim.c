@@ -338,38 +338,38 @@ shim_PSA_ALG_RSA_OAEP(psa_algorithm_t hash_alg)
 	return PSA_ALG_RSA_OAEP(hash_alg);
 }
 
-psa_ecc_curve_t
-shim_PSA_KEY_TYPE_GET_CURVE(psa_key_type_t key_type)
+psa_ecc_family_t
+shim_PSA_KEY_TYPE_ECC_GET_FAMILY(psa_key_type_t key_type)
 {
-	return PSA_KEY_TYPE_GET_CURVE(key_type);
+	return PSA_KEY_TYPE_ECC_GET_FAMILY(key_type);
 }
 
-psa_dh_group_t
-shim_PSA_KEY_TYPE_GET_GROUP(psa_key_type_t key_type)
+psa_dh_family_t
+shim_PSA_KEY_TYPE_DH_GET_FAMILY(psa_key_type_t key_type)
 {
-	return PSA_KEY_TYPE_GET_GROUP(key_type);
+	return PSA_KEY_TYPE_DH_GET_FAMILY(key_type);
 }
 
 psa_key_type_t
-shim_PSA_KEY_TYPE_ECC_KEY_PAIR(psa_ecc_curve_t curve)
+shim_PSA_KEY_TYPE_ECC_KEY_PAIR(psa_ecc_family_t curve)
 {
 	return PSA_KEY_TYPE_ECC_KEY_PAIR(curve);
 }
 
 psa_key_type_t
-shim_PSA_KEY_TYPE_ECC_PUBLIC_KEY(psa_ecc_curve_t curve)
+shim_PSA_KEY_TYPE_ECC_PUBLIC_KEY(psa_ecc_family_t curve)
 {
 	return PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve);
 }
 
 psa_key_type_t
-shim_PSA_KEY_TYPE_DH_KEY_PAIR(psa_dh_group_t group)
+shim_PSA_KEY_TYPE_DH_KEY_PAIR(psa_dh_family_t group)
 {
 	return PSA_KEY_TYPE_DH_KEY_PAIR(group);
 }
 
 psa_key_type_t
-shim_PSA_KEY_TYPE_DH_PUBLIC_KEY(psa_dh_group_t group)
+shim_PSA_KEY_TYPE_DH_PUBLIC_KEY(psa_dh_family_t group)
 {
 	return PSA_KEY_TYPE_DH_PUBLIC_KEY(group);
 }
