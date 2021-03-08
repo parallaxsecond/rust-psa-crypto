@@ -40,3 +40,14 @@ implementation-defined bits) of this crate to build for example a PSA Secure
 Element Driver. With the feature `interface`, this crate will only produce the
 implementation-defined types and their helpers/accessors using the
 `MBEDTLS_INCLUDE_DIR` variable that you need to pass.
+
+## Cross-compilation
+
+The `interface` and `operations` features need a C toolchain. When cross-compiling, the
+appropriate C toolchain will automatically be selected. Compilation will fail if it is
+not available on your system.
+
+The CI currently tests cross-compilation for the following targets:
+
+- `aarch64-unknown-linux-gnu`
+- `armv7-unknown-linux-gnueabihf`

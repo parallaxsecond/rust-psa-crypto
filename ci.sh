@@ -3,8 +3,7 @@
 # Copyright 2020 Contributors to the Parsec project.
 # SPDX-License-Identifier: Apache-2.0
 
-# Continuous Integration test script, executed by GitHub Actions on x86 and
-# Travis CI on Arm64.
+# Continuous Integration test script
 
 set -euf -o pipefail
 
@@ -16,6 +15,12 @@ git submodule update --init
 # Build client #
 ################
 RUST_BACKTRACE=1 cargo build
+
+# Cross-compilation tests, only the default features are tested.
+rustup target add armv7-unknown-linux-gnueabihf
+rustup target add aarch64-unknown-linux-gnu
+RUST_BACKTRACE=1 cargo build --target armv7-unknown-linux-gnueabihf
+RUST_BACKTRACE=1 cargo build --target aarch64-unknown-linux-gnu
 
 #################
 # Static checks #
