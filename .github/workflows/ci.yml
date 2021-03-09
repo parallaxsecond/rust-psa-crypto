@@ -18,5 +18,13 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: "3.x"
+      - name: Install cross-compilation toolchains
+        run: |
+          sudo apt update
+          sudo apt install -y gcc-multilib
+          # For target: armv7-unknown-linux-gnueabihf
+          sudo apt install -y gcc-arm-linux-gnueabihf
+          # For target: aarch64-unknown-linux-gnu
+          sudo apt install -y gcc-aarch64-linux-gnu
       - name: Execute all tests
         run: ./ci.sh
