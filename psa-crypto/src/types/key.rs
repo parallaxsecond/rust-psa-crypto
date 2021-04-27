@@ -875,13 +875,13 @@ impl From<UsageFlags> for psa_crypto_sys::psa_key_usage_t {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_DECRYPT;
         }
         if flags.sign_message {
-        usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN_MESSAGE;
+            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN_MESSAGE;
         }
         if flags.sign_hash {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN_HASH;
         }
         if flags.verify_message {
-        usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY_MESSAGE;
+            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY_MESSAGE;
         }
         if flags.verify_hash {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY_HASH;
