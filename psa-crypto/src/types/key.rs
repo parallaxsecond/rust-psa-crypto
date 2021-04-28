@@ -874,15 +874,16 @@ impl From<UsageFlags> for psa_crypto_sys::psa_key_usage_t {
         if flags.decrypt {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_DECRYPT;
         }
-        if flags.sign_message {
-            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN_MESSAGE;
-        }
+        //TODO: not yet implemented in Mbed Crypto, uncomment when added
+        //if flags.sign_message {
+        //  usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN_MESSAGE;
+        //}
         if flags.sign_hash {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN_HASH;
         }
-        if flags.verify_message {
-            usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY_MESSAGE;
-        }
+        //if flags.verify_message {
+        //  usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY_MESSAGE;
+        //}
         if flags.verify_hash {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY_HASH;
         }
