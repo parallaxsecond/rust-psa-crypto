@@ -115,7 +115,7 @@ impl Attributes {
 
     /// Check if a key has permission to sign a message
     pub fn is_message_signable(self) -> bool {
-        self.policy.usage_flags.sign_hash & self.policy.usage_flags.sign_message
+        self.policy.usage_flags.sign_hash | self.policy.usage_flags.sign_message
     }
 
     /// Check message signing permission in a fallible way
@@ -130,7 +130,7 @@ impl Attributes {
 
     /// Check if a key has permission to verify a message
     pub fn is_message_verifiable(self) -> bool {
-        self.policy.usage_flags.verify_hash & self.policy.usage_flags.verify_message
+        self.policy.usage_flags.verify_hash | self.policy.usage_flags.verify_message
     }
 
     /// Check message verifying permission in a fallible way
