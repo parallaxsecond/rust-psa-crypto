@@ -103,12 +103,42 @@ impl Attributes {
         self.policy.usage_flags.verify_hash
     }
 
-    /// Check hash signing permission in a fallible way
+    /// Check hash verifying permission in a fallible way
     pub fn can_verify_hash(self) -> Result<()> {
         if self.is_hash_verifiable() {
             Ok(())
         } else {
             error!("Key attributes do not permit verifying hashes.");
+            Err(Error::NotPermitted)
+        }
+    }
+
+    /// Check if a key has permission to sign a message
+    pub fn is_message_signable(self) -> bool {
+        self.policy.usage_flags.sign_hash | self.policy.usage_flags.sign_message
+    }
+
+    /// Check message signing permission in a fallible way
+    pub fn can_sign_message(self) -> Result<()> {
+        if self.is_message_signable() {
+            Ok(())
+        } else {
+            error!("Key attributes do not permit signing messages.");
+            Err(Error::NotPermitted)
+        }
+    }
+
+    /// Check if a key has permission to verify a message
+    pub fn is_message_verifiable(self) -> bool {
+        self.policy.usage_flags.verify_hash | self.policy.usage_flags.verify_message
+    }
+
+    /// Check message verifying permission in a fallible way
+    pub fn can_verify_message(self) -> Result<()> {
+        if self.is_message_verifiable() {
+            Ok(())
+        } else {
+            error!("Key attributes do not permit verifying messages.");
             Err(Error::NotPermitted)
         }
     }
@@ -846,13 +876,13 @@ impl From<UsageFlags> for psa_crypto_sys::psa_key_usage_t {
         }
         //TODO: not yet implemented in Mbed Crypto, uncomment when added
         //if flags.sign_message {
-        //usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN_MESSAGE;
+        //  usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN_MESSAGE;
         //}
         if flags.sign_hash {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_SIGN_HASH;
         }
         //if flags.verify_message {
-        //usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY_MESSAGE;
+        //  usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY_MESSAGE;
         //}
         if flags.verify_hash {
             usage_flags |= psa_crypto_sys::PSA_KEY_USAGE_VERIFY_HASH;
