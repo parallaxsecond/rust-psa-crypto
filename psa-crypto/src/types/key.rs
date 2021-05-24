@@ -615,6 +615,11 @@ impl Type {
         matches!(self, Type::EccPublicKey { .. })
     }
 
+    /// Checks if a key type is RSA public key.
+    pub fn is_rsa_public_key(self) -> bool {
+        matches!(self, Type::RsaPublicKey)
+    }
+
     /// Checks if a key type is DH public key with any group family inside.
     pub fn is_dh_public_key(self) -> bool {
         matches!(self, Type::DhPublicKey { .. })
@@ -623,6 +628,11 @@ impl Type {
     /// Checks if a key type is DH key pair with any group family inside.
     pub fn is_dh_key_pair(self) -> bool {
         matches!(self, Type::DhKeyPair { .. })
+    }
+
+    /// Checks if a key type is an asymmetric public key type.
+    pub fn is_public_key(self) -> bool {
+        self.is_rsa_public_key() || self.is_ecc_public_key() || self.is_dh_public_key()
     }
 
     /// If key is public or key pair, returns the corresponding public key type.
