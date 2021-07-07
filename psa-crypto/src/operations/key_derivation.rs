@@ -21,30 +21,28 @@ use core::convert::{TryFrom, TryInto};
 /// use psa_crypto::types::key_derivation::{Operation, Inputs, Input, InputSecret};
 ///
 /// # const KEY_DATA: [u8; 23] = [0; 23];
+/// # let mut usage_flags: UsageFlags = Default::default();
+/// # usage_flags.set_derive();
 /// # let mut attributes = Attributes {
 /// #     key_type: Type::Derive,
 /// #     bits: 0,
 /// #     lifetime: Lifetime::Volatile,
 /// #     policy: Policy {
-/// #         usage_flags: UsageFlags {
-/// #             derive: true,
-/// #             ..Default::default()
-/// #         },
+/// #         usage_flags,
 /// #         permitted_algorithms: KeyDerivation::Hkdf {
 /// #            hash_alg: Hash::Sha256,
 /// #         }.into()
 /// #     }
 /// # };
 ///
+/// # let mut usage_flags: UsageFlags = Default::default();
+/// # usage_flags.set_derive();
 /// # let mut derived_key_attributes = Attributes {
 /// # key_type: Type::RawData,
 /// #     bits: 8,
 /// #     lifetime: Lifetime::Volatile,
 /// #     policy: Policy {
-/// #         usage_flags: UsageFlags {
-/// #             derive: true,
-/// #             ..Default::default()
-/// #         },
+/// #         usage_flags,
 /// #         permitted_algorithms: KeyDerivation::Hkdf {
 /// #            hash_alg: Hash::Sha256,
 /// #         }.into()
