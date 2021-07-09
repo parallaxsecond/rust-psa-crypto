@@ -26,15 +26,14 @@ const ENCRYPTED_DATA: [u8; 40] = [
 #[test]
 fn aead_encrypt_aes_ccm() {
     let alg = Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm);
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_encrypt();
     let attributes = Attributes {
         key_type: Type::Aes,
         bits: 0,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                encrypt: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: alg.into(),
         },
     };
@@ -59,14 +58,13 @@ fn aead_encrypt_aes_ccm() {
 #[test]
 fn aead_encrypt_aes_ccm_no_encrypt_usage_flag() {
     let alg = Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm);
+    let mut usage_flags: UsageFlags = Default::default();
     let attributes = Attributes {
         key_type: Type::Aes,
         bits: 0,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: alg.into(),
         },
     };
@@ -89,15 +87,14 @@ fn aead_encrypt_aes_ccm_no_encrypt_usage_flag() {
 #[test]
 fn aead_decrypt_aes_ccm() {
     let alg = Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm);
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_decrypt();
     let attributes = Attributes {
         key_type: Type::Aes,
         bits: 0,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                decrypt: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: alg.into(),
         },
     };
@@ -122,14 +119,13 @@ fn aead_decrypt_aes_ccm() {
 #[test]
 fn aead_decrypt_aes_ccm_no_decrypt_usage_flag() {
     let alg = Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm);
+    let mut usage_flags: UsageFlags = Default::default();
     let attributes = Attributes {
         key_type: Type::Aes,
         bits: 0,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: alg.into(),
         },
     };
@@ -156,15 +152,14 @@ fn aead_decrypt_aes_ccm_invalid_signature() {
         0x89, 0x05, 0x4D, 0x89, 0x5C, 0xEA, 0xC4, 0x7C,
     ];
     let alg = Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm);
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_decrypt();
     let attributes = Attributes {
         key_type: Type::Aes,
         bits: 0,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                decrypt: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: alg.into(),
         },
     };

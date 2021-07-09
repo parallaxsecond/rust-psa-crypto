@@ -18,15 +18,14 @@ const PRIVATE_KEY_DATA: [u8; 32] = [
 #[test]
 fn output_key() {
     const KEY_DATA: [u8; 23] = [0; 23];
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_derive();
     let attributes = Attributes {
         key_type: Type::Derive,
         bits: 0,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                derive: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: KeyDerivation::Hkdf {
                 hash_alg: Hash::Sha256,
             }
@@ -34,15 +33,14 @@ fn output_key() {
         },
     };
 
+    let mut usage_flags: UsageFlags = Default::default(); 
+    usage_flags.set_derive();
     let derived_key_attributes = Attributes {
         key_type: Type::RawData,
         bits: 8,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                derive: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: KeyDerivation::Hkdf {
                 hash_alg: Hash::Sha256,
             }
@@ -69,6 +67,8 @@ fn output_key() {
 #[ignore]
 fn output_key_with_key_agreement() {
     let key_agreement_alg = RawKeyAgreement::Ecdh;
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_derive();
     let key_agr_attributes = Attributes {
         key_type: Type::EccKeyPair {
             curve_family: EccFamily::SecpR1,
@@ -76,10 +76,7 @@ fn output_key_with_key_agreement() {
         bits: 0,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                derive: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: KeyAgreement::WithKeyDerivation {
                 ka_alg: key_agreement_alg,
                 kdf_alg: KeyDerivation::Hkdf {
@@ -90,15 +87,14 @@ fn output_key_with_key_agreement() {
         },
     };
     const KEY_DATA: [u8; 23] = [0; 23];
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_derive();
     let attributes = Attributes {
         key_type: Type::RawData,
         bits: 0,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                derive: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: KeyAgreement::WithKeyDerivation {
                 ka_alg: key_agreement_alg,
                 kdf_alg: KeyDerivation::Hkdf {
@@ -108,15 +104,14 @@ fn output_key_with_key_agreement() {
             .into(),
         },
     };
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_derive();
     let derived_key_attributes = Attributes {
         key_type: Type::RawData,
         bits: 8,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                derive: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: KeyDerivation::Hkdf {
                 hash_alg: Hash::Sha256,
             }

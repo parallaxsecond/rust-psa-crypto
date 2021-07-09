@@ -21,18 +21,14 @@ use crate::types::status::{Result, Status};
 /// # use psa_crypto::operations::asym_signature::sign_hash;
 /// # use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
 /// # use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
+/// # let mut usage_flags: UsageFlags = Default::default();
+/// # usage_flags.set_sign_hash().set_verify_hash();
 /// # let mut attributes = Attributes {
 /// #     key_type: Type::RsaKeyPair,
 /// #     bits: 1024,
 /// #     lifetime: Lifetime::Volatile,
 /// #     policy: Policy {
-/// #         usage_flags: UsageFlags {
-/// #             sign_hash: true,
-/// #             sign_message: true,
-/// #             verify_hash: true,
-/// #             verify_message: true,
-/// #             ..Default::default()
-/// #         },
+/// #         usage_flags,
 /// #         permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
 /// #             hash_alg: Hash::Sha256.into(),
 /// #         }.into(),
@@ -90,18 +86,14 @@ pub fn sign_hash(
 /// # use psa_crypto::operations::asym_signature::{sign_hash, verify_hash};
 /// # use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
 /// # use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
+/// # let mut usage_flags: UsageFlags = Default::default();
+/// # usage_flags.set_sign_hash().set_verify_hash();
 /// # let mut attributes = Attributes {
 /// #     key_type: Type::RsaKeyPair,
 /// #     bits: 1024,
 /// #     lifetime: Lifetime::Volatile,
 /// #     policy: Policy {
-/// #         usage_flags: UsageFlags {
-/// #             sign_hash: true,
-/// #             sign_message: true,
-/// #             verify_hash: true,
-/// #             verify_message: true,
-/// #             ..Default::default()
-/// #         },
+/// #         usage_flags,
 /// #         permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
 /// #             hash_alg: Hash::Sha256.into(),
 /// #         }.into(),

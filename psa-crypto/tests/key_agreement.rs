@@ -24,6 +24,8 @@ const EXPECTED_OUTPUT: [u8; 32] = [
 #[test]
 fn key_agreement() {
     let alg = RawKeyAgreement::Ecdh;
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_derive();
     let attributes = Attributes {
         key_type: Type::EccKeyPair {
             curve_family: EccFamily::SecpR1,
@@ -31,10 +33,7 @@ fn key_agreement() {
         bits: 0,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                derive: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: KeyAgreement::Raw(alg).into(),
         },
     };
@@ -62,15 +61,14 @@ fn key_agreement_incompatible_keys() {
     ];
 
     let alg = RawKeyAgreement::Ecdh;
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_derive();
     let attributes = Attributes {
         key_type: Type::RsaPublicKey,
         bits: 0,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                derive: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: KeyAgreement::Raw(alg).into(),
         },
     };
@@ -85,6 +83,7 @@ fn key_agreement_incompatible_keys() {
 #[test]
 fn key_agreement_no_derive_flag() {
     let alg = RawKeyAgreement::Ecdh;
+    let mut usage_flags: UsageFlags = Default::default();
     let attributes = Attributes {
         key_type: Type::EccKeyPair {
             curve_family: EccFamily::SecpR1,
@@ -92,9 +91,7 @@ fn key_agreement_no_derive_flag() {
         bits: 0,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: KeyAgreement::Raw(alg).into(),
         },
     };

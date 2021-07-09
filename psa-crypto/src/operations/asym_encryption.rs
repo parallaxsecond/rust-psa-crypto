@@ -22,15 +22,14 @@ use crate::types::status::{Result, Status};
 /// # use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
 /// # use psa_crypto::types::algorithm::{AsymmetricEncryption, Hash};
 /// #
+/// # let mut usage_flags: UsageFlags = Default::default();
+/// # usage_flags.set_encrypt();
 /// # let mut attributes = Attributes {
 /// #     key_type: Type::RsaKeyPair,
 /// #     bits: 1024,
 /// #     lifetime: Lifetime::Volatile,
 /// #     policy: Policy {
-/// #         usage_flags: UsageFlags {
-/// #             encrypt: true,
-/// #             ..Default::default()
-/// #         },
+/// #         usage_flags,
 /// #         permitted_algorithms: AsymmetricEncryption::RsaPkcs1v15Crypt.into(),
 /// #     },
 /// # };
@@ -96,15 +95,14 @@ pub fn encrypt(
 /// # use psa_crypto::types::algorithm::{AsymmetricEncryption, Hash};
 /// # use rsa::{RSAPublicKey, PaddingScheme, PublicKey};
 /// # use rand::rngs::OsRng;
+/// # let mut usage_flags: UsageFlags = Default::default();
+/// # usage_flags.set_decrypt();
 /// # let mut attributes = Attributes {
 /// #     key_type: Type::RsaKeyPair,
 /// #     bits: 1024,
 /// #     lifetime: Lifetime::Volatile,
 /// #     policy: Policy {
-/// #         usage_flags: UsageFlags {
-/// #             decrypt: true,
-/// #             ..Default::default()
-/// #         },
+/// #         usage_flags,
 /// #         permitted_algorithms: AsymmetricEncryption::RsaPkcs1v15Crypt.into()
 /// #     },
 /// # };

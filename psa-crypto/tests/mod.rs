@@ -12,23 +12,14 @@ mod key_agreement;
 
 #[test]
 fn generate_integration_test() {
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_verify_message();
     let attributes = Attributes {
         lifetime: Lifetime::Persistent,
         key_type: Type::RsaKeyPair,
         bits: 1024,
         policy: Policy {
-            usage_flags: UsageFlags {
-                sign_hash: false,
-                verify_hash: false,
-                sign_message: false,
-                verify_message: true,
-                export: false,
-                encrypt: false,
-                decrypt: false,
-                cache: false,
-                copy: false,
-                derive: false,
-            },
+            usage_flags,
             permitted_algorithms: Algorithm::AsymmetricSignature(
                 AsymmetricSignature::RsaPkcs1v15Sign {
                     hash_alg: Hash::Sha256.into(),
@@ -57,18 +48,14 @@ fn import_integration_test() {
         1, 0, 1,
     ];
 
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_verify_hash().set_sign_hash();
     let attributes = Attributes {
         lifetime: Lifetime::Persistent,
         key_type: Type::RsaPublicKey,
         bits: 1024,
         policy: Policy {
-            usage_flags: UsageFlags {
-                sign_hash: true,
-                sign_message: true,
-                verify_hash: true,
-                verify_message: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
                 hash_alg: Hash::Sha256.into(),
             }
@@ -100,23 +87,14 @@ fn export_key_pair_test() {
         VJ8gc1rd0y/NXVtGwQJAc2w23nTmZ/olcMVRia1+AFsELcCnD+JqaJ2AEF1Ng6Ix\
         V/X2l32v6t3B57sw/8ce3LCheEdqLHlSOpQiaD7Qfw==";
 
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_sign_hash().set_verify_hash().set_export();
     let attributes = Attributes {
         key_type: Type::RsaKeyPair,
         bits: 1024,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                sign_hash: true,
-                verify_hash: true,
-                sign_message: true,
-                verify_message: true,
-                export: true,
-                encrypt: false,
-                decrypt: false,
-                cache: false,
-                copy: false,
-                derive: false,
-            },
+            usage_flags,
             permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
                 hash_alg: Hash::Sha256.into(),
             }
@@ -138,16 +116,14 @@ fn export_key_pair_test() {
 
 #[test]
 fn copy_key_success() {
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_export().set_copy();
     let attributes = Attributes {
         key_type: Type::RsaKeyPair,
         bits: 1024,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                copy: true,
-                export: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: Algorithm::None,
         },
     };
@@ -168,20 +144,20 @@ fn copy_key_success() {
 
 #[test]
 fn copy_key_incompatible_copy_attrs() {
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_copy().set_export();
     let attributes = Attributes {
         key_type: Type::RsaKeyPair,
         bits: 1024,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                copy: true,
-                export: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: Algorithm::None,
         },
     };
 
+    let mut usage_flags: UsageFlags = Default::default();
+    usage_flags.set_copy().set_export();
     let incompatible_copy_attrs = Attributes {
         key_type: Type::EccKeyPair {
             curve_family: EccFamily::SecpR1,
@@ -189,11 +165,7 @@ fn copy_key_incompatible_copy_attrs() {
         bits: 448,
         lifetime: Lifetime::Volatile,
         policy: Policy {
-            usage_flags: UsageFlags {
-                copy: true,
-                export: true,
-                ..Default::default()
-            },
+            usage_flags,
             permitted_algorithms: Algorithm::None,
         },
     };

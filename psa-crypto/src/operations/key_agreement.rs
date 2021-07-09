@@ -24,15 +24,14 @@ use crate::types::status::{Result, Status};
 /// # const OUR_KEY_DATA: [u8; 32] = [0xc8, 0x8f, 0x01, 0xf5, 0x10, 0xd9, 0xac, 0x3f, 0x70, 0xa2, 0x92, 0xda, 0xa2,
 /// # 0x31, 0x6d, 0xe5, 0x44, 0xe9, 0xaa, 0xb8, 0xaf, 0xe8, 0x40, 0x49, 0xc6, 0x2a, 0x9c, 0x57, 0x86, 0x2d, 0x14, 0x33];
 /// let alg = RawKeyAgreement::Ecdh;
+/// # let mut usage_flags: UsageFlags = Default::default();
+/// # usage_flags.set_derive();
 /// # let attributes = Attributes {
 /// #     key_type: Type::EccKeyPair {curve_family: EccFamily::SecpR1 },
 /// #     bits: 256,
 /// #     lifetime: Lifetime::Volatile,
 /// #     policy: Policy {
-/// #         usage_flags: UsageFlags {
-/// #         derive: true,
-/// #             ..Default::default()
-/// #         },
+/// #         usage_flags,
 /// #         permitted_algorithms: KeyAgreement::Raw(alg).into(),
 /// #     },
 /// # };

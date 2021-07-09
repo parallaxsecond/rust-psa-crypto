@@ -24,15 +24,14 @@ use crate::types::status::{Result, Status};
 /// # const INPUT_DATA: [u8; 24] = [0x45, 0x35, 0xd1, 0x2b, 0x43, 0x77, 0x92, 0x8a, 0x7c, 0x0a, 0x61, 0xc9, 0xf8, 0x25, 0xa4, 0x86,
 /// # 0x71, 0xea, 0x05, 0x91, 0x07, 0x48, 0xc8, 0xef];
 /// let alg = Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm);
+/// let mut usage_flags: UsageFlags = Default::default();
+/// usage_flags.set_encrypt();
 /// let attributes = Attributes {
 /// key_type: Type::Aes,
 ///      bits: 0,
 ///      lifetime: Lifetime::Volatile,
 ///      policy: Policy {
-///          usage_flags: UsageFlags {
-///              encrypt: true,
-///              ..Default::default()
-///          },
+///          usage_flags,
 ///          permitted_algorithms: alg.into(),
 ///      },
 /// };
@@ -87,15 +86,14 @@ pub fn encrypt(
 /// # const INPUT_DATA: [u8; 40] = [0x26, 0xc5, 0x69, 0x61, 0xc0, 0x35, 0xa7, 0xe4, 0x52, 0xcc, 0xe6, 0x1b, 0xc6, 0xee, 0x22, 0x0d,
 /// # 0x77, 0xb3, 0xf9, 0x4d, 0x18, 0xfd, 0x10, 0xb6, 0xd8, 0x0e, 0x8b, 0xf8, 0x0f, 0x4a, 0x46, 0xca, 0xb0, 0x6d, 0x43, 0x13, 0xf0, 0xdb, 0x9b, 0xe9];
 /// let alg = Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm);
+/// let mut usage_flags: UsageFlags = Default::default();
+/// usage_flags.set_decrypt();
 /// let attributes = Attributes {
 /// key_type: Type::Aes,
 ///      bits: 0,
 ///      lifetime: Lifetime::Volatile,
 ///      policy: Policy {
-///          usage_flags: UsageFlags {
-///              decrypt: true,
-///              ..Default::default()
-///          },
+///          usage_flags,
 ///          permitted_algorithms: alg.into(),
 ///      },
 /// };

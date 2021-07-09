@@ -48,23 +48,13 @@ impl Attributes {
     /// use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
     /// use psa_crypto::types::algorithm::{Algorithm, AsymmetricSignature, Hash};
     ///
+    /// let mut usage_flags: UsageFlags = Default::default();
     /// let mut attributes = Attributes {
     ///     key_type: Type::RsaKeyPair,
     ///     bits: 1024,
     ///     lifetime: Lifetime::Volatile,
     ///     policy: Policy {
-    ///         usage_flags: UsageFlags {
-    ///             export: false,
-    ///             copy: false,
-    ///             cache: false,
-    ///             encrypt: false,
-    ///             decrypt: false,
-    ///             sign_message: false,
-    ///             verify_message: false,
-    ///             sign_hash: false,
-    ///             verify_hash: false,
-    ///             derive: false,
-    ///         },
+    ///         usage_flags,
     ///         permitted_algorithms: Algorithm::AsymmetricSignature(AsymmetricSignature::RsaPkcs1v15Sign {
     ///             hash_alg: Hash::Sha256.into(),
     ///         }),
@@ -230,23 +220,13 @@ impl Attributes {
     /// let alg = Algorithm::AsymmetricSignature(AsymmetricSignature::RsaPkcs1v15Sign {
     ///     hash_alg: Hash::Sha256.into(),
     /// });
+    /// let mut usage_flags: UsageFlags = Default::default();
     /// let mut attributes = Attributes {
     ///     key_type: Type::RsaKeyPair,
     ///     bits: 1024,
     ///     lifetime: Lifetime::Volatile,
     ///     policy: Policy {
-    ///         usage_flags: UsageFlags {
-    ///             export: false,
-    ///             copy: false,
-    ///             cache: false,
-    ///             encrypt: false,
-    ///             decrypt: false,
-    ///             sign_message: false,
-    ///             verify_message: false,
-    ///             sign_hash: false,
-    ///             verify_hash: false,
-    ///             derive: false,
-    ///         },
+    ///         usage_flags,
     ///         permitted_algorithms: permitted_alg,
     ///     },
     /// };
@@ -346,18 +326,14 @@ impl Attributes {
     /// # use psa_crypto::operations::key_management;
     /// # use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
     /// # use psa_crypto::types::algorithm::{AsymmetricSignature, Hash};
+    /// # let mut usage_flags: UsageFlags = Default::default();
+    /// # usage_flags.set_sign_hash().set_verify_hash();
     /// # let mut attributes = Attributes {
     /// #     key_type: Type::RsaKeyPair,
     /// #     bits: 1024,
     /// #     lifetime: Lifetime::Volatile,
     /// #     policy: Policy {
-    /// #         usage_flags: UsageFlags {
-    /// #             sign_hash: true,
-    /// #             sign_message: true,
-    /// #             verify_hash: true,
-    /// #             verify_message: true,
-    /// #             ..Default::default()
-    /// #         },
+    /// #         usage_flags,
     /// #         permitted_algorithms: AsymmetricSignature::RsaPkcs1v15Sign {
     /// #             hash_alg: Hash::Sha256.into(),
     /// #         }.into(),
@@ -770,25 +746,120 @@ pub struct Policy {
 #[derive(Copy, Clone, Debug, Default, PartialEq, Serialize, Deserialize, Zeroize)]
 pub struct UsageFlags {
     /// Permission to export the key.
-    pub export: bool,
+    export: bool,
     /// Permission to copy the key.
-    pub copy: bool,
+    copy: bool,
     /// Permission for the implementation to cache the key.
-    pub cache: bool,
+    cache: bool,
     /// Permission to encrypt a message with the key.
-    pub encrypt: bool,
+    encrypt: bool,
     /// Permission to decrypt a message with the key.
-    pub decrypt: bool,
+    decrypt: bool,
     /// Permission to sign a message with the key.
-    pub sign_message: bool,
+    sign_message: bool,
     /// Permission to verify a message signature with the key.
-    pub verify_message: bool,
+    verify_message: bool,
     /// Permission to sign a message hash with the key.
-    pub sign_hash: bool,
+    sign_hash: bool,
     /// Permission to verify a message hash with the key.
-    pub verify_hash: bool,
+    verify_hash: bool,
     /// Permission to derive other keys from this key.
-    pub derive: bool,
+    derive: bool,
+}
+
+impl UsageFlags {
+    ///Setter for the export flag
+    pub fn set_export(&mut self) -> &mut Self{
+        self.export = true;
+        self
+    }
+    ///Getter for the export flag
+    pub fn export(&self) -> bool {
+        return self.export;
+    }
+    ///Setter for the copy flag
+    pub fn set_copy(&mut self) -> &mut Self{
+        self.copy = true;
+        self
+    }
+    ///Getter for the copy flag
+    pub fn copy(&self) -> bool {
+        return self.copy;
+    }
+    ///Setter for the cache flag
+    pub fn set_cache(&mut self) -> &mut Self{
+        self.cache = true;
+        self
+    }
+    ///Getter for the cache flag
+    pub fn cache(&self) -> bool {
+        return self.cache;
+    }
+    ///Setter for the encrypt flag
+    pub fn set_encrypt(&mut self) -> &mut Self{
+        self.encrypt = true;
+        self
+    }
+    ///Getter for the encrypt flag
+    pub fn encrypt(&self) -> bool {
+        return self.encrypt;
+    }
+    ///Setter for the decrypt flag
+    pub fn set_decrypt(&mut self) -> &mut Self{
+        self.decrypt = true;
+        self
+    }
+    ///Getter for the decrypt flag
+    pub fn decrypt(&self) -> bool {
+        return self.decrypt;
+    }
+    ///Setter for the sign_hash flag (also sets the sign_message flag)
+    pub fn set_sign_hash(&mut self) -> &mut Self{
+        self.sign_hash = true;
+        self.sign_message = true;
+        self
+    }
+    ///Getter for the sign_hash flag
+    pub fn sign_hash(&self) -> bool {
+        return self.sign_hash;
+    }
+    ///Setter for the sign_message flag
+    pub fn set_sign_message(&mut self) -> &mut Self{
+        self.sign_message = true;
+        self
+    }
+    ///Getter for the sign_message flag
+    pub fn sign_message(&self) -> bool {
+        return self.sign_message;
+    }
+    ///Setter for the verify_hash flag (also sets the varify_message flag)
+    pub fn set_verify_hash(&mut self) -> &mut Self{
+        self.verify_hash = true;
+        self.verify_message = true;
+        self
+    }
+    ///Getter for the verify_hash flag
+    pub fn verify_hash(&self) -> bool {
+        return self.verify_hash;
+    }
+    ///Setter for the verify_message flag
+    pub fn set_verify_message(&mut self) -> &mut Self{
+        self.verify_message = true;
+        self
+    }
+    ///Getter for the verify_message flag
+    pub fn verify_message(&self) -> bool {
+        return self.verify_message;
+    }
+    ///Setter for the derive flag
+    pub fn set_derive(&mut self) -> &mut Self{
+        self.derive = true;
+        self
+    }
+    ///Getter for the derive flag
+    pub fn derive(&self) -> bool {
+        return self.derive;
+    }
 }
 
 /// Definition of the key ID.
