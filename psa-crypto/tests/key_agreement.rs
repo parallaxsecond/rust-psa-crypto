@@ -83,7 +83,7 @@ fn key_agreement_incompatible_keys() {
 #[test]
 fn key_agreement_no_derive_flag() {
     let alg = RawKeyAgreement::Ecdh;
-    let mut usage_flags: UsageFlags = Default::default();
+    let usage_flags: UsageFlags = Default::default();
     let attributes = Attributes {
         key_type: Type::EccKeyPair {
             curve_family: EccFamily::SecpR1,

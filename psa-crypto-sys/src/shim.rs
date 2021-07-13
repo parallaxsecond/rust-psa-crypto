@@ -333,7 +333,7 @@ pub unsafe fn PSA_ASYMMETRIC_DECRYPT_OUTPUT_SIZE(
 }
 
 pub unsafe fn PSA_EXPORT_KEY_OUTPUT_SIZE(key_type: psa_key_type_t, key_bits: usize) -> usize {
-    psa_crypto_binding::shim_PSA_KEY_EXPORT_MAX_SIZE(key_type, key_bits)
+    psa_crypto_binding::shim_PSA_EXPORT_KEY_OUTPUT_SIZE(key_type, key_bits)
 }
 
 pub fn PSA_HASH_LENGTH(alg: psa_algorithm_t) -> usize {
@@ -354,23 +354,25 @@ pub unsafe fn PSA_MAC_TRUNCATED_LENGTH(alg: psa_algorithm_t) -> usize {
 }
 
 pub fn PSA_AEAD_TAG_LENGTH(
-    /*key_type: psa_key_type_t,
+    key_type: psa_key_type_t,
     key_bits: usize,
-    Spec states these are requried
-     */
     alg: psa_algorithm_t,
 ) -> usize {
-    unsafe {
-        psa_crypto_binding::shim_PSA_AEAD_TAG_LENGTH(
-            /*key_type, key_bits, Spec states these are required */ alg,
-        )
-    }
+    unsafe { psa_crypto_binding::shim_PSA_AEAD_TAG_LENGTH(key_type, key_bits, alg) }
 }
 
-pub unsafe fn PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg: psa_algorithm_t, plaintext_bytes: usize) -> usize {
-    psa_crypto_binding::shim_PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg, plaintext_bytes)
+pub unsafe fn PSA_AEAD_ENCRYPT_OUTPUT_SIZE(
+    key_type: psa_key_type_t,
+    alg: psa_algorithm_t,
+    plaintext_length: usize,
+) -> usize {
+    psa_crypto_binding::shim_PSA_AEAD_ENCRYPT_OUTPUT_SIZE(key_type, alg, plaintext_length)
 }
 
-pub unsafe fn PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg: psa_algorithm_t, ciphertext_bytes: usize) -> usize {
-    psa_crypto_binding::shim_PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg, ciphertext_bytes)
+pub unsafe fn PSA_AEAD_DECRYPT_OUTPUT_SIZE(
+    key_type: psa_key_type_t,
+    alg: psa_algorithm_t,
+    ciphertext_length: usize,
+) -> usize {
+    psa_crypto_binding::shim_PSA_AEAD_DECRYPT_OUTPUT_SIZE(key_type, alg, ciphertext_length)
 }
