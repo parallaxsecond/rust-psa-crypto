@@ -439,7 +439,7 @@ impl Attributes {
         self.compatible_with_alg(alg.into())?;
         Ok(unsafe {
             psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(
-                /*self.key_type.try_into() PSA API specifies including this parameter*/
+                self.key_type.try_into()?,
                 alg.into(),
                 plaintext_len,
             )
@@ -452,7 +452,7 @@ impl Attributes {
         self.compatible_with_alg(alg.into())?;
         Ok(unsafe {
             psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(
-                /*self.key_type.try_into() PSA API specifies including this parameter*/
+                self.key_type.try_into()?,
                 alg.into(),
                 ciphertext_len,
             )
@@ -464,7 +464,8 @@ impl Attributes {
     pub fn aead_tag_length(self, alg: Aead) -> Result<usize> {
         self.compatible_with_alg(alg.into())?;
         Ok(psa_crypto_sys::PSA_AEAD_TAG_LENGTH(
-            /*self.key_type.try_into()?, self.bits, Spec states these are requried */
+            self.key_type.try_into()?,
+            self.bits,
             alg.into(),
         ))
     }
@@ -769,96 +770,96 @@ pub struct UsageFlags {
 
 impl UsageFlags {
     ///Setter for the export flag
-    pub fn set_export(&mut self) -> &mut Self{
+    pub fn set_export(&mut self) -> &mut Self {
         self.export = true;
         self
     }
     ///Getter for the export flag
     pub fn export(&self) -> bool {
-        return self.export;
+        self.export
     }
     ///Setter for the copy flag
-    pub fn set_copy(&mut self) -> &mut Self{
+    pub fn set_copy(&mut self) -> &mut Self {
         self.copy = true;
         self
     }
     ///Getter for the copy flag
     pub fn copy(&self) -> bool {
-        return self.copy;
+        self.copy
     }
     ///Setter for the cache flag
-    pub fn set_cache(&mut self) -> &mut Self{
+    pub fn set_cache(&mut self) -> &mut Self {
         self.cache = true;
         self
     }
     ///Getter for the cache flag
     pub fn cache(&self) -> bool {
-        return self.cache;
+        self.cache
     }
     ///Setter for the encrypt flag
-    pub fn set_encrypt(&mut self) -> &mut Self{
+    pub fn set_encrypt(&mut self) -> &mut Self {
         self.encrypt = true;
         self
     }
     ///Getter for the encrypt flag
     pub fn encrypt(&self) -> bool {
-        return self.encrypt;
+        self.encrypt
     }
     ///Setter for the decrypt flag
-    pub fn set_decrypt(&mut self) -> &mut Self{
+    pub fn set_decrypt(&mut self) -> &mut Self {
         self.decrypt = true;
         self
     }
     ///Getter for the decrypt flag
     pub fn decrypt(&self) -> bool {
-        return self.decrypt;
+        self.decrypt
     }
     ///Setter for the sign_hash flag (also sets the sign_message flag)
-    pub fn set_sign_hash(&mut self) -> &mut Self{
+    pub fn set_sign_hash(&mut self) -> &mut Self {
         self.sign_hash = true;
         self.sign_message = true;
         self
     }
     ///Getter for the sign_hash flag
     pub fn sign_hash(&self) -> bool {
-        return self.sign_hash;
+        self.sign_hash
     }
     ///Setter for the sign_message flag
-    pub fn set_sign_message(&mut self) -> &mut Self{
+    pub fn set_sign_message(&mut self) -> &mut Self {
         self.sign_message = true;
         self
     }
     ///Getter for the sign_message flag
     pub fn sign_message(&self) -> bool {
-        return self.sign_message;
+        self.sign_message
     }
     ///Setter for the verify_hash flag (also sets the varify_message flag)
-    pub fn set_verify_hash(&mut self) -> &mut Self{
+    pub fn set_verify_hash(&mut self) -> &mut Self {
         self.verify_hash = true;
         self.verify_message = true;
         self
     }
     ///Getter for the verify_hash flag
     pub fn verify_hash(&self) -> bool {
-        return self.verify_hash;
+        self.verify_hash
     }
     ///Setter for the verify_message flag
-    pub fn set_verify_message(&mut self) -> &mut Self{
+    pub fn set_verify_message(&mut self) -> &mut Self {
         self.verify_message = true;
         self
     }
     ///Getter for the verify_message flag
     pub fn verify_message(&self) -> bool {
-        return self.verify_message;
+        self.verify_message
     }
     ///Setter for the derive flag
-    pub fn set_derive(&mut self) -> &mut Self{
+    pub fn set_derive(&mut self) -> &mut Self {
         self.derive = true;
         self
     }
     ///Getter for the derive flag
     pub fn derive(&self) -> bool {
-        return self.derive;
+        self.derive
     }
 }
 

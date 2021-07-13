@@ -33,7 +33,7 @@ fn output_key() {
         },
     };
 
-    let mut usage_flags: UsageFlags = Default::default(); 
+    let mut usage_flags: UsageFlags = Default::default();
     usage_flags.set_derive();
     let derived_key_attributes = Attributes {
         key_type: Type::RawData,

@@ -280,12 +280,12 @@ shim_PSA_ALG_FULL_LENGTH_MAC(psa_algorithm_t mac_alg) {
 
 psa_algorithm_t
 shim_PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(psa_algorithm_t aead_alg) {
-    return PSA_ALG_AEAD_WITH_DEFAULT_TAG_LENGTH(aead_alg);
+    return PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG(aead_alg);
 }
 
 psa_algorithm_t
 shim_PSA_ALG_AEAD_WITH_SHORTENED_TAG(psa_algorithm_t aead_alg, size_t tag_length) {
-    return PSA_ALG_AEAD_WITH_TAG_LENGTH(aead_alg, tag_length);
+    return PSA_ALG_AEAD_WITH_SHORTENED_TAG(aead_alg, tag_length);
 }
 
 psa_algorithm_t
@@ -399,21 +399,21 @@ shim_PSA_ASYMMETRIC_DECRYPT_OUTPUT_SIZE(psa_key_type_t key_type, size_t key_bits
 }
 
 size_t
-shim_PSA_KEY_EXPORT_MAX_SIZE(psa_key_type_t key_type, size_t key_bits)
+shim_PSA_EXPORT_KEY_OUTPUT_SIZE(psa_key_type_t key_type, size_t key_bits)
 {
-    return PSA_KEY_EXPORT_MAX_SIZE(key_type, key_bits);
+    return PSA_EXPORT_KEY_OUTPUT_SIZE(key_type, key_bits);
 }
 
 size_t
 shim_PSA_HASH_LENGTH(psa_algorithm_t alg)
 {
-    return PSA_HASH_SIZE(alg);
+    return PSA_HASH_LENGTH(alg);
 }
 
 size_t
 shim_PSA_MAC_LENGTH(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg)
 {
-    return PSA_MAC_FINAL_SIZE(key_type, key_bits, alg);
+    return PSA_MAC_LENGTH(key_type, key_bits, alg);
 }
 
 size_t
@@ -423,19 +423,19 @@ shim_PSA_MAC_TRUNCATED_LENGTH(psa_algorithm_t alg)
 }
 
 size_t
-shim_PSA_AEAD_TAG_LENGTH(/*psa_key_type_t key_type, size_t key_bits, Spec states these are required */psa_algorithm_t alg)
+shim_PSA_AEAD_TAG_LENGTH(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg)
 {
-    return PSA_AEAD_TAG_LENGTH(/*key_type, key_bits, Spec states these are required*/ alg);
+    return PSA_AEAD_TAG_LENGTH(key_type, key_bits, alg);
 }
 
 size_t
-shim_PSA_AEAD_ENCRYPT_OUTPUT_SIZE(psa_algorithm_t aead_alg, size_t plaintext_bytes)
+shim_PSA_AEAD_ENCRYPT_OUTPUT_SIZE(psa_key_type_t key_type, psa_algorithm_t aead_alg, size_t plaintext_length)
 {
-    return PSA_AEAD_ENCRYPT_OUTPUT_SIZE(aead_alg, plaintext_bytes);
+    return PSA_AEAD_ENCRYPT_OUTPUT_SIZE(key_type, aead_alg, plaintext_length);
 }
 
 size_t
-shim_PSA_AEAD_DECRYPT_OUTPUT_SIZE(psa_algorithm_t aead_alg, size_t ciphertext_bytes)
+shim_PSA_AEAD_DECRYPT_OUTPUT_SIZE(psa_key_type_t key_type, psa_algorithm_t aead_alg, size_t ciphertext_length)
 {
-    return PSA_AEAD_DECRYPT_OUTPUT_SIZE(aead_alg, ciphertext_bytes);
+    return PSA_AEAD_DECRYPT_OUTPUT_SIZE(key_type, aead_alg, ciphertext_length);
 }

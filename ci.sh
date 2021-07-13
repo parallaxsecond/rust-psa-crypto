@@ -57,10 +57,14 @@ cargo build --no-default-features --features no-std
 # Test dynamic linking
 git clone https://github.com/ARMmbed/mbedtls.git
 pushd mbedtls
-git checkout mbedtls-2.25.0
+git checkout v3.0.0
 ./scripts/config.py crypto
 SHARED=1 make
 popd
+
+# Clean before to only build the interface
+cargo clean
+MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/include cargo build --release --no-default-features --features interface
 
 # Clean before to force dynamic linking
 cargo clean
@@ -69,7 +73,3 @@ MBEDTLS_LIB_DIR=$(pwd)/mbedtls/library MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/includ
 # Clean before to force static linking
 cargo clean
 MBEDTLS_LIB_DIR=$(pwd)/mbedtls/library MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/include MBEDCRYPTO_STATIC=1 cargo build --release
-
-# Clean before to only build the interface
-cargo clean
-MBEDTLS_INCLUDE_DIR=$(pwd)/mbedtls/include cargo build --release --no-default-features --features interface

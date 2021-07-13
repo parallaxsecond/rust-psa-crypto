@@ -2,6 +2,7 @@ use psa_crypto::operations::{aead, key_management};
 use psa_crypto::types::algorithm::{Aead, AeadWithDefaultLengthTag};
 use psa_crypto::types::key::{Attributes, Lifetime, Policy, Type, UsageFlags};
 use psa_crypto::types::status::Error;
+use std::convert::TryInto;
 
 const KEY_DATA: [u8; 16] = [
     0x41, 0x89, 0x35, 0x1B, 0x5C, 0xAE, 0xA3, 0x75, 0xA0, 0x29, 0x9E, 0x81, 0xC6, 0x21, 0xBF, 0x43,
@@ -39,8 +40,13 @@ fn aead_encrypt_aes_ccm() {
     };
     psa_crypto::init().unwrap();
     let my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
-    let output_buffer_size =
-        unsafe { psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg.into(), DECRYPTED_DATA.len()) };
+    let output_buffer_size = unsafe {
+        psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(
+            attributes.key_type.try_into().unwrap(),
+            alg.into(),
+            DECRYPTED_DATA.len(),
+        )
+    };
     let mut output_buffer = vec![0; output_buffer_size];
     let length = aead::encrypt(
         my_key,
@@ -58,7 +64,7 @@ fn aead_encrypt_aes_ccm() {
 #[test]
 fn aead_encrypt_aes_ccm_no_encrypt_usage_flag() {
     let alg = Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm);
-    let mut usage_flags: UsageFlags = Default::default();
+    let usage_flags: UsageFlags = Default::default();
     let attributes = Attributes {
         key_type: Type::Aes,
         bits: 0,
@@ -70,8 +76,13 @@ fn aead_encrypt_aes_ccm_no_encrypt_usage_flag() {
     };
     psa_crypto::init().unwrap();
     let my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
-    let output_buffer_size =
-        unsafe { psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(alg.into(), DECRYPTED_DATA.len()) };
+    let output_buffer_size = unsafe {
+        psa_crypto_sys::PSA_AEAD_ENCRYPT_OUTPUT_SIZE(
+            attributes.key_type.try_into().unwrap(),
+            alg.into(),
+            DECRYPTED_DATA.len(),
+        )
+    };
     let mut output_buffer = vec![0; output_buffer_size];
     let result = aead::encrypt(
         my_key,
@@ -100,8 +111,13 @@ fn aead_decrypt_aes_ccm() {
     };
     psa_crypto::init().unwrap();
     let my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
-    let output_buffer_size =
-        unsafe { psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg.into(), ENCRYPTED_DATA.len()) };
+    let output_buffer_size = unsafe {
+        psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(
+            attributes.key_type.try_into().unwrap(),
+            alg.into(),
+            ENCRYPTED_DATA.len(),
+        )
+    };
     let mut output_buffer = vec![0; output_buffer_size];
     let length = aead::decrypt(
         my_key,
@@ -119,7 +135,7 @@ fn aead_decrypt_aes_ccm() {
 #[test]
 fn aead_decrypt_aes_ccm_no_decrypt_usage_flag() {
     let alg = Aead::AeadWithDefaultLengthTag(AeadWithDefaultLengthTag::Ccm);
-    let mut usage_flags: UsageFlags = Default::default();
+    let usage_flags: UsageFlags = Default::default();
     let attributes = Attributes {
         key_type: Type::Aes,
         bits: 0,
@@ -131,8 +147,13 @@ fn aead_decrypt_aes_ccm_no_decrypt_usage_flag() {
     };
     psa_crypto::init().unwrap();
     let my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
-    let output_buffer_size =
-        unsafe { psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg.into(), ENCRYPTED_DATA.len()) };
+    let output_buffer_size = unsafe {
+        psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(
+            attributes.key_type.try_into().unwrap(),
+            alg.into(),
+            ENCRYPTED_DATA.len(),
+        )
+    };
     let mut output_buffer = vec![0; output_buffer_size];
     let result = aead::decrypt(
         my_key,
@@ -166,7 +187,11 @@ fn aead_decrypt_aes_ccm_invalid_signature() {
     psa_crypto::init().unwrap();
     let my_key = key_management::import(attributes, None, &KEY_DATA).unwrap();
     let output_buffer_size = unsafe {
-        psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(alg.into(), RANDOM_INPUT_DATA.len())
+        psa_crypto_sys::PSA_AEAD_DECRYPT_OUTPUT_SIZE(
+            attributes.key_type.try_into().unwrap(),
+            alg.into(),
+            RANDOM_INPUT_DATA.len(),
+        )
     };
     let mut output_buffer = vec![0; output_buffer_size];
     let result = aead::decrypt(

@@ -83,10 +83,10 @@ psa_key_type_t shim_PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(psa_key_type_t key_type)
 size_t shim_PSA_SIGN_OUTPUT_SIZE(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg);
 size_t shim_PSA_ASYMMETRIC_ENCRYPT_OUTPUT_SIZE(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg);
 size_t shim_PSA_ASYMMETRIC_DECRYPT_OUTPUT_SIZE(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg);
-size_t shim_PSA_KEY_EXPORT_MAX_SIZE(psa_key_type_t key_type, size_t key_bits);
+size_t shim_PSA_EXPORT_KEY_OUTPUT_SIZE(psa_key_type_t key_type, size_t key_bits);
 size_t shim_PSA_HASH_LENGTH(psa_algorithm_t alg);
 size_t shim_PSA_MAC_LENGTH(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg);
 size_t shim_PSA_MAC_TRUNCATED_LENGTH(psa_algorithm_t alg);
-size_t shim_PSA_AEAD_TAG_LENGTH(/*psa_key_type_t key_type, size_t key_bits, Spec states these are required*/psa_algorithm_t alg);
-size_t shim_PSA_AEAD_ENCRYPT_OUTPUT_SIZE(psa_algorithm_t aead_alg, size_t plaintext_bytes);
-size_t shim_PSA_AEAD_DECRYPT_OUTPUT_SIZE(psa_algorithm_t aead_alg, size_t ciphertext_bytes);
+size_t shim_PSA_AEAD_TAG_LENGTH(psa_key_type_t key_type, size_t key_bits, psa_algorithm_t alg);
+size_t shim_PSA_AEAD_ENCRYPT_OUTPUT_SIZE(psa_key_type_t key_type, psa_algorithm_t aead_alg, size_t plaintext_length);
+size_t shim_PSA_AEAD_DECRYPT_OUTPUT_SIZE(psa_key_type_t key_type, psa_algorithm_t aead_alg, size_t ciphertext_length);
