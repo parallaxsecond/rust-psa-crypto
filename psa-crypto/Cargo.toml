@@ -1,6 +1,6 @@
 [package]
 name = "psa-crypto"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Parsec Project Contributors"]
 edition = "2018"
 description = "Wrapper around the PSA Cryptography API"
@@ -11,10 +11,11 @@ license = "Apache-2.0"
 repository = "https://github.com/parallaxsecond/rust-psa-crypto"
 
 [dependencies]
-psa-crypto-sys = { path = "../psa-crypto-sys", version = "0.8.0", default-features = false }
+psa-crypto-sys = { path = "../psa-crypto-sys", version = "0.9.0", default-features = false }
 log = "0.4.11"
 serde = { version = "1.0.115", features = ["derive"] }
-zeroize = { version = "1.1.0", features = ["zeroize_derive"] }
+# Versions 1.4.x no longer compiles with Rust version 1.46.0
+zeroize = { version = "<=1.3.0", features = ["zeroize_derive"] }
 
 [dev-dependencies]
 rsa = "0.3.0"
