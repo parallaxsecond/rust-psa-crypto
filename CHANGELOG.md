@@ -1,5 +1,26 @@
 # Changelog
 
+## [psa-crypto-0.9.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-0.9.0) (2021-08-02)
+
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-sys-0.9.0...psa-crypto-0.9.0)
+
+## [psa-crypto-sys-0.9.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-sys-0.9.0) (2021-08-02)
+
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.8.0...psa-crypto-sys-0.9.0)
+
+**Fixed bugs:**
+
+- Fix the UsageFlags structure [\#82](https://github.com/parallaxsecond/rust-psa-crypto/issues/82)
+- Move to Mbed TLS version 3.0.0 [\#88](https://github.com/parallaxsecond/rust-psa-crypto/pull/88) ([hug-dev](https://github.com/hug-dev))
+
+**Merged pull requests:**
+
+- Upgrade `psa-crypto-sys` version [\#91](https://github.com/parallaxsecond/rust-psa-crypto/pull/91) ([hug-dev](https://github.com/hug-dev))
+- Made the fields of UsageFlags private, Fix \#82 [\#86](https://github.com/parallaxsecond/rust-psa-crypto/pull/86) ([Kakemone](https://github.com/Kakemone))
+- Add a method to check if a type is a public key [\#84](https://github.com/parallaxsecond/rust-psa-crypto/pull/84) ([hug-dev](https://github.com/hug-dev))
+- Add PsaSignMessage and PsaVerifyMessage usage flags functions [\#83](https://github.com/parallaxsecond/rust-psa-crypto/pull/83) ([akazimierskigl](https://github.com/akazimierskigl))
+- Add a CHANGELOG file [\#81](https://github.com/parallaxsecond/rust-psa-crypto/pull/81) ([hug-dev](https://github.com/hug-dev))
+
 ## [psa-crypto-0.8.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-0.8.0) (2021-03-17)
 
 [Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-sys-0.8.0...psa-crypto-0.8.0)
