@@ -12,7 +12,7 @@ repository = "https://github.com/parallaxsecond/rust-psa-crypto"
 links = "mbedcrypto"
 
 [build-dependencies]
-bindgen = { version = "0.56.0", optional = true }
+bindgen = { version = "0.57.0", optional = true }
 cc = "1.0.59"
 cmake = "0.1.44"
 walkdir = "2.3.1"
