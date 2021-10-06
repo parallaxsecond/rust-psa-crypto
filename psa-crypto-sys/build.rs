@@ -30,7 +30,51 @@
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
 
+// Use mbedtls binary built via 'minerva-mbedtls/build.rs'
+fn minerva_update_envs() -> std::io::Result<()> {
+    use std::env;
+    use std::path::PathBuf;
+
+    let arch = "x86_64"; // TODO auto detect arch
+
+    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let build_dir = out_dir.parent().unwrap().parent().unwrap();
+    let to_mbedtls_dir = |pb: &PathBuf| {
+        let mut pb = pb.clone();
+        pb.push("out");
+        pb.push(&format!("mbedtls-v3-{}", arch));
+        pb
+    };
+
+    let mut pbs: Vec<_> = build_dir.read_dir()?
+        .into_iter()
+        .filter(|ent| ent.is_ok())
+        .map(|ent| ent.unwrap().path())
+        .filter(|p| p.strip_prefix(&build_dir).unwrap().to_str().unwrap().starts_with("minerva-mbedtls-"))
+        .filter(|p| to_mbedtls_dir(p).is_dir())
+        .collect();
+    assert!(pbs.len() > 0);
+
+    if pbs.len() > 1 {
+        pbs.sort_by(|a, b| {
+            let a = &to_mbedtls_dir(a).metadata().unwrap().created().unwrap();
+            let b = &to_mbedtls_dir(b).metadata().unwrap().created().unwrap();
+            b.cmp(a)
+        });
+    }
+    let mbedtls_dir = to_mbedtls_dir(&pbs[0]).to_str().unwrap().to_owned();
+    println!("resolved `mbedtls_dir`: {}", mbedtls_dir);
+
+    env::set_var("MBEDTLS_LIB_DIR", &format!("{}/__local/lib", mbedtls_dir));
+    env::set_var("MBEDTLS_INCLUDE_DIR", &format!("{}/__local/include", mbedtls_dir));
+    env::set_var("MBEDCRYPTO_STATIC", "1");
+
+    Ok(())
+}
+
 fn main() -> std::io::Result<()> {
+    minerva_update_envs()?;
+
     #[cfg(feature = "operations")]
     return operations::script_operations();
 
