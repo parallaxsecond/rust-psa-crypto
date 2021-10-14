@@ -35,14 +35,13 @@ fn minerva_update_envs() -> std::io::Result<()> {
     use std::env;
     use std::path::PathBuf;
 
-    let arch = "x86_64"; // TODO auto detect arch
-
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let build_dir = out_dir.parent().unwrap().parent().unwrap();
+    let target = env::var("TARGET").unwrap();
     let to_mbedtls_dir = |pb: &PathBuf| {
         let mut pb = pb.clone();
         pb.push("out");
-        pb.push(&format!("mbedtls-v3-{}", arch));
+        pb.push(&format!("mbedtls-v3-{}", target));
         pb
     };
 
@@ -65,8 +64,8 @@ fn minerva_update_envs() -> std::io::Result<()> {
     let mbedtls_dir = to_mbedtls_dir(&pbs[0]).to_str().unwrap().to_owned();
     println!("resolved `mbedtls_dir`: {}", mbedtls_dir);
 
-    env::set_var("MBEDTLS_LIB_DIR", &format!("{}/__local/lib", mbedtls_dir));
-    env::set_var("MBEDTLS_INCLUDE_DIR", &format!("{}/__local/include", mbedtls_dir));
+    env::set_var("MBEDTLS_LIB_DIR", &format!("{}/library", mbedtls_dir));
+    env::set_var("MBEDTLS_INCLUDE_DIR", &format!("{}/include", mbedtls_dir));
     env::set_var("MBEDCRYPTO_STATIC", "1");
 
     Ok(())
