@@ -120,18 +120,28 @@ mod operations {
     use cmake::Config;
     use std::env;
     use std::io::{Error, ErrorKind, Result};
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
     use walkdir::WalkDir;
 
     fn compile_mbed_crypto() -> Result<PathBuf> {
         let mbedtls_dir = String::from("./vendor");
+        let mbedtls_config = mbedtls_dir.clone() + "/scripts/config.py";
+
         println!("cargo:rerun-if-changed=src/c/shim.c");
         println!("cargo:rerun-if-changed=src/c/shim.h");
 
         let out_dir = env::var("OUT_DIR").unwrap();
 
+        //  Check for Mbed TLS sources
+        if !Path::new(&mbedtls_config).exists() {
+            return Err(Error::new(
+                ErrorKind::Other,
+                "MbedTLS config.py is missing. Have you run 'git submodule update --init'?",
+            ));
+        }
+
         // Configure the MbedTLS build for making Mbed Crypto
-        if !::std::process::Command::new(mbedtls_dir + "/scripts/config.py")
+        if !::std::process::Command::new(mbedtls_config)
             .arg("--write")
             .arg(&(out_dir.clone() + "/config.h"))
             .arg("crypto")
@@ -145,8 +155,8 @@ mod operations {
             ));
         }
 
-        // Rerun build if anything file under the vendor directory has changed.
-        for entry in WalkDir::new("vendor")
+        // Rerun build if any file under the vendor directory has changed.
+        for entry in WalkDir::new(&mbedtls_dir)
             .into_iter()
             .filter_map(|entry| entry.ok())
         {
@@ -158,7 +168,7 @@ mod operations {
         }
 
         // Build the MbedTLS libraries
-        let mbed_build_path = Config::new("vendor")
+        let mbed_build_path = Config::new(&mbedtls_dir)
             .cflag(format!("-I{}", out_dir))
             .cflag("-DMBEDTLS_CONFIG_FILE='<config.h>'")
             .build();

@@ -18,6 +18,8 @@ This repository contains a Rust wrapper around the [PSA Cryptography API](https:
 
 The PSA Crypto wrapper is currently work-in-progress. This repository is currently mainly a space for prototyping and design discussion.
 
+If you build the wrapper from source you need to run `git submodule update --init` after cloning the repository.
+
 ## License
 
 The software is provided under Apache-2.0. Contributions to this project are accepted under the same license.
