@@ -178,6 +178,13 @@ impl Attributes {
         }
     }
 
+    /// Check if can be converted into psa_key_attributes_t
+    #[cfg(feature = "interface")]
+    pub fn can_convert_into_psa(self) -> Result<()> {
+        let _ = psa_crypto_sys::psa_key_attributes_t::try_from(self)?;
+        Ok(())
+    }
+
     /// Check if the alg given for a cryptographic operation is permitted to be used with the key
     pub fn is_alg_permitted(self, alg: Algorithm) -> bool {
         match self.policy.permitted_algorithms {
@@ -897,9 +904,91 @@ impl TryFrom<Attributes> for psa_crypto_sys::psa_key_attributes_t {
             )
         };
         unsafe { psa_crypto_sys::psa_set_key_type(&mut attrs, attributes.key_type.try_into()?) };
-        unsafe { psa_crypto_sys::psa_set_key_bits(&mut attrs, attributes.bits) };
+        unsafe { psa_crypto_sys::psa_set_key_bits(&mut attrs, attributes.try_into()?) };
 
         Ok(attrs)
+    }
+}
+
+#[cfg(feature = "interface")]
+impl TryFrom<Attributes> for usize {
+    type Error = Error;
+    // Check if key size is correct for the key type
+    fn try_from(attributes: Attributes) -> Result<Self> {
+        // For some operations like import 0 size is permitted
+        if attributes.bits == 0 {
+            return Ok(attributes.bits);
+        }
+        match attributes.key_type {
+            Type::EccKeyPair { curve_family } | Type::EccPublicKey { curve_family } => {
+                match curve_family {
+                    // SEC random curves over prime fields.
+                    EccFamily::SecpR1 => match attributes.bits {
+                        192 | 224 | 256 | 284 | 521 => Ok(attributes.bits),
+                        _ => {
+                            error!("Requested key size is not supported ({})", attributes.bits);
+                            Err(Error::InvalidArgument)
+                        }
+                    },
+                    // SEC Koblitz curves over prime fields.
+                    EccFamily::SecpK1 => match attributes.bits {
+                        192 | 224 | 256 => Ok(attributes.bits),
+                        _ => {
+                            error!("Requested key size is not supported ({})", attributes.bits);
+                            Err(Error::InvalidArgument)
+                        }
+                    },
+                    // SEC Koblitz curves over binary fields
+                    EccFamily::SectK1 => match attributes.bits {
+                        233 | 239 | 283 | 409 | 571 => Ok(attributes.bits),
+                        _ => {
+                            error!("Requested key size is not supported ({})", attributes.bits);
+                            Err(Error::InvalidArgument)
+                        }
+                    },
+                    // SEC random curves over binary fields
+                    EccFamily::SectR1 => match attributes.bits {
+                        233 | 283 | 409 | 571 => Ok(attributes.bits),
+                        _ => {
+                            error!("Requested key size is not supported ({})", attributes.bits);
+                            Err(Error::InvalidArgument)
+                        }
+                    },
+                    // Brainpool P random curves
+                    EccFamily::BrainpoolPR1 => match attributes.bits {
+                        192 | 224 | 256 | 320 | 384 | 512 => Ok(attributes.bits),
+                        _ => {
+                            error!("Requested key size is not supported ({})", attributes.bits);
+                            Err(Error::InvalidArgument)
+                        }
+                    },
+                    // Curve used primarily in France and elsewhere in Europe.
+                    EccFamily::Frp => match attributes.bits {
+                        256 => Ok(attributes.bits),
+                        _ => {
+                            error!("Requested key size is not supported ({})", attributes.bits);
+                            Err(Error::InvalidArgument)
+                        }
+                    },
+                    // Montgomery curves
+                    EccFamily::Montgomery => match attributes.bits {
+                        255 | 448 => Ok(attributes.bits),
+                        _ => {
+                            error!("Requested key size is not supported ({})", attributes.bits);
+                            Err(Error::InvalidArgument)
+                        }
+                    },
+                    _ => {
+                        // We don't (yet?) implement checks for other curve families
+                        Ok(attributes.bits)
+                    }
+                }
+            }
+            _ => {
+                // TO-DO We don't (yet?) implement checks for other types
+                Ok(attributes.bits)
+            }
+        }
     }
 }
 
