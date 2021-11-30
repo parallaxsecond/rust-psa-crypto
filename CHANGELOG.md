@@ -1,5 +1,25 @@
 # Changelog
 
+## [psa-crypto-sys-0.9.1](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-sys-0.9.1) (2021-11-30)
+
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.9.1...psa-crypto-sys-0.9.1)
+
+## [psa-crypto-0.9.1](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-0.9.1) (2021-11-30)
+
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.9.0...psa-crypto-0.9.1)
+
+**Fixed bugs:**
+
+- Compile issue with clang 13 [\#85](https://github.com/parallaxsecond/rust-psa-crypto/issues/85)
+
+**Merged pull requests:**
+
+- Bump psa-crypto and psa-crypto-sys versions [\#96](https://github.com/parallaxsecond/rust-psa-crypto/pull/96) ([anta5010](https://github.com/anta5010))
+- Add checks for keys sizes for psa\_key\_attributes\_t convert [\#95](https://github.com/parallaxsecond/rust-psa-crypto/pull/95) ([anta5010](https://github.com/anta5010))
+- Check for MbedTLS sources existance [\#94](https://github.com/parallaxsecond/rust-psa-crypto/pull/94) ([anta5010](https://github.com/anta5010))
+- psa-crypto-sys: bump bindgen to 0.57.0 [\#93](https://github.com/parallaxsecond/rust-psa-crypto/pull/93) ([nullr0ute](https://github.com/nullr0ute))
+- Add the CHANGELOG [\#92](https://github.com/parallaxsecond/rust-psa-crypto/pull/92) ([hug-dev](https://github.com/hug-dev))
+
 ## [psa-crypto-0.9.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-0.9.0) (2021-08-02)
 
 [Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-sys-0.9.0...psa-crypto-0.9.0)
