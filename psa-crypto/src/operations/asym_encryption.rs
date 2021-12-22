@@ -93,8 +93,9 @@ pub fn encrypt(
 /// # use psa_crypto::operations::asym_encryption::decrypt;
 /// # use psa_crypto::types::key::{Attributes, Type, Lifetime, Policy, UsageFlags};
 /// # use psa_crypto::types::algorithm::{AsymmetricEncryption, Hash};
-/// # use rsa::{RSAPublicKey, PaddingScheme, PublicKey};
+/// # use rsa::{RsaPublicKey, PaddingScheme, PublicKey};
 /// # use rand::rngs::OsRng;
+/// # use rsa::pkcs1::FromRsaPublicKey;
 /// # let mut usage_flags: UsageFlags = Default::default();
 /// # usage_flags.set_decrypt();
 /// # let mut attributes = Attributes {
@@ -115,8 +116,9 @@ pub fn encrypt(
 ///
 /// let key_id = generate(attributes, None).unwrap();
 /// let mut pub_key = vec![0; attributes.export_public_key_output_size().unwrap()];
-/// let _pub_key_length = export_public(key_id.clone(), &mut pub_key);
-/// let rsa_pub_key = RSAPublicKey::from_pkcs1(&pub_key).unwrap();
+/// let pub_key_length = export_public(key_id.clone(), &mut pub_key).unwrap();
+/// pub_key.truncate(pub_key_length);
+/// let rsa_pub_key = RsaPublicKey::from_pkcs1_der(&pub_key).unwrap();
 /// let ciphertext = rsa_pub_key.encrypt(&mut OsRng, PaddingScheme::new_pkcs1v15_encrypt(), &MESSAGE).unwrap();
 ///
 /// let alg = AsymmetricEncryption::RsaPkcs1v15Crypt;
