@@ -246,9 +246,7 @@ impl Attributes {
         match self.key_type {
             Type::RawData => false,
             Type::Hmac => alg.is_hmac(),
-            Type::Derive => {
-                matches!(alg, Algorithm::KeyDerivation(_))
-            }
+            Type::Derive => matches!(alg, Algorithm::KeyDerivation(_)),
             Type::Aes | Type::Camellia => {
                 if let Algorithm::Mac(mac_alg) = alg {
                     mac_alg.is_block_cipher_needed()
@@ -295,16 +293,14 @@ impl Attributes {
                 Algorithm::AsymmetricSignature(sign_alg) => sign_alg.is_ecc_alg(),
                 _ => false,
             },
-            Type::DhKeyPair { .. } | Type::DhPublicKey { .. } => {
-                matches!(
-                    alg,
-                    Algorithm::KeyAgreement(KeyAgreement::Raw(RawKeyAgreement::Ffdh))
-                        | Algorithm::KeyAgreement(KeyAgreement::WithKeyDerivation {
-                            ka_alg: RawKeyAgreement::Ffdh,
-                            ..
-                        })
-                )
-            }
+            Type::DhKeyPair { .. } | Type::DhPublicKey { .. } => matches!(
+                alg,
+                Algorithm::KeyAgreement(KeyAgreement::Raw(RawKeyAgreement::Ffdh))
+                    | Algorithm::KeyAgreement(KeyAgreement::WithKeyDerivation {
+                        ka_alg: RawKeyAgreement::Ffdh,
+                        ..
+                    })
+            ),
         }
     }
 
