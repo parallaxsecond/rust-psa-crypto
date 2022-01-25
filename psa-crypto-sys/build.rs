@@ -171,6 +171,8 @@ mod operations {
         let mbed_build_path = Config::new(&mbedtls_dir)
             .cflag(format!("-I{}", out_dir))
             .cflag("-DMBEDTLS_CONFIG_FILE='<config.h>'")
+            .define("ENABLE_PROGRAMS", "OFF")
+            .define("ENABLE_TESTING", "OFF")
             .build();
 
         Ok(mbed_build_path)
