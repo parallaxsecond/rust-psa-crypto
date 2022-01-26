@@ -73,6 +73,7 @@ static INITIALISED: AtomicBool = AtomicBool::new(false);
 #[cfg(feature = "operations")]
 pub fn init() -> Result<()> {
     // It is not a problem to call psa_crypto_init more than once.
+    let _lock = LOCK.write();
     Status::from(unsafe { psa_crypto_sys::psa_crypto_init() }).to_result()?;
     let _ = INITIALISED.store(true, Ordering::Relaxed);
 
@@ -96,3 +97,8 @@ pub fn initialized() -> Result<()> {
         Err(Error::BadState)
     }
 }
+
+#[cfg(feature = "operations")]
+use parking_lot::{const_rwlock, RwLock};
+#[cfg(feature = "operations")]
+static LOCK: RwLock<()> = const_rwlock(());

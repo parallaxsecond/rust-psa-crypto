@@ -9,6 +9,7 @@ use crate::initialized;
 use crate::types::algorithm::AsymmetricEncryption;
 use crate::types::key::Id;
 use crate::types::status::{Result, Status};
+use crate::LOCK;
 
 /// Encrypt a short message with a key pair or public key
 ///
@@ -58,6 +59,7 @@ pub fn encrypt(
     ciphertext: &mut [u8],
 ) -> Result<usize> {
     initialized()?;
+    let _lock = LOCK.read();
 
     let mut output_length = 0;
     let (salt_ptr, salt_len) = match salt {
@@ -139,6 +141,7 @@ pub fn decrypt(
     plaintext: &mut [u8],
 ) -> Result<usize> {
     initialized()?;
+    let _lock = LOCK.read();
 
     let mut output_length = 0;
     let (salt_ptr, salt_len) = match salt {

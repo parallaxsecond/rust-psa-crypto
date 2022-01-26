@@ -7,6 +7,7 @@
 
 use crate::initialized;
 use crate::types::status::{Result, Status};
+use crate::LOCK;
 
 /// Generate a buffer of random bytes.
 ///
@@ -25,6 +26,7 @@ use crate::types::status::{Result, Status};
 /// ```
 pub fn generate_random(output: &mut [u8]) -> Result<()> {
     initialized()?;
+    let _lock = LOCK.read();
 
     Status::from(unsafe { psa_crypto_sys::psa_generate_random(output.as_mut_ptr(), output.len()) })
         .to_result()?;
