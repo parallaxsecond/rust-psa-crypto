@@ -45,14 +45,53 @@ fn main() -> std::io::Result<()> {
 mod common {
     use std::env;
     use std::io::{Error, ErrorKind, Result};
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
+
+    pub fn configure_mbed_crypto() -> Result<()> {
+        let mbedtls_dir = String::from("./vendor");
+        let mbedtls_config = mbedtls_dir + "/scripts/config.py";
+
+        println!("cargo:rerun-if-changed=src/c/shim.c");
+        println!("cargo:rerun-if-changed=src/c/shim.h");
+
+        let out_dir = env::var("OUT_DIR").unwrap();
+
+        //  Check for Mbed TLS sources
+        if !Path::new(&mbedtls_config).exists() {
+            return Err(Error::new(
+                ErrorKind::Other,
+                "MbedTLS config.py is missing. Have you run 'git submodule update --init'?",
+            ));
+        }
+
+        // Configure the MbedTLS build for making Mbed Crypto
+        if !::std::process::Command::new(mbedtls_config)
+            .arg("--write")
+            .arg(&(out_dir + "/config.h"))
+            .arg("crypto")
+            .status()
+            .map_err(|_| Error::new(ErrorKind::Other, "configuring mbedtls failed"))?
+            .success()
+        {
+            return Err(Error::new(
+                ErrorKind::Other,
+                "config.py returned an error status",
+            ));
+        }
+
+        Ok(())
+    }
 
     pub fn generate_mbed_crypto_bindings(mbed_include_dir: String) -> Result<()> {
         let header = mbed_include_dir.clone() + "/psa/crypto.h";
 
         println!("cargo:rerun-if-changed={}", header);
 
+        let out_dir = env::var("OUT_DIR").unwrap();
+
         let shim_bindings = bindgen::Builder::default()
+            .clang_arg(format!("-I{}", out_dir))
+            .clang_arg("-DMBEDTLS_CONFIG_FILE=<config.h>")
             .clang_arg(format!("-I{}", mbed_include_dir))
             .rustfmt_bindings(true)
             .header("src/c/shim.h")
@@ -73,8 +112,12 @@ mod common {
     }
 
     pub fn compile_shim_library(include_dir: String) -> Result<()> {
+        let out_dir = env::var("OUT_DIR").unwrap();
+
         // Compile and package the shim library
         cc::Build::new()
+            .include(&out_dir)
+            .define("MBEDTLS_CONFIG_FILE", "<config.h>")
             .include(include_dir)
             .file("./src/c/shim.c")
             .warnings(true)
@@ -84,10 +127,7 @@ mod common {
             .map_err(|_| Error::new(ErrorKind::Other, "compiling shim.c failed"))?;
 
         // Also link shim library
-        println!(
-            "cargo:rustc-link-search=native={}",
-            env::var("OUT_DIR").unwrap()
-        );
+        println!("cargo:rustc-link-search=native={}", out_dir);
         println!("cargo:rustc-link-lib=static=shim");
 
         Ok(())
@@ -103,6 +143,7 @@ mod interface {
     // Build script when the interface feature is on and not the operations one
     pub fn script_interface() -> Result<()> {
         if let Ok(include_dir) = env::var("MBEDTLS_INCLUDE_DIR") {
+            common::configure_mbed_crypto()?;
             common::generate_mbed_crypto_bindings(include_dir.clone())?;
             common::compile_shim_library(include_dir)
         } else {
@@ -120,40 +161,12 @@ mod operations {
     use cmake::Config;
     use std::env;
     use std::io::{Error, ErrorKind, Result};
-    use std::path::{Path, PathBuf};
+    use std::path::PathBuf;
     use walkdir::WalkDir;
 
     fn compile_mbed_crypto() -> Result<PathBuf> {
         let mbedtls_dir = String::from("./vendor");
-        let mbedtls_config = mbedtls_dir.clone() + "/scripts/config.py";
-
-        println!("cargo:rerun-if-changed=src/c/shim.c");
-        println!("cargo:rerun-if-changed=src/c/shim.h");
-
         let out_dir = env::var("OUT_DIR").unwrap();
-
-        //  Check for Mbed TLS sources
-        if !Path::new(&mbedtls_config).exists() {
-            return Err(Error::new(
-                ErrorKind::Other,
-                "MbedTLS config.py is missing. Have you run 'git submodule update --init'?",
-            ));
-        }
-
-        // Configure the MbedTLS build for making Mbed Crypto
-        if !::std::process::Command::new(mbedtls_config)
-            .arg("--write")
-            .arg(&(out_dir.clone() + "/config.h"))
-            .arg("crypto")
-            .status()
-            .map_err(|_| Error::new(ErrorKind::Other, "configuring mbedtls failed"))?
-            .success()
-        {
-            return Err(Error::new(
-                ErrorKind::Other,
-                "config.py returned an error status",
-            ));
-        }
 
         // Rerun build if any file under the vendor directory has changed.
         for entry in WalkDir::new(&mbedtls_dir)
@@ -198,6 +211,8 @@ mod operations {
                 "both environment variables MBEDTLS_LIB_DIR and MBEDTLS_INCLUDE_DIR need to be set for operations feature",
             ));
         }
+
+        common::configure_mbed_crypto()?;
 
         if let (Ok(lib_dir), Ok(include_dir)) =
             (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))

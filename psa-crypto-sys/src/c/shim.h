@@ -1,6 +1,8 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 
+#include "mbedtls/build_info.h"
+
 #include <psa/crypto.h>
 #include <psa/crypto_se_driver.h>
 
