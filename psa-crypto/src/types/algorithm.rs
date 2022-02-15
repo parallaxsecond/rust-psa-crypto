@@ -185,8 +185,6 @@ impl Mac {
 
 /// Enumeration of symmetric encryption algorithms supported.
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
-// StreamCipher contains "Cipher" to differentiate with the other ones that are block cipher modes.
-#[allow(clippy::pub_enum_variant_names)]
 pub enum Cipher {
     /// The stream cipher mode of a stream cipher algorithm.
     StreamCipher,

@@ -184,7 +184,7 @@ impl Inputs<'_> {
     ) -> Result<()> {
         match secret {
             InputSecret::Input(input) => {
-                Inputs::apply_input_step_to_op(op, DerivationStep::Secret, &input)
+                Inputs::apply_input_step_to_op(op, DerivationStep::Secret, input)
             }
             InputSecret::KeyAgreement {
                 private_key,
