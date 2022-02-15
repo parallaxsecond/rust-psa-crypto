@@ -1,6 +1,6 @@
 [package]
 name = "psa-crypto-sys"
-version = "0.9.1"
+version = "0.9.2"
 authors = ["Parsec Project Contributors"]
 edition = "2018"
 description = "Wrapper around the PSA Cryptography API"
@@ -12,7 +12,7 @@ repository = "https://github.com/parallaxsecond/rust-psa-crypto"
 links = "mbedcrypto"
 
 [build-dependencies]
-bindgen = { version = "0.57.0", optional = true }
+bindgen = { version = "0.59.2", optional = true }
 cc = "1.0.59"
 cmake = "0.1.44"
 walkdir = "2.3.1"
