@@ -1,14 +1,15 @@
 [package]
 name = "psa-crypto-sys"
-version = "0.9.1"
+version = "0.10.1"
 authors = ["Parsec Project Contributors"]
+build = "build/build.rs"
 edition = "2018"
-description = "Wrapper around the PSA Cryptography API"
+description = "Wrapper around the PSA Cryptography API and MBEDTLS API"
 readme = "README.md"
-keywords = ["psa", "crypto", "cryptography"]
+keywords = ["psa", "crypto", "cryptography", "mbedtls"]
 categories = ["api-bindings", "external-ffi-bindings", "cryptography"]
 license = "Apache-2.0"
-repository = "https://github.com/parallaxsecond/rust-psa-crypto"
+repository = "https://github.com/AnimaGUS-minerva/rust-psa-crypto"
 links = "mbedcrypto"
 
 [build-dependencies]
