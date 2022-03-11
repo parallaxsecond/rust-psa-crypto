@@ -114,10 +114,3 @@ impl BuildConfig {
     }
 }
 
-fn other_main() {
-    let cfg = BuildConfig::new();
-    cfg.create_config_h();
-    cfg.print_rerun_files();
-    cfg.cmake();
-    cfg.bindgen();
-}
