@@ -11,7 +11,7 @@ use cmake;
 impl super::BuildConfig {
     pub fn cmake(&self) {
         let mut cmk = cmake::Config::new(&self.mbedtls_src);
-        cmk.cflag(format!(
+        let _ = cmk.cflag(format!(
             r#"-DMBEDTLS_CONFIG_FILE="\"{}\"""#,
             self.config_h.to_str().expect("config.h UTF-8 error")
         ))
@@ -19,11 +19,11 @@ impl super::BuildConfig {
         .define("ENABLE_TESTING", "OFF")
         .build_target("lib");
         for cflag in &self.cflags {
-            cmk.cflag(cflag);
+            let _ = cmk.cflag(cflag);
         }
         let cc = cc::Build::new().get_compiler();
         if cc.is_like_clang() && cc.args().iter().any(|arg| arg == "-mllvm") {
-            cmk.define("CMAKE_C_COMPILER_FORCED", "TRUE");
+            let _ = cmk.define("CMAKE_C_COMPILER_FORCED", "TRUE");
         }
 
         let mut dst = cmk.build();

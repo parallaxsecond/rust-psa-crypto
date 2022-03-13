@@ -6,44 +6,33 @@
  * option. This file may not be copied, modified, or distributed except
  * according to those terms. */
 
-extern crate bindgen;
-extern crate cmake;
-#[macro_use]
-extern crate lazy_static;
-
-mod config;
-mod features;
-mod headers;
-#[path = "bindgen.rs"]
-mod mod_bindgen;
-#[path = "cmake.rs"]
-mod mod_cmake;
-
 use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use features::FEATURES;
+use crate::features::FEATURES;
+use crate::config;
+use crate::headers;
 
-struct BuildConfig {
-    out_dir: PathBuf,
-    mbedtls_src: PathBuf,
-    mbedtls_include: PathBuf,
-    config_h: PathBuf,
-    cflags: Vec<String>,
+pub struct BuildConfig {
+    pub out_dir: PathBuf,
+    pub mbedtls_src: PathBuf,
+    pub mbedtls_include: PathBuf,
+    pub config_h: PathBuf,
+    pub cflags: Vec<String>,
 }
 
 impl BuildConfig {
-    fn create_config_h(&self) {
+    pub fn create_config_h(&self) {
         let mut defines = config::default_defines();
         for &(feat, def) in config::FEATURE_DEFINES {
             if FEATURES.have_feature(feat) {
-                defines.insert(def.0, def.1);
+                let _ = defines.insert(def.0, def.1);
             }
         }
         for &(feat, comp, def) in config::PLATFORM_DEFINES {
             if FEATURES.have_platform_component(feat, comp) {
-                defines.insert(def.0, def.1);
+                let _ = defines.insert(def.0, def.1);
             }
         }
 
@@ -67,7 +56,7 @@ impl BuildConfig {
             .expect("config.h I/O error");
     }
 
-    fn print_rerun_files(&self) {
+    pub fn print_rerun_files(&self) {
         println!("cargo:rerun-if-env-changed=RUST_MBEDTLS_SYS_SOURCE");
         println!(
             "cargo:rerun-if-changed={}",
@@ -90,7 +79,7 @@ impl BuildConfig {
         }
     }
 
-    fn new() -> Self {
+    pub fn new() -> Self {
         let out_dir = PathBuf::from(env::var_os("OUT_DIR").expect("OUT_DIR environment not set?"));
         let config_h = out_dir.join("config.h");
         let mbedtls_src = PathBuf::from(env::var("RUST_MBEDTLS_SYS_SOURCE").unwrap_or("vendor".to_owned()));

@@ -88,14 +88,14 @@ impl super::BuildConfig {
         }
 
         let mut cc = cc::Build::new();
-        cc.include(&self.mbedtls_include)
+        let _ = cc.include(&self.mbedtls_include)
         .flag(&format!(
             "-DMBEDTLS_CONFIG_FILE=\"{}\"",
             self.config_h.to_str().expect("config.h UTF-8 error")
         ));
 
         for cflag in &self.cflags {
-            cc.flag(cflag);
+            let _ = cc.flag(cflag);
         }
 
         // Determine the sysroot for this compiler so that bindgen
@@ -110,7 +110,7 @@ impl super::BuildConfig {
                         .strip_suffix("\r\n")
                         .or(path.strip_suffix("\n"))
                         .unwrap_or(&path);
-                    cc.flag(&format!("--sysroot={}", trimmed_path));
+                    let _ = cc.flag(&format!("--sysroot={}", trimmed_path));
                 }
                 _ => {} // skip toolchains without a configured sysroot
             };

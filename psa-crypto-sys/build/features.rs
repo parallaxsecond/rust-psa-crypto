@@ -22,11 +22,11 @@ lazy_static! {
 impl Features {
     fn init(&mut self) {
         if env_have_target_cfg("env", "sgx") {
-            self.automatic_features.insert("custom_has_support");
-            self.automatic_features.insert("aes_alt");
-            self.automatic_features.insert("aesni");
+            let _ = self.automatic_features.insert("custom_has_support");
+            let _ = self.automatic_features.insert("aes_alt");
+            let _ = self.automatic_features.insert("aesni");
         }
-        self.automatic_features.insert("c_compiler");
+        let _ = self.automatic_features.insert("c_compiler");
 
         // deprecated, needed for backcompat
         let have_custom_threading = self.have_feature("custom_threading");
@@ -35,27 +35,27 @@ impl Features {
         if !self.have_feature("std") ||
             env_have_target_cfg("env", "sgx") ||
             env_have_target_cfg("os", "none") {
-            self.with_feature("c_compiler").unwrap().insert("freestanding");
-        }
+                let _ = self.with_feature("c_compiler").unwrap().insert("freestanding");
+            }
         if let Some(components) = self.with_feature("threading") {
             if !have_custom_threading && env_have_target_cfg("family", "unix") {
-                components.insert("pthread");
+                let _ = components.insert("pthread");
             } else {
-                components.insert("custom");
+                let _ = components.insert("custom");
             }
         }
         if let Some(components) = self.with_feature("std") {
             if env_have_target_cfg("family", "unix") {
-                components.insert("net");
-                components.insert("fs");
-                components.insert("entropy");
+                let _ = components.insert("net");
+                let _ = components.insert("fs");
+                let _ = components.insert("entropy");
             }
         }
         if let Some(components) = self.with_feature("time") {
             if !have_custom_gmtime_r && env_have_target_cfg("family", "unix") {
-                components.insert("libc");
+                let _ = components.insert("libc");
             } else {
-                components.insert("custom");
+                let _ = components.insert("custom");
             }
         }
 
