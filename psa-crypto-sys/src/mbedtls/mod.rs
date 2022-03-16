@@ -10,9 +10,6 @@
 #[cfg(feature = "std")]
 extern crate core;
 
-#[macro_use]
-extern crate cfg_if;
-
 pub mod types;
 include!(concat!(env!("OUT_DIR"), "/mod-bindings.rs"));
 

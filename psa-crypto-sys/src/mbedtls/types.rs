@@ -22,6 +22,8 @@ pub type intptr_t = isize;
 pub type uintptr_t = usize;
 pub type ptrdiff_t = isize;
 
+use cfg_if::cfg_if;
+
 #[cfg(feature = "std")]
 pub use std::os::raw as raw_types;
 
@@ -77,7 +79,7 @@ pub mod raw_types {
 }
 
 #[cfg(unix)]
-extern crate libc;
+use libc;
 
 #[cfg(std_component = "fs")]
 pub use self::libc::FILE;
