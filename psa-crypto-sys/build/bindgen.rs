@@ -126,7 +126,7 @@ impl super::BuildConfig {
             .allowlist_recursively(false)
             .blocklist_type("^mbedtls_time_t$")
             .use_core()
-            .ctypes_prefix("::types::raw_types")
+            .ctypes_prefix("crate::mbedtls::types::raw_types")
             .parse_callbacks(Box::new(MbedtlsParseCallbacks))
             .default_enum_style(bindgen::EnumVariation::Consts)
             .generate_comments(false)
@@ -148,7 +148,7 @@ impl super::BuildConfig {
             .and_then(|mut f| {
                 f.write_all(bindings.as_bytes())?;
                 f.write_all(union_impls.as_bytes())?;
-                f.write_all(b"use crate::types::*;\n")?; // for FILE, time_t, etc.
+                f.write_all(b"use crate::mbedtls::types::*;\n")?; // for FILE, time_t, etc.
                 Ok(())
             }).expect("bindings.rs I/O error");
 
