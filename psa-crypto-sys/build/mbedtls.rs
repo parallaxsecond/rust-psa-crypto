@@ -27,12 +27,12 @@ impl BuildConfig {
         let mut defines = config::default_defines();
         for &(feat, def) in config::FEATURE_DEFINES {
             if FEATURES.have_feature(feat) {
-                let _ = defines.insert(def.0, def.1);
+                defines.insert(def.0, def.1);
             }
         }
         for &(feat, comp, def) in config::PLATFORM_DEFINES {
             if FEATURES.have_platform_component(feat, comp) {
-                let _ = defines.insert(def.0, def.1);
+                defines.insert(def.0, def.1);
             }
         }
 
