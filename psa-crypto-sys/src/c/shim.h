@@ -19,6 +19,7 @@ psa_key_lifetime_t shim_get_key_lifetime(const psa_key_attributes_t *attributes)
 psa_key_type_t shim_get_key_type(const psa_key_attributes_t *attributes);
 psa_key_usage_t shim_get_key_usage_flags(const psa_key_attributes_t *attributes);
 psa_key_attributes_t shim_key_attributes_init(void);
+psa_cipher_operation_t shim_cipher_operation_init(void);
 psa_key_derivation_operation_t shim_key_derivation_operation_init(void);
 
 void shim_set_key_algorithm(psa_key_attributes_t *attributes, psa_algorithm_t alg);

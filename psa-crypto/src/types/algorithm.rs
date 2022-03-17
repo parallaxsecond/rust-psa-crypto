@@ -599,10 +599,7 @@ impl TryFrom<Algorithm> for psa_crypto_sys::psa_algorithm_t {
             Algorithm::KeyAgreement(key_agreement) => Ok(key_agreement.into()),
             Algorithm::KeyDerivation(key_derivation) => Ok(key_derivation.into()),
             Algorithm::Aead(aead) => Ok(aead.into()),
-            _ => {
-                error!("Algorithm not supported: {:?}.", alg);
-                Err(Error::NotSupported)
-            }
+            Algorithm::Cipher(cipher) => Ok(cipher.into()),
         }
     }
 }
@@ -766,6 +763,22 @@ impl From<AsymmetricEncryption> for psa_crypto_sys::psa_algorithm_t {
             AsymmetricEncryption::RsaOaep { hash_alg } => unsafe {
                 psa_crypto_sys::PSA_ALG_RSA_OAEP(hash_alg.into())
             },
+        }
+    }
+}
+
+#[cfg(feature = "interface")]
+impl From<Cipher> for psa_crypto_sys::psa_algorithm_t {
+    fn from(cipher: Cipher) -> Self {
+        match cipher {
+            Cipher::StreamCipher => psa_crypto_sys::PSA_ALG_STREAM_CIPHER,
+            Cipher::Ctr => psa_crypto_sys::PSA_ALG_CTR,
+            Cipher::Cfb => psa_crypto_sys::PSA_ALG_CFB,
+            Cipher::Ofb => psa_crypto_sys::PSA_ALG_OFB,
+            Cipher::Xts => psa_crypto_sys::PSA_ALG_XTS,
+            Cipher::EcbNoPadding => psa_crypto_sys::PSA_ALG_ECB_NO_PADDING,
+            Cipher::CbcNoPadding => psa_crypto_sys::PSA_ALG_CBC_NO_PADDING,
+            Cipher::CbcPkcs7 => psa_crypto_sys::PSA_ALG_CBC_PKCS7,
         }
     }
 }
