@@ -39,17 +39,20 @@ pub use types::*;
 #[cfg(feature = "operations")]
 pub use psa_crypto_binding::{
     psa_aead_decrypt, psa_aead_encrypt, psa_asymmetric_decrypt, psa_asymmetric_encrypt,
-    psa_close_key, psa_copy_key, psa_crypto_init, psa_destroy_key, psa_export_key,
-    psa_export_public_key, psa_generate_key, psa_generate_random, psa_get_key_attributes,
-    psa_hash_compare, psa_hash_compute, psa_import_key, psa_key_derivation_abort,
-    psa_key_derivation_input_bytes, psa_key_derivation_input_key, psa_key_derivation_key_agreement,
-    psa_key_derivation_output_key, psa_key_derivation_set_capacity, psa_key_derivation_setup,
-    psa_mac_compute, psa_mac_verify, psa_open_key, psa_raw_key_agreement, psa_reset_key_attributes,
-    psa_sign_hash, psa_verify_hash,
+    psa_cipher_abort, psa_cipher_decrypt_setup, psa_cipher_encrypt_setup, psa_cipher_finish,
+    psa_cipher_set_iv, psa_cipher_update, psa_close_key, psa_copy_key, psa_crypto_init,
+    psa_destroy_key, psa_export_key, psa_export_public_key, psa_generate_key, psa_generate_random,
+    psa_get_key_attributes, psa_hash_compare, psa_hash_compute, psa_import_key,
+    psa_key_derivation_abort, psa_key_derivation_input_bytes, psa_key_derivation_input_key,
+    psa_key_derivation_key_agreement, psa_key_derivation_output_key,
+    psa_key_derivation_set_capacity, psa_key_derivation_setup, psa_mac_compute, psa_mac_verify,
+    psa_open_key, psa_raw_key_agreement, psa_reset_key_attributes, psa_sign_hash, psa_verify_hash,
 };
 
 #[cfg(feature = "interface")]
-pub use psa_crypto_binding::{psa_key_attributes_t, psa_key_derivation_operation_t};
+pub use psa_crypto_binding::{
+    psa_cipher_operation_t, psa_key_attributes_t, psa_key_derivation_operation_t,
+};
 
 // Secure Element Driver definitions
 #[cfg(feature = "interface")]

@@ -49,6 +49,12 @@ shim_key_attributes_init(void)
     return psa_key_attributes_init();
 }
 
+psa_cipher_operation_t
+shim_cipher_operation_init(void)
+{
+    return psa_cipher_operation_init();
+}
+
 psa_key_derivation_operation_t
 shim_key_derivation_operation_init(void)
 {
