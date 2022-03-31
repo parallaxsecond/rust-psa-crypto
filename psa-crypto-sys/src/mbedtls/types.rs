@@ -30,7 +30,7 @@ pub use std::os::raw as raw_types;
 #[cfg(not(feature = "std"))]
 pub mod raw_types {
     // From libstd/os/raw.rs
-    cfg_if! {
+    super::cfg_if! {
         if #[cfg(any(
             target_os = "android",
             target_os = "emscripten",
@@ -55,7 +55,7 @@ pub mod raw_types {
     pub type c_ushort = u16;
     pub type c_int = i32;
     pub type c_uint = u32;
-    cfg_if! {
+    super::cfg_if! {
         if #[cfg(any(target_pointer_width = "32", windows))] {
             pub type c_long = i32;
             pub type c_ulong = u32;
