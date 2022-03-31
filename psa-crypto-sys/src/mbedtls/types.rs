@@ -81,7 +81,7 @@ pub mod raw_types {
 #[cfg(unix)]
 use libc;
 
-#[cfg(std_component = "fs")]
+#[cfg(any(std_component = "fs", feature = "minerva-fs-workaround"))]
 pub use self::libc::FILE;
 
 cfg_if! {

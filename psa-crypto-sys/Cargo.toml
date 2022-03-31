@@ -34,7 +34,8 @@ default = ["std", "debug", "threading", "zlib", "time", "aesni", "padlock", "leg
 static = []
 interface = []
 operations = ["interface"]
-minerva = []
+minerva-update-envs = []
+minerva-fs-workaround = []
 # If you use mbedtls-sys in a no_std configuration, you need to provide your
 # own versions of the following functions:
 #

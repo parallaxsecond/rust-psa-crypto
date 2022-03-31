@@ -45,7 +45,7 @@ extern crate lazy_static;
 use mbedtls::BuildConfig;
 
 // Use mbedtls binary built via 'minerva-mbedtls/build.rs'
-#[cfg(feature = "minerva")]
+#[cfg(feature = "minerva-update-envs")]
 fn minerva_update_envs() -> std::io::Result<()> {
     use std::env;
     use std::path::PathBuf;
@@ -87,7 +87,7 @@ fn minerva_update_envs() -> std::io::Result<()> {
 }
 
 fn main() -> std::io::Result<()> {
-    #[cfg(feature = "minerva")]
+    #[cfg(feature = "minerva-update-envs")]
     minerva_update_envs()?;
 
     #[cfg(feature = "operations")]
