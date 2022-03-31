@@ -24,18 +24,41 @@
     unused_extern_crates,
     unused_import_braces,
     unused_qualifications,
-    unused_results,
+    //unused_results,
     missing_copy_implementations
 )]
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
 
+mod config;
+mod features;
+mod headers;
+#[path = "bindgen.rs"]
+mod mod_bindgen;
+#[path = "cmake.rs"]
+mod mod_cmake;
+mod mbedtls;
+
+#[macro_use]
+extern crate lazy_static;
+
+use mbedtls::BuildConfig;
+
 fn main() -> std::io::Result<()> {
     #[cfg(feature = "operations")]
-    return operations::script_operations();
+    let _first = operations::script_operations();
 
     #[cfg(all(feature = "interface", not(feature = "operations")))]
-    return interface::script_interface();
+    let _first = interface::script_interface();
+
+    {
+        let cfg = BuildConfig::new();
+        cfg.create_config_h();
+        cfg.print_rerun_files();
+        cfg.cmake();
+        cfg.bindgen();
+        Ok(())
+    }
 
     #[cfg(not(any(feature = "interface", feature = "operations")))]
     Ok(())
