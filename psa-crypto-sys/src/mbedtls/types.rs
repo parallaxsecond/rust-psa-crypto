@@ -99,7 +99,7 @@ cfg_if! {
             pub tm_yday:  i32,            /* Days in year.   [0-365]*/
             pub tm_isdst: i32,
         }
-    } else if #[cfg(time_component = "libc")] {
+    } else if #[cfg(any(time_component = "libc", feature = "minerva-time-workaround"))] {
         pub use self::libc::{tm, time_t};
     }
 }

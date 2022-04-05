@@ -104,9 +104,6 @@ fn main() -> std::io::Result<()> {
         cfg.bindgen();
         Ok(())
     }
-
-    #[cfg(not(any(feature = "interface", feature = "operations")))]
-    Ok(())
 }
 
 #[cfg(any(feature = "interface", feature = "operations"))]
