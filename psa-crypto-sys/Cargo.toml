@@ -43,7 +43,6 @@ minerva-nostd = [
 static = []
 interface = []
 operations = ["interface"]
-minerva-update-envs = []
 minerva-fs-workaround = []
 minerva-time-workaround = []
 # If you use mbedtls-sys in a no_std configuration, you need to provide your
