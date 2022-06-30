@@ -244,6 +244,10 @@ mod operations {
             statically = cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok();
         } else {
             println!("Did not find environment variables, building MbedTLS!");
+            if env::var("TARGET").unwrap().as_str() == "xtensa-esp32-none-elf" {
+                // cf. legacy logic -- 'minerva-mbedtls/build.rs'
+                //panic!("@@ TODO: xtensa cross build for 'out/{{lib/{{libmbedx509.a,libmbedcrypto.a,libmbedtls.a}},libshim.a}}'");
+            }
             let mut mbed_lib_dir = compile_mbed_crypto()?;
             let mut mbed_include_dir = mbed_lib_dir.clone();
             mbed_lib_dir.push("lib");
