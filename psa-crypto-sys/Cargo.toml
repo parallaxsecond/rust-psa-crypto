@@ -3,7 +3,7 @@ name = "psa-crypto-sys"
 version = "0.10.1"
 authors = ["Parsec Project Contributors"]
 build = "build/build.rs"
-edition = "2018"
+edition = "2021"
 description = "Wrapper around the PSA Cryptography API and MBEDTLS API"
 readme = "README.md"
 keywords = ["psa", "crypto", "cryptography", "mbedtls"]
@@ -35,6 +35,10 @@ default = [
     "operations",
     # mbedtls features
     "std", "debug", "threading", "zlib", "time", "aesni", "padlock", "legacy_protocols",
+]
+minerva-nostd = [
+    "operations",
+           "debug", "threading",         "time", "aesni", "padlock", "legacy_protocols",
 ]
 static = []
 interface = []

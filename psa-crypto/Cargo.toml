@@ -2,7 +2,7 @@
 name = "psa-crypto"
 version = "0.10.1"
 authors = ["Parsec Project Contributors"]
-edition = "2018"
+edition = "2021"
 description = "Wrapper around the PSA Cryptography API"
 readme = "README.md"
 keywords = ["psa", "crypto", "cryptography", "no_std"]
@@ -13,7 +13,7 @@ repository = "https://github.com/parallaxsecond/rust-psa-crypto"
 [dependencies]
 psa-crypto-sys = { path = "../psa-crypto-sys", version = "0.10.0", default-features = false }
 log = "0.4.11"
-serde = { version = "1.0.115", features = ["derive"] }
+serde = { version = "1.0.115", features = ["derive"], default-features = false }
 # Versions 1.4.x no longer compiles with Rust version 1.46.0
 zeroize = { version = "<=1.3.0", features = ["zeroize_derive"] }
 
@@ -27,4 +27,4 @@ default = ["operations", "no-std"]
 operations = ["psa-crypto-sys/operations", "interface"]
 interface = ["psa-crypto-sys/interface"]
 no-std = []
-minerva = ["operations", "no-std", "psa-crypto-sys/minerva-fs-workaround", "psa-crypto-sys/minerva-time-workaround"]
+minerva = ["operations", "no-std", "psa-crypto-sys/minerva-fs-workaround", "psa-crypto-sys/minerva-time-workaround", "psa-crypto-sys/minerva-nostd" ]

@@ -81,7 +81,7 @@ pub mod raw_types {
 #[cfg(unix)]
 use libc;
 
-#[cfg(any(std_component = "fs", feature = "minerva-fs-workaround"))]
+#[cfg(all(unix, any(std_component = "fs", feature = "minerva-fs-workaround")))]
 pub use self::libc::FILE;
 
 cfg_if! {
@@ -99,12 +99,12 @@ cfg_if! {
             pub tm_yday:  i32,            /* Days in year.   [0-365]*/
             pub tm_isdst: i32,
         }
-    } else if #[cfg(any(time_component = "libc", feature = "minerva-time-workaround"))] {
+    } else if #[cfg(all(unix, any(time_component = "libc", feature = "minerva-time-workaround")))] {
         pub use self::libc::{tm, time_t};
     }
 }
 
-#[cfg(threading_component = "pthread")]
+#[cfg(all(unix, threading_component = "pthread"))]
 pub use self::libc::pthread_mutex_t;
 
 #[cfg(feature = "zlib")]

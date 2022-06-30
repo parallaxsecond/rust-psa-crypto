@@ -125,6 +125,7 @@ impl super::BuildConfig {
             .allowlist_var("^(?i)mbedtls_.*")
             .allowlist_recursively(false)
             .blocklist_type("^mbedtls_time_t$")
+            .blocklist_function("^mbedtls_mpi_.*_file$")
             .use_core()
             .ctypes_prefix("crate::mbedtls::types::raw_types")
             .parse_callbacks(Box::new(MbedtlsParseCallbacks))
