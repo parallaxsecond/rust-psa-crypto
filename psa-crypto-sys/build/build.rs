@@ -250,7 +250,7 @@ mod operations {
             }
             let mut mbed_lib_dir = compile_mbed_crypto()?;
             let mut mbed_include_dir = mbed_lib_dir.clone();
-            mbed_lib_dir.push("lib");
+            mbed_lib_dir.push("build/library");
             mbed_include_dir.push("include");
 
             lib = mbed_lib_dir.to_str().unwrap().to_owned();
