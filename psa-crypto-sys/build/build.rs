@@ -190,6 +190,32 @@ mod operations {
         let mbedtls_dir = String::from("./vendor");
         let out_dir = env::var("OUT_DIR").unwrap();
 
+        //==== !!!! WIP
+        if env::var("TARGET").unwrap().as_str() == "xtensa-esp32-none-elf" {
+            use std::path::Path;
+            use std::process::Command;
+
+            if 0==1 { panic!("✅ mbedtls_dir: {}\n out_dir: {}", mbedtls_dir, out_dir); }
+
+            let mbedtls_xtensa = format!("{}/mbedtls-xtensa", out_dir);
+            if !Path::new(&mbedtls_xtensa).exists() {
+                Command::new("git").args(&["clone", "-c", "advice.detachedHead=false",
+                    &mbedtls_dir, &mbedtls_xtensa]).status()?;
+                Command::new("cp").args(&["xtensa.mk", &out_dir]).status()?;
+                Command::new("make").args(&["-C", &mbedtls_xtensa, "-f", "../xtensa.mk"]).status()?;
+            }
+
+            Command::new("ls").args(&["-lrt", &format!("{}/library", mbedtls_xtensa)]).status()?;
+            if 1==1 { panic!("✅ ^^^^ LGTM: xtensa builds: 'out/build/library/{{libmbedx509,libmbedcrypto,libmbedtls}}.a'"); }
+
+            //
+
+            let xtensa_gcc = env::var("XTENSA_GCC").expect("XTENSA_GCC");
+            if 0==1 { panic!("✅ xtensa_gcc: {}", xtensa_gcc); } // lgtm
+            //panic!("✅ TODO: xtensa cross build for 'out/build/library/libshim.a'");
+        }
+        //==== !!!!
+
         // Rerun build if any file under the vendor directory has changed.
         for entry in WalkDir::new(&mbedtls_dir)
             .into_iter()
@@ -244,10 +270,6 @@ mod operations {
             statically = cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok();
         } else {
             println!("Did not find environment variables, building MbedTLS!");
-            if env::var("TARGET").unwrap().as_str() == "xtensa-esp32-none-elf" {
-                // cf. legacy logic -- 'minerva-mbedtls/build.rs'
-                //panic!("@@ TODO: xtensa cross build for 'out/{{lib/{{libmbedx509.a,libmbedcrypto.a,libmbedtls.a}},libshim.a}}'");
-            }
             let mut mbed_lib_dir = compile_mbed_crypto()?;
             let mut mbed_include_dir = mbed_lib_dir.clone();
             mbed_lib_dir.push("build/library");
