@@ -186,35 +186,37 @@ mod operations {
     use std::path::PathBuf;
     use walkdir::WalkDir;
 
-    fn compile_mbed_crypto() -> Result<PathBuf> {
+    fn compile_mbed_crypto_xtensa() -> Result<PathBuf> {
         let mbedtls_dir = String::from("./vendor");
         let out_dir = env::var("OUT_DIR").unwrap();
 
-        //==== !!!! WIP
-        if env::var("TARGET").unwrap().as_str() == "xtensa-esp32-none-elf" {
-            use std::path::Path;
+        if 0==1 { panic!("✅ mbedtls_dir: {}\n out_dir: {}", mbedtls_dir, out_dir); }
+
+        let mbedtls_xtensa = format!("{}/mbedtls-xtensa", out_dir);
+        if !std::path::Path::new(&mbedtls_xtensa).exists() {
             use std::process::Command;
-
-            if 0==1 { panic!("✅ mbedtls_dir: {}\n out_dir: {}", mbedtls_dir, out_dir); }
-
-            let mbedtls_xtensa = format!("{}/mbedtls-xtensa", out_dir);
-            if !Path::new(&mbedtls_xtensa).exists() {
-                Command::new("git").args(&["clone", "-c", "advice.detachedHead=false",
-                    &mbedtls_dir, &mbedtls_xtensa]).status()?;
-                Command::new("cp").args(&["xtensa.mk", &out_dir]).status()?;
-                Command::new("make").args(&["-C", &mbedtls_xtensa, "-f", "../xtensa.mk"]).status()?;
-            }
-
-            Command::new("ls").args(&["-lrt", &format!("{}/library", mbedtls_xtensa)]).status()?;
-            if 1==1 { panic!("✅ ^^^^ LGTM: xtensa builds: 'out/build/library/{{libmbedx509,libmbedcrypto,libmbedtls}}.a'"); }
-
-            //
-
-            let xtensa_gcc = env::var("XTENSA_GCC").expect("XTENSA_GCC");
-            if 0==1 { panic!("✅ xtensa_gcc: {}", xtensa_gcc); } // lgtm
-            //panic!("✅ TODO: xtensa cross build for 'out/build/library/libshim.a'");
+            Command::new("git").args(&["clone", "-c", "advice.detachedHead=false",
+                &mbedtls_dir, &mbedtls_xtensa]).status()?;
+            Command::new("cp").args(&["xtensa.mk", &out_dir]).status()?;
+            Command::new("make").args(&["-C", &mbedtls_xtensa, "-f", "../xtensa.mk"]).status()?;
         }
-        //==== !!!!
+
+        std::process::Command::new("ls").args(&["-lrt", &format!("{}/library", mbedtls_xtensa)]).status()?;
+        if 0==1 { panic!("✅ ^^^^ LGTM: xtensa builds: 'out/build/library/{{libmbedx509,libmbedcrypto,libmbedtls}}.a'"); }
+
+        //
+
+        // !!!!
+        let xtensa_gcc = env::var("XTENSA_GCC").expect("XTENSA_GCC");
+        if 0==1 { panic!("✅ xtensa_gcc: {}", xtensa_gcc); } // lgtm
+        //panic!("✅ TODO: xtensa cross build for 'out/build/library/libshim.a'");
+
+        Ok(PathBuf::from(mbedtls_xtensa))
+    }
+
+    fn compile_mbed_crypto() -> Result<PathBuf> {
+        let mbedtls_dir = String::from("./vendor");
+        let out_dir = env::var("OUT_DIR").unwrap();
 
         // Rerun build if any file under the vendor directory has changed.
         for entry in WalkDir::new(&mbedtls_dir)
@@ -270,10 +272,23 @@ mod operations {
             statically = cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok();
         } else {
             println!("Did not find environment variables, building MbedTLS!");
-            let mut mbed_lib_dir = compile_mbed_crypto()?;
-            let mut mbed_include_dir = mbed_lib_dir.clone();
-            mbed_lib_dir.push("build/library");
-            mbed_include_dir.push("include");
+
+            let (mbed_lib_dir, mbed_include_dir) =
+                if env::var("TARGET").unwrap().as_str() == "xtensa-esp32-none-elf" {
+                    let mut mbed_lib_dir = compile_mbed_crypto_xtensa()?;
+                    let mut mbed_include_dir = mbed_lib_dir.clone();
+                    mbed_lib_dir.push("library");
+                    mbed_include_dir.push("include");
+
+                    (mbed_lib_dir, mbed_include_dir)
+                } else {
+                    let mut mbed_lib_dir = compile_mbed_crypto()?;
+                    let mut mbed_include_dir = mbed_lib_dir.clone();
+                    mbed_lib_dir.push("build/library");
+                    mbed_include_dir.push("include");
+
+                    (mbed_lib_dir, mbed_include_dir)
+                };
 
             lib = mbed_lib_dir.to_str().unwrap().to_owned();
             include = mbed_include_dir.to_str().unwrap().to_owned();
