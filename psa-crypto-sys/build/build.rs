@@ -136,16 +136,11 @@ mod common {
     pub fn compile_shim_library(include_dir: String) -> Result<()> {
         let out_dir = env::var("OUT_DIR").unwrap();
 
-        // Compile and package the shim library
-        // cc::Build::new()
-        //     .include(&out_dir)
-        //====
         let mut cfg = cc::Build::new();
         if is_xtensa() {
             cfg.compiler(env::var("XTENSA_GCC").expect("XTENSA_GCC"));
         }
         cfg.include(&out_dir)
-        //====
             .define("MBEDTLS_CONFIG_FILE", "<config.h>")
             .include(include_dir)
             .file("./src/c/shim.c")
@@ -201,8 +196,6 @@ mod operations {
         let mbedtls_dir = String::from("./vendor");
         let out_dir = env::var("OUT_DIR").unwrap();
 
-        if 0==1 { panic!("✅ mbedtls_dir: {}\n out_dir: {}", mbedtls_dir, out_dir); }
-
         let mbedtls_xtensa = format!("{}/mbedtls-xtensa", out_dir);
         if !std::path::Path::new(&mbedtls_xtensa).exists() {
             use std::process::Command;
@@ -211,9 +204,6 @@ mod operations {
             Command::new("cp").args(&["xtensa.mk", &out_dir]).status()?;
             Command::new("make").args(&["-C", &mbedtls_xtensa, "-f", "../xtensa.mk"]).status()?;
         }
-
-        std::process::Command::new("ls").args(&["-lrt", &format!("{}/library", mbedtls_xtensa)]).status()?;
-        if 0==1 { panic!("✅ ^^^^ LGTM: xtensa builds: 'out/build/library/{{libmbedx509,libmbedcrypto,libmbedtls}}.a'"); }
 
         Ok(PathBuf::from(mbedtls_xtensa))
     }
@@ -277,22 +267,13 @@ mod operations {
         } else {
             println!("Did not find environment variables, building MbedTLS!");
 
-            let (mbed_lib_dir, mbed_include_dir) =
-                if common::is_xtensa() {
-                    let mut mbed_lib_dir = compile_mbed_crypto_xtensa()?;
-                    let mut mbed_include_dir = mbed_lib_dir.clone();
-                    mbed_lib_dir.push("library");
-                    mbed_include_dir.push("include");
+            let is_xtensa = common::is_xtensa();
+            let mut mbed_lib_dir =
+                if is_xtensa { compile_mbed_crypto_xtensa()? } else { compile_mbed_crypto()? };
+            let mut mbed_include_dir = mbed_lib_dir.clone();
 
-                    (mbed_lib_dir, mbed_include_dir)
-                } else {
-                    let mut mbed_lib_dir = compile_mbed_crypto()?;
-                    let mut mbed_include_dir = mbed_lib_dir.clone();
-                    mbed_lib_dir.push("build/library");
-                    mbed_include_dir.push("include");
-
-                    (mbed_lib_dir, mbed_include_dir)
-                };
+            mbed_lib_dir.push(if is_xtensa { "library" } else { "build/library" });
+            mbed_include_dir.push("include");
 
             lib = mbed_lib_dir.to_str().unwrap().to_owned();
             include = mbed_include_dir.to_str().unwrap().to_owned();
