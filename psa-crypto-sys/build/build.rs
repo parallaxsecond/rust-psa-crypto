@@ -137,8 +137,15 @@ mod common {
         let out_dir = env::var("OUT_DIR").unwrap();
 
         // Compile and package the shim library
-        cc::Build::new()
-            .include(&out_dir)
+        // cc::Build::new()
+        //     .include(&out_dir)
+        //====
+        let mut cfg = cc::Build::new();
+        if is_xtensa() {
+            cfg.compiler(env::var("XTENSA_GCC").expect("XTENSA_GCC"));
+        }
+        cfg.include(&out_dir)
+        //====
             .define("MBEDTLS_CONFIG_FILE", "<config.h>")
             .include(include_dir)
             .file("./src/c/shim.c")
@@ -153,6 +160,10 @@ mod common {
         println!("cargo:rustc-link-lib=static=shim");
 
         Ok(())
+    }
+
+    pub fn is_xtensa() -> bool {
+        env::var("TARGET").unwrap().as_str() == "xtensa-esp32-none-elf"
     }
 }
 
@@ -203,13 +214,6 @@ mod operations {
 
         std::process::Command::new("ls").args(&["-lrt", &format!("{}/library", mbedtls_xtensa)]).status()?;
         if 0==1 { panic!("✅ ^^^^ LGTM: xtensa builds: 'out/build/library/{{libmbedx509,libmbedcrypto,libmbedtls}}.a'"); }
-
-        //
-
-        // !!!!
-        let xtensa_gcc = env::var("XTENSA_GCC").expect("XTENSA_GCC");
-        if 0==1 { panic!("✅ xtensa_gcc: {}", xtensa_gcc); } // lgtm
-        //panic!("✅ TODO: xtensa cross build for 'out/build/library/libshim.a'");
 
         Ok(PathBuf::from(mbedtls_xtensa))
     }
@@ -274,7 +278,7 @@ mod operations {
             println!("Did not find environment variables, building MbedTLS!");
 
             let (mbed_lib_dir, mbed_include_dir) =
-                if env::var("TARGET").unwrap().as_str() == "xtensa-esp32-none-elf" {
+                if common::is_xtensa() {
                     let mut mbed_lib_dir = compile_mbed_crypto_xtensa()?;
                     let mut mbed_include_dir = mbed_lib_dir.clone();
                     mbed_lib_dir.push("library");
