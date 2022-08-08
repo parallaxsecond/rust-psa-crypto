@@ -240,6 +240,8 @@ mod operations {
 
         // Request rustc to link the Mbed Crypto library
         println!("cargo:rustc-link-search=native={}", lib_path,);
+        println!("cargo:rustc-link-lib={}=mbedtls", link_type);
+        println!("cargo:rustc-link-lib={}=mbedx509", link_type);
         println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
     }
 
