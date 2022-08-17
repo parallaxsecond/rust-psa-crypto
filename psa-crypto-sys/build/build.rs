@@ -152,6 +152,10 @@ mod common {
     pub fn is_xtensa() -> bool {
         env::var("TARGET").unwrap().as_str() == "xtensa-esp32-none-elf"
     }
+
+    pub fn is_x86() -> bool {
+        env::var("TARGET").unwrap().as_str() == "i686-unknown-linux-gnu"
+    }
 }
 
 #[cfg(all(feature = "interface", not(feature = "operations")))]
@@ -278,8 +282,14 @@ mod operations {
             } else {
                 let mbed_dir = &cfg.mbedtls_src.to_str().unwrap().to_owned();
                 std::process::Command::new("make").args(&["-C", mbed_dir, "clean"]).status()?;
-                std::process::Command::new("make").args(&["-C", mbed_dir, "lib",
-                    "-j", "CFLAGS=-O2 -DMBEDTLS_USE_PSA_CRYPTO=1"]).status()?;
+                if common::is_x86() {
+                    std::process::Command::new("make").args(&["-C", mbed_dir, "lib",
+                        "-j", "CFLAGS=-m32 -O2 -DMBEDTLS_USE_PSA_CRYPTO=1",
+                        "LDFLAGS=-m32"]).status()?;
+                } else {
+                    std::process::Command::new("make").args(&["-C", mbed_dir, "lib",
+                        "-j", "CFLAGS=-O2 -DMBEDTLS_USE_PSA_CRYPTO=1"]).status()?;
+                }
                 String::from(mbed_dir.to_owned() + "/library")
             };
             cfg.bindgen();
