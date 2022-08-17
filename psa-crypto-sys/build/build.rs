@@ -35,8 +35,6 @@ mod features;
 mod headers;
 #[path = "bindgen.rs"]
 mod mod_bindgen;
-#[path = "cmake.rs"]
-mod mod_cmake;
 mod mbedtls;
 
 #[macro_use]
@@ -46,19 +44,13 @@ use mbedtls::BuildConfig;
 
 fn main() -> std::io::Result<()> {
     #[cfg(feature = "operations")]
-    let _first = operations::script_operations();
+    return operations::script_operations();
 
     #[cfg(all(feature = "interface", not(feature = "operations")))]
-    let _first = interface::script_interface();
+    return interface::script_interface();
 
-    {
-        let cfg = BuildConfig::new();
-        cfg.create_config_h();
-        cfg.print_rerun_files();
-        cfg.cmake();
-        cfg.bindgen();
-        Ok(())
-    }
+    #[cfg(not(any(feature = "interface", feature = "operations")))]
+    Ok(())
 }
 
 #[cfg(any(feature = "interface", feature = "operations"))]
@@ -272,13 +264,26 @@ mod operations {
             let is_xtensa = common::is_xtensa();
             let mut mbed_lib_dir =
                 if is_xtensa { compile_mbed_crypto_xtensa()? } else { compile_mbed_crypto()? };
+
             let mut mbed_include_dir = mbed_lib_dir.clone();
-
-            mbed_lib_dir.push(if is_xtensa { "library" } else { "build/library" });
             mbed_include_dir.push("include");
-
-            lib = mbed_lib_dir.to_str().unwrap().to_owned();
             include = mbed_include_dir.to_str().unwrap().to_owned();
+
+            let cfg = super::BuildConfig::new();
+            cfg.create_config_h();
+            cfg.print_rerun_files();
+            lib = if is_xtensa {
+                mbed_lib_dir.push("library");
+                mbed_lib_dir.to_str().unwrap().to_owned()
+            } else {
+                let mbed_dir = &cfg.mbedtls_src.to_str().unwrap().to_owned();
+                std::process::Command::new("make").args(&["-C", mbed_dir, "clean"]).status()?;
+                std::process::Command::new("make").args(&["-C", mbed_dir, "lib",
+                    "-j", "CFLAGS=-O2 -DMBEDTLS_USE_PSA_CRYPTO=1"]).status()?;
+                String::from(mbed_dir.to_owned() + "/library")
+            };
+            cfg.bindgen();
+
             statically = true;
         }
 
