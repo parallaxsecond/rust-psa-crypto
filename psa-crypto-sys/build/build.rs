@@ -152,10 +152,6 @@ mod common {
     pub fn is_xtensa() -> bool {
         env::var("TARGET").unwrap().as_str() == "xtensa-esp32-none-elf"
     }
-
-    pub fn is_x86() -> bool {
-        env::var("TARGET").unwrap().as_str() == "i686-unknown-linux-gnu"
-    }
 }
 
 #[cfg(all(feature = "interface", not(feature = "operations")))]
@@ -188,20 +184,36 @@ mod operations {
     use std::path::PathBuf;
     use walkdir::WalkDir;
 
-    fn compile_mbed_crypto_xtensa() -> Result<PathBuf> {
-        let mbedtls_dir = String::from("./vendor");
+    fn compile_mbed_crypto_minerva(mbedtls_dir: &str) -> Result<PathBuf> {
         let out_dir = env::var("OUT_DIR").unwrap();
+        let arch = env::var("TARGET").unwrap();
+        let mbed_build_path = &format!("{}/mbedtls-{}", out_dir, arch);
 
-        let mbedtls_xtensa = format!("{}/mbedtls-xtensa", out_dir);
-        if !std::path::Path::new(&mbedtls_xtensa).exists() {
-            use std::process::Command;
-            Command::new("git").args(&["clone", "-c", "advice.detachedHead=false",
-                &mbedtls_dir, &mbedtls_xtensa]).status()?;
-            Command::new("cp").args(&["xtensa.mk", &out_dir]).status()?;
-            Command::new("make").args(&["-C", &mbedtls_xtensa, "-f", "../xtensa.mk"]).status()?;
+        if std::path::Path::new(&mbed_build_path).exists() {
+            return Ok(PathBuf::from(mbed_build_path));
         }
 
-        Ok(PathBuf::from(mbedtls_xtensa))
+        use std::process::Command;
+        Command::new("git").args(&["clone", "-c", "advice.detachedHead=false",
+            mbedtls_dir, mbed_build_path]).status()?;
+        match arch.as_str() {
+            "xtensa-esp32-none-elf" => {
+                Command::new("cp").args(&["xtensa.mk", &out_dir]).status()?;
+                Command::new("make").args(&["-C", &mbed_build_path,
+                    "-f", "../xtensa.mk"]).status()?;
+            },
+            "i686-unknown-linux-gnu" => {
+                Command::new("make").args(&["-C", mbed_build_path, "lib",
+                    "-j", "CFLAGS=-O2 -m32 -DMBEDTLS_USE_PSA_CRYPTO=1",
+                    "LDFLAGS=-m32"]).status()?;
+            },
+            _ => {
+                Command::new("make").args(&["-C", mbed_build_path, "lib",
+                    "-j", "CFLAGS=-O2 -DMBEDTLS_USE_PSA_CRYPTO=1"]).status()?;
+            },
+        }
+
+        Ok(PathBuf::from(mbed_build_path))
     }
 
     #[allow(unused)]
@@ -269,29 +281,13 @@ mod operations {
             let cfg = super::BuildConfig::new();
             cfg.create_config_h();
             cfg.print_rerun_files();
-            (lib, include) = if common::is_xtensa() {
-                let mbed_dir = compile_mbed_crypto_xtensa()?;
-                let mbed_dir = mbed_dir.to_str().unwrap();
 
-                (format!("{}/library", mbed_dir), format!("{}/include", mbed_dir)) // !!!!
-            } else {
-                let mbed_dir = cfg.mbedtls_src.to_str().unwrap();
-
-                std::process::Command::new("make").args(&["-C", mbed_dir, "clean"]).status()?;
-                if common::is_x86() {
-                    std::process::Command::new("make").args(&["-C", mbed_dir, "lib",
-                        "-j", "CFLAGS=-m32 -O2 -DMBEDTLS_USE_PSA_CRYPTO=1",
-                        "LDFLAGS=-m32"]).status()?;
-                } else {
-                    std::process::Command::new("make").args(&["-C", mbed_dir, "lib",
-                        "-j", "CFLAGS=-O2 -DMBEDTLS_USE_PSA_CRYPTO=1"]).status()?;
-                }
-
-                (format!("{}/library", mbed_dir), format!("{}/include", mbed_dir)) // !!!!
-            };
-            cfg.bindgen();
-
+            let build_path = compile_mbed_crypto_minerva(cfg.mbedtls_src.to_str().unwrap())?;
+            lib = format!("{}/library", build_path.display());
+            include = format!("{}/include", build_path.display());
             statically = true;
+
+            cfg.bindgen();
         }
 
         // Linking to PSA Crypto library is only needed for the operations.
