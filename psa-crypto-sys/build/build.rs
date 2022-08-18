@@ -204,6 +204,7 @@ mod operations {
         Ok(PathBuf::from(mbedtls_xtensa))
     }
 
+    #[allow(unused)]
     fn compile_mbed_crypto() -> Result<PathBuf> {
         let mbedtls_dir = String::from("./vendor");
         let out_dir = env::var("OUT_DIR").unwrap();
@@ -244,8 +245,8 @@ mod operations {
     // Build script when the operations feature is on
     pub fn script_operations() -> Result<()> {
         let lib;
-        let statically;
         let include;
+        let statically;
 
         if env::var("MBEDTLS_LIB_DIR").is_err() ^ env::var("MBEDTLS_INCLUDE_DIR").is_err() {
             return Err(Error::new(
@@ -265,22 +266,17 @@ mod operations {
         } else {
             println!("Did not find environment variables, building MbedTLS!");
 
-            let is_xtensa = common::is_xtensa();
-            let mut mbed_lib_dir =
-                if is_xtensa { compile_mbed_crypto_xtensa()? } else { compile_mbed_crypto()? };
-
-            let mut mbed_include_dir = mbed_lib_dir.clone();
-            mbed_include_dir.push("include");
-            include = mbed_include_dir.to_str().unwrap().to_owned();
-
             let cfg = super::BuildConfig::new();
             cfg.create_config_h();
             cfg.print_rerun_files();
-            lib = if is_xtensa {
-                mbed_lib_dir.push("library");
-                mbed_lib_dir.to_str().unwrap().to_owned()
+            (lib, include) = if common::is_xtensa() {
+                let mbed_dir = compile_mbed_crypto_xtensa()?;
+                let mbed_dir = mbed_dir.to_str().unwrap();
+
+                (format!("{}/library", mbed_dir), format!("{}/include", mbed_dir)) // !!!!
             } else {
-                let mbed_dir = &cfg.mbedtls_src.to_str().unwrap().to_owned();
+                let mbed_dir = cfg.mbedtls_src.to_str().unwrap();
+
                 std::process::Command::new("make").args(&["-C", mbed_dir, "clean"]).status()?;
                 if common::is_x86() {
                     std::process::Command::new("make").args(&["-C", mbed_dir, "lib",
@@ -290,7 +286,8 @@ mod operations {
                     std::process::Command::new("make").args(&["-C", mbed_dir, "lib",
                         "-j", "CFLAGS=-O2 -DMBEDTLS_USE_PSA_CRYPTO=1"]).status()?;
                 }
-                String::from(mbed_dir.to_owned() + "/library")
+
+                (format!("{}/library", mbed_dir), format!("{}/include", mbed_dir)) // !!!!
             };
             cfg.bindgen();
 
