@@ -22,7 +22,7 @@ use zeroize::Zeroize;
 
 /// Native definition of the attributes needed to fully describe
 /// a cryptographic key.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Zeroize)]
 pub struct Attributes {
     /// Lifetime of the key
     pub lifetime: Lifetime,
@@ -491,7 +491,7 @@ impl Attributes {
 
 /// The lifetime of a key indicates where it is stored and which application and system actions
 /// will create and destroy it.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Zeroize)]
 pub enum Lifetime {
     /// A volatile key only exists as long as the identifier to it is not destroyed.
     Volatile,
@@ -504,7 +504,7 @@ pub enum Lifetime {
 }
 
 /// Enumeration of key types supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Zeroize)]
 pub enum Type {
     /// Not a valid key type for any cryptographic operation but can be used to store arbitrary
     /// data in the key store.
@@ -640,7 +640,7 @@ impl Type {
 /// Enumeration of elliptic curve families supported. They are needed to create an ECC key.
 /// The specific curve used for each family is given by the `bits` field of the key attributes.
 /// See the book for more details.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Zeroize)]
 pub enum EccFamily {
     /// SEC Koblitz curves over prime fields.
     /// This family comprises the following curves:
@@ -721,7 +721,7 @@ impl fmt::Display for EccFamily {
 }
 
 /// Enumeration of Diffie Hellman group families supported.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Zeroize)]
 pub enum DhFamily {
     /// Diffie-Hellman groups defined in RFC 7919 Appendix A.
     /// This family includes groups with the following `bits`: 2048, 3072, 4096, 6144, 8192.
@@ -738,7 +738,7 @@ impl fmt::Display for DhFamily {
 }
 
 /// Definition of the key policy, what is permitted to do with the key.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Zeroize)]
 pub struct Policy {
     /// Usage flags for the key.
     pub usage_flags: UsageFlags,
@@ -747,7 +747,7 @@ pub struct Policy {
 }
 
 /// Definition of the usage flags. They encode what kind of operations are permitted on the key.
-#[derive(Copy, Clone, Debug, Default, PartialEq, Serialize, Deserialize, Zeroize)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, Zeroize)]
 pub struct UsageFlags {
     /// Permission to export the key.
     export: bool,
@@ -867,7 +867,7 @@ impl UsageFlags {
 }
 
 /// Definition of the key ID.
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, Zeroize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Zeroize)]
 pub struct Id(pub(crate) psa_key_id_t);
 
 impl Id {
