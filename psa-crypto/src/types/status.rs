@@ -15,7 +15,7 @@ use std::fmt;
 pub type Result<T> = core::result::Result<T, Error>;
 
 /// Definition of a PSA status code
-#[derive(Clone, Copy, Debug, PartialEq, Zeroize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Zeroize)]
 pub enum Status {
     /// Status code for success
     Success,
@@ -46,7 +46,7 @@ impl Status {
 }
 
 /// Definition of a PSA status code
-#[derive(Clone, Copy, Debug, PartialEq, Zeroize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Zeroize)]
 pub enum Error {
     /// An error occurred that does not correspond to any defined failure cause
     GenericError,
