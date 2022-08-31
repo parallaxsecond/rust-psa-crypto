@@ -1,6 +1,6 @@
 all: psa-xtensa
 
-psa-xtensa: patch-config-xtensa patch-entropy-poll patch-x509-crt patch-cipher-info-from-string-xtensa
+psa-xtensa: patch-config-xtensa patch-entropy-poll patch-x509-crt patch-cipher-info-from-string-xtensa patch-rsa patch-fclose
 	make -j CC=$(XTENSA_GCC) CFLAGS="-O2 -DMBEDTLS_USE_PSA_CRYPTO=1" lib
 
 CONFIG_H_FILE := include/mbedtls/mbedtls_config.h
@@ -23,3 +23,14 @@ CIPHER_C_FILE := library/cipher.c
 patch-cipher-info-from-string-xtensa:
 	sed -i -E 's/^(const mbedtls_cipher_info_t \*mbedtls_cipher_info_from_string)/int strcmp_one\( const char \*s1, const char \*s2 \) \{ return 1; \}  \0/g' $(CIPHER_C_FILE)
 	sed -i -E 's/strcmp\(/strcmp_one\(/g' $(CIPHER_C_FILE)
+
+RSA_C_FILE := library/rsa.c
+patch-rsa:
+	sed -i -E 's/^(#if defined\(MBEDTLS_SELF_TEST\))/#if 0/g' $(RSA_C_FILE)
+
+patch-fclose:
+	sed -i -E 's/(fclose\( stream \))/0\/\*\0\*\//g' library/psa_its_file.c
+	sed -i -E 's/(fclose\( f \))/\/\*\0\*\//g' library/ctr_drbg.c
+	sed -i -E 's/(fclose\( f \))/\/\*\0\*\//g' library/hmac_drbg.c
+	sed -i -E 's/(fclose\( f \))/\/\*\0\*\//g' library/entropy.c
+	sed -i -E 's/(fclose\()/\/\/\0/g' library/entropy_poll.c
