@@ -1,12 +1,41 @@
 # Changelog
 
-## [psa-crypto-sys-0.9.1](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-sys-0.9.1) (2021-11-30)
+## [psa-crypto-0.9.2](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-0.9.2) (2022-08-31)
 
-[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.9.1...psa-crypto-sys-0.9.1)
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-sys-0.9.3...psa-crypto-0.9.2)
+
+## [psa-crypto-sys-0.9.3](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-sys-0.9.3) (2022-08-31)
+
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-sys-0.9.2...psa-crypto-sys-0.9.3)
+
+**Closed issues:**
+
+- Warn when the `vendor` directory is not populated [\#89](https://github.com/parallaxsecond/rust-psa-crypto/issues/89)
+
+**Merged pull requests:**
+
+- Bump zeroize version [\#107](https://github.com/parallaxsecond/rust-psa-crypto/pull/107) ([gowthamsk-arm](https://github.com/gowthamsk-arm))
+- Fix issues reported by clippy [\#106](https://github.com/parallaxsecond/rust-psa-crypto/pull/106) ([gowthamsk-arm](https://github.com/gowthamsk-arm))
+- Add unauthenticated cypher operations in psa-crypto and psa-crypto-sys. [\#104](https://github.com/parallaxsecond/rust-psa-crypto/pull/104) ([egrimley-arm](https://github.com/egrimley-arm))
+
+## [psa-crypto-sys-0.9.2](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-sys-0.9.2) (2022-02-16)
+
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.9.1...psa-crypto-sys-0.9.2)
+
+**Merged pull requests:**
+
+- Fix a few lint issues and prepare for `-sys` release [\#102](https://github.com/parallaxsecond/rust-psa-crypto/pull/102) ([ionut-arm](https://github.com/ionut-arm))
+- build.rs: Use generated config file with shim library headers. [\#100](https://github.com/parallaxsecond/rust-psa-crypto/pull/100) ([egrimley-arm](https://github.com/egrimley-arm))
+- build.rs: Build Mbed TLS with ENABLE\_PROGRAMS=OFF, ENABLE\_TESTING=OFF. [\#99](https://github.com/parallaxsecond/rust-psa-crypto/pull/99) ([egrimley-arm](https://github.com/egrimley-arm))
+- Update from rsa 0.3.0 to 0.5.0. [\#98](https://github.com/parallaxsecond/rust-psa-crypto/pull/98) ([egrimley-arm](https://github.com/egrimley-arm))
 
 ## [psa-crypto-0.9.1](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-0.9.1) (2021-11-30)
 
-[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.9.0...psa-crypto-0.9.1)
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-sys-0.9.1...psa-crypto-0.9.1)
+
+## [psa-crypto-sys-0.9.1](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-sys-0.9.1) (2021-11-30)
+
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.9.0...psa-crypto-sys-0.9.1)
 
 **Fixed bugs:**
 
@@ -14,6 +43,7 @@
 
 **Merged pull requests:**
 
+- Update CHANGELOG [\#97](https://github.com/parallaxsecond/rust-psa-crypto/pull/97) ([anta5010](https://github.com/anta5010))
 - Bump psa-crypto and psa-crypto-sys versions [\#96](https://github.com/parallaxsecond/rust-psa-crypto/pull/96) ([anta5010](https://github.com/anta5010))
 - Add checks for keys sizes for psa\_key\_attributes\_t convert [\#95](https://github.com/parallaxsecond/rust-psa-crypto/pull/95) ([anta5010](https://github.com/anta5010))
 - Check for MbedTLS sources existance [\#94](https://github.com/parallaxsecond/rust-psa-crypto/pull/94) ([anta5010](https://github.com/anta5010))
@@ -170,12 +200,12 @@
 
 **Fixed bugs:**
 
-- 'export\_key\_pair\_test' panicked at 'called `Result::unwrap\(\)` on an `Err` value: StorageFailure' [\#46](https://github.com/parallaxsecond/rust-psa-crypto/issues/46)
+- 'export\_key\_pair\_test' panicked at 'called `Result::unwrap()` on an `Err` value: StorageFailure' [\#46](https://github.com/parallaxsecond/rust-psa-crypto/issues/46)
 - psa-crypto-sys test fail on i686 [\#41](https://github.com/parallaxsecond/rust-psa-crypto/issues/41)
 - Changes to the C library do not trigger a rebuild [\#35](https://github.com/parallaxsecond/rust-psa-crypto/issues/35)
 - Add license file to crates [\#45](https://github.com/parallaxsecond/rust-psa-crypto/pull/45) ([ionut-arm](https://github.com/ionut-arm))
 - Re-run build if any file under psa-crypto-sys/vendor has changed [\#43](https://github.com/parallaxsecond/rust-psa-crypto/pull/43) ([joechrisellis](https://github.com/joechrisellis))
-- Blocklist `max\_align\_t` in bindgen [\#42](https://github.com/parallaxsecond/rust-psa-crypto/pull/42) ([joechrisellis](https://github.com/joechrisellis))
+- Blocklist `max_align_t` in bindgen [\#42](https://github.com/parallaxsecond/rust-psa-crypto/pull/42) ([joechrisellis](https://github.com/joechrisellis))
 
 **Closed issues:**
 
@@ -187,7 +217,7 @@
 - Refactor of key\_derivation [\#52](https://github.com/parallaxsecond/rust-psa-crypto/pull/52) ([sbailey-arm](https://github.com/sbailey-arm))
 - Add key derivation [\#49](https://github.com/parallaxsecond/rust-psa-crypto/pull/49) ([sbailey-arm](https://github.com/sbailey-arm))
 - Added all missing ops listed in Service API that Mbed Crypto support … [\#48](https://github.com/parallaxsecond/rust-psa-crypto/pull/48) ([sbailey-arm](https://github.com/sbailey-arm))
-- Add support for `psa\_generate\_random` [\#47](https://github.com/parallaxsecond/rust-psa-crypto/pull/47) ([joechrisellis](https://github.com/joechrisellis))
+- Add support for `psa_generate_random` [\#47](https://github.com/parallaxsecond/rust-psa-crypto/pull/47) ([joechrisellis](https://github.com/joechrisellis))
 
 ## [psa-crypto-0.3.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-0.3.0) (2020-07-14)
 
@@ -242,7 +272,6 @@
 
 - Part of moving Parsec to use psa-crypto [\#28](https://github.com/parallaxsecond/rust-psa-crypto/pull/28) ([sbailey-arm](https://github.com/sbailey-arm))
 - Modify Mbed TLS version to most recent realease [\#27](https://github.com/parallaxsecond/rust-psa-crypto/pull/27) ([hug-dev](https://github.com/hug-dev))
-- Add various improvements [\#20](https://github.com/parallaxsecond/rust-psa-crypto/pull/20) ([hug-dev](https://github.com/hug-dev))
 
 **Fixed bugs:**
 
@@ -262,6 +291,7 @@
 
 - Update Mbed TLS version and add new types [\#22](https://github.com/parallaxsecond/rust-psa-crypto/pull/22) ([hug-dev](https://github.com/hug-dev))
 - Separate implementation-defined feature in -sys [\#21](https://github.com/parallaxsecond/rust-psa-crypto/pull/21) ([ionut-arm](https://github.com/ionut-arm))
+- Add various improvements [\#20](https://github.com/parallaxsecond/rust-psa-crypto/pull/20) ([hug-dev](https://github.com/hug-dev))
 - Add no-std feature; impl Display on Error [\#19](https://github.com/parallaxsecond/rust-psa-crypto/pull/19) ([ionut-arm](https://github.com/ionut-arm))
 - Add Secure Element types definition [\#18](https://github.com/parallaxsecond/rust-psa-crypto/pull/18) ([hug-dev](https://github.com/hug-dev))
 - Add documentation, examples and tests [\#16](https://github.com/parallaxsecond/rust-psa-crypto/pull/16) ([hug-dev](https://github.com/hug-dev))
