@@ -14,6 +14,12 @@ This repository contains a Rust wrapper around the [PSA Cryptography API](https:
 
 * [`psa-crypto`](psa-crypto): a higher-level, more Rust-friendly interface
 
+In order to cross-build for ARM using the "ci.sh" script, the gcc for arm needs to be installed:
+
+    sudo apt install gcc-12-arm-linux-gnueabihf gcc-arm-linux-gnueabihf \
+                     gcc-aarch64-linux-gnu gcc-12-aarch64-linux-gnu
+
+
 ## Notice
 
 The PSA Crypto wrapper is currently work-in-progress. This repository is currently mainly a space for prototyping and design discussion.
