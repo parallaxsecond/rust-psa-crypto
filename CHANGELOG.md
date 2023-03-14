@@ -1,5 +1,18 @@
 # Changelog
 
+## [psa-crypto-sys-0.10.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-sys-0.10.0) (2023-03-09)
+
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.10.0...psa-crypto-sys-0.10.0)
+
+## [psa-crypto-0.10.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-0.10.0) (2023-03-09)
+
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-sys-0.9.2...psa-crypto-0.10.0)
+
+**Merged pull requests:**
+
+- Bump bindgen version [\#111](https://github.com/parallaxsecond/rust-psa-crypto/pull/111) ([gowthamsk-arm](https://github.com/gowthamsk-arm))
+- Update to remove const\_err [\#110](https://github.com/parallaxsecond/rust-psa-crypto/pull/110) ([marcsvll](https://github.com/marcsvll))
+
 ## [psa-crypto-0.9.2](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-0.9.2) (2022-08-31)
 
 [Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-sys-0.9.3...psa-crypto-0.9.2)
@@ -14,6 +27,7 @@
 
 **Merged pull requests:**
 
+- Bumping psa-crypto and -sys versions [\#108](https://github.com/parallaxsecond/rust-psa-crypto/pull/108) ([ionut-arm](https://github.com/ionut-arm))
 - Bump zeroize version [\#107](https://github.com/parallaxsecond/rust-psa-crypto/pull/107) ([gowthamsk-arm](https://github.com/gowthamsk-arm))
 - Fix issues reported by clippy [\#106](https://github.com/parallaxsecond/rust-psa-crypto/pull/106) ([gowthamsk-arm](https://github.com/gowthamsk-arm))
 - Add unauthenticated cypher operations in psa-crypto and psa-crypto-sys. [\#104](https://github.com/parallaxsecond/rust-psa-crypto/pull/104) ([egrimley-arm](https://github.com/egrimley-arm))
