@@ -12,6 +12,8 @@ use crate::types::algorithm::{Algorithm, Cipher, KeyAgreement, RawKeyAgreement};
 #[cfg(feature = "operations")]
 use crate::types::status::Status;
 use crate::types::status::{Error, Result};
+#[cfg(feature = "operations")]
+use crate::LOCK;
 #[cfg(feature = "interface")]
 use core::convert::{TryFrom, TryInto};
 use core::fmt;
@@ -350,6 +352,7 @@ impl Attributes {
     #[cfg(feature = "operations")]
     pub fn from_key_id(key_id: Id) -> Result<Self> {
         initialized()?;
+        let _lock = LOCK.read();
         let mut key_attributes = unsafe { psa_crypto_sys::psa_key_attributes_init() };
         Status::from(unsafe {
             psa_crypto_sys::psa_get_key_attributes(key_id.0, &mut key_attributes)

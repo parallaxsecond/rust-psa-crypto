@@ -7,7 +7,7 @@ use crate::initialized;
 use crate::types::key::Id;
 use crate::types::algorithm::Mac;
 use crate::types::status::{Result, Status, Error};
-
+use crate::LOCK;
 
 /// Calculate the message authentication code (MAC) of a message
 /// The key must allow `sign_message`
@@ -49,6 +49,7 @@ use crate::types::status::{Result, Status, Error};
 /// ```
 pub fn compute_mac(key_id: Id, mac_alg: Mac, input_message: &[u8], mac: &mut [u8]) -> Result<usize> {
     initialized()?;
+    let _lock = LOCK.read();
 
     let mut output_length = 0;
     let key_handle = key_id.handle()?;
@@ -111,6 +112,7 @@ pub fn compute_mac(key_id: Id, mac_alg: Mac, input_message: &[u8], mac: &mut [u8
 /// ```
 pub fn verify_mac(key_id: Id, mac_alg: Mac, input_message: &[u8], expected_mac: &[u8]) -> Result<()> {
     initialized()?;
+    let _lock = LOCK.read();
 
     let key_handle = key_id.handle()?;
 

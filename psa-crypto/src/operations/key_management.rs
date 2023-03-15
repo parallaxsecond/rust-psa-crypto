@@ -6,6 +6,7 @@
 use crate::initialized;
 use crate::types::key::{Attributes, Id};
 use crate::types::status::{Result, Status};
+use crate::LOCK;
 use core::convert::TryFrom;
 #[cfg(feature = "interface")]
 use log::error;
@@ -45,6 +46,7 @@ use log::error;
 /// ```
 pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
     initialized()?;
+    let _lock = LOCK.write();
     let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     if let Some(id) = id {
         unsafe { psa_crypto_sys::psa_set_key_id(&mut key_attributes, id) };
@@ -97,6 +99,7 @@ pub fn generate(attributes: Attributes, id: Option<u32>) -> Result<Id> {
 /// ```
 pub unsafe fn destroy(key: Id) -> Result<()> {
     initialized()?;
+    let _lock = LOCK.write();
     Status::from(psa_crypto_sys::psa_destroy_key(key.0)).to_result()
 }
 
@@ -144,6 +147,7 @@ pub unsafe fn destroy(key: Id) -> Result<()> {
 /// ```
 pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id> {
     initialized()?;
+    let _lock = LOCK.write();
 
     let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     if let Some(id) = id {
@@ -194,8 +198,9 @@ pub fn import(attributes: Attributes, id: Option<u32>, data: &[u8]) -> Result<Id
 /// ```
 pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
     initialized()?;
-    let mut data_length = 0;
+    let _lock = LOCK.read();
 
+    let mut data_length = 0;
     Status::from(unsafe {
         psa_crypto_sys::psa_export_public_key(
             key.0,
@@ -241,8 +246,9 @@ pub fn export_public(key: Id, data: &mut [u8]) -> Result<usize> {
 /// ```
 pub fn export(key: Id, data: &mut [u8]) -> Result<usize> {
     initialized()?;
-    let mut data_length = 0;
+    let _lock = LOCK.read();
 
+    let mut data_length = 0;
     Status::from(unsafe {
         psa_crypto_sys::psa_export_key(key.0, data.as_mut_ptr(), data.len(), &mut data_length)
     })
@@ -281,6 +287,8 @@ pub fn export(key: Id, data: &mut [u8]) -> Result<usize> {
 /// ```
 pub fn copy(key_id_to_copy: Id, attributes: Attributes, id: Option<u32>) -> Result<Id> {
     initialized()?;
+    let _lock = LOCK.write();
+
     let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     if let Some(id) = id {
         unsafe { psa_crypto_sys::psa_set_key_id(&mut key_attributes, id) };

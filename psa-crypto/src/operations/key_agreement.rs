@@ -6,6 +6,7 @@ use crate::initialized;
 use crate::types::algorithm::RawKeyAgreement;
 use crate::types::key::Id;
 use crate::types::status::{Result, Status};
+use crate::LOCK;
 
 /// Perform a key agreement and return the raw shared secret.
 /// # Example
@@ -49,6 +50,8 @@ pub fn raw_key_agreement(
     output: &mut [u8],
 ) -> Result<usize> {
     initialized()?;
+    let _lock = LOCK.read();
+
     let mut output_size = 0;
     Status::from(unsafe {
         psa_crypto_sys::psa_raw_key_agreement(

@@ -9,6 +9,7 @@ use crate::initialized;
 use crate::types::algorithm::AsymmetricSignature;
 use crate::types::key::Id;
 use crate::types::status::{Result, Status};
+use crate::LOCK;
 
 /// Sign an already-calculated hash with a private key
 ///
@@ -59,6 +60,7 @@ pub fn sign_hash(
     signature: &mut [u8],
 ) -> Result<usize> {
     initialized()?;
+    let _lock = LOCK.read();
 
     let mut signature_length = 0;
 
@@ -119,6 +121,7 @@ pub fn sign_hash(
 /// ```
 pub fn verify_hash(key: Id, alg: AsymmetricSignature, hash: &[u8], signature: &[u8]) -> Result<()> {
     initialized()?;
+    let _lock = LOCK.read();
 
     Status::from(unsafe {
         psa_crypto_sys::psa_verify_hash(

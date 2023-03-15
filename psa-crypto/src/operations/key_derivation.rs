@@ -8,6 +8,7 @@ use crate::types::key::Attributes;
 use crate::types::key::Id;
 use crate::types::key_derivation::Operation;
 use crate::types::status::{Error, Result, Status};
+use crate::LOCK;
 use core::convert::{TryFrom, TryInto};
 
 /// This function calculates output bytes from a key derivation algorithm and uses those bytes to generate a key deterministically.
@@ -65,6 +66,7 @@ use core::convert::{TryFrom, TryInto};
 /// ```
 pub fn output_key(operation: Operation, attributes: Attributes, id: Option<u32>) -> Result<Id> {
     initialized()?;
+    let _lock = LOCK.read();
 
     let mut key_attributes = psa_crypto_sys::psa_key_attributes_t::try_from(attributes)?;
     if let Some(id) = id {

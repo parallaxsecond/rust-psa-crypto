@@ -8,6 +8,7 @@
 use crate::initialized;
 use crate::types::algorithm::Hash;
 use crate::types::status::{Result, Status};
+use crate::LOCK;
 
 /// Calculate hash of a message
 ///
@@ -30,6 +31,7 @@ use crate::types::status::{Result, Status};
 /// ```
 pub fn hash_compute(hash_alg: Hash, input: &[u8], hash: &mut [u8]) -> Result<usize> {
     initialized()?;
+    let _lock = LOCK.read();
 
     let mut output_length = 0;
 
@@ -64,6 +66,7 @@ pub fn hash_compute(hash_alg: Hash, input: &[u8], hash: &mut [u8]) -> Result<usi
 /// ```
 pub fn hash_compare(hash_alg: Hash, input: &[u8], hash_to_compare: &[u8]) -> Result<()> {
     initialized()?;
+    let _lock = LOCK.read();
 
     Status::from(unsafe {
         psa_crypto_sys::psa_hash_compare(

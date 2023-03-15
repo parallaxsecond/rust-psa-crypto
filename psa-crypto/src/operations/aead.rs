@@ -9,6 +9,7 @@ use crate::initialized;
 use crate::types::algorithm::Aead;
 use crate::types::key::Id;
 use crate::types::status::{Result, Status};
+use crate::LOCK;
 
 /// Process an authenticated encryption operation.
 /// # Example
@@ -51,6 +52,7 @@ pub fn encrypt(
     ciphertext: &mut [u8],
 ) -> Result<usize> {
     initialized()?;
+    let _lock = LOCK.read();
 
     let mut ciphertext_size = 0;
     Status::from(unsafe {
@@ -113,6 +115,7 @@ pub fn decrypt(
     plaintext: &mut [u8],
 ) -> Result<usize> {
     initialized()?;
+    let _lock = LOCK.read();
 
     let mut plaintext_size = 0;
 
