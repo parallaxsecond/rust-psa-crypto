@@ -9,7 +9,7 @@
 //! for a more complete description of operations and types.
 //! This abstraction is built on top of the `psa-crypto-sys` crate.
 
-#![cfg_attr(feature = "no-std", no_std)]
+#![cfg_attr(not(feature = "std"), no_std)]
 #![deny(
     nonstandard_style,
     dead_code,
