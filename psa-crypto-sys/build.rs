@@ -122,12 +122,8 @@ mod common {
             .warnings(true)
             .flag("-Werror")
             .opt_level(2)
-            .try_compile("libshim.a")
+            .try_compile("libmbedcryptoshim.a")
             .map_err(|_| Error::new(ErrorKind::Other, "compiling shim.c failed"))?;
-
-        // Also link shim library
-        println!("cargo:rustc-link-search=native={}", out_dir);
-        println!("cargo:rustc-link-lib=static=shim");
 
         Ok(())
     }
