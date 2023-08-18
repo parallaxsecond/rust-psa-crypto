@@ -8,7 +8,7 @@
 use log::error;
 use zeroize::Zeroize;
 
-#[cfg(not(feature = "no-std"))]
+#[cfg(feature = "std")]
 use std::fmt;
 
 /// Result type returned by any PSA operation
@@ -92,7 +92,7 @@ pub enum Error {
     InvalidHandle,
 }
 
-#[cfg(not(feature = "no-std"))]
+#[cfg(feature = "std")]
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -156,7 +156,7 @@ impl fmt::Display for Error {
     }
 }
 
-#[cfg(not(feature = "no-std"))]
+#[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
 impl From<Error> for Status {

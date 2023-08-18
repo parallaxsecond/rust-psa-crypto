@@ -50,9 +50,9 @@ cargo build --no-default-features
 # psa-crypto
 popd
 pushd psa-crypto
+cargo build --no-default-features --features std
+cargo build --no-default-features --features operations,std
 cargo build --no-default-features
-cargo build --no-default-features --features operations
-cargo build --no-default-features --features no-std
 
 # Test dynamic linking
 git clone https://github.com/ARMmbed/mbedtls.git
