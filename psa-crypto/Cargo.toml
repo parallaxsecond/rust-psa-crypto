@@ -9,7 +9,7 @@ keywords = ["psa", "crypto", "cryptography", "no_std"]
 categories = ["api-bindings", "external-ffi-bindings", "cryptography"]
 license = "Apache-2.0"
 repository = "https://github.com/parallaxsecond/rust-psa-crypto"
-rust-version = "1.58.1"
+rust-version = "1.60.0"
 
 [dependencies]
 psa-crypto-sys = { path = "../psa-crypto-sys", version = "0.10.0", default-features = false }
