@@ -42,6 +42,7 @@ fn main() -> std::io::Result<()> {
 
 #[cfg(any(feature = "interface", feature = "operations"))]
 mod common {
+    use bindgen::callbacks::{ItemInfo, ParseCallbacks};
     use std::env;
     use std::io::{Error, ErrorKind, Result};
     use std::path::{Path, PathBuf};
@@ -81,6 +82,23 @@ mod common {
         Ok(())
     }
 
+    // Cargo provides the crate version from Cargo.toml in the environment.
+    const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+    // Return a prefix that we hope is globally unique.
+    pub fn prefix() -> String {
+        format!("psa_crypto_{}_", VERSION.replace('.', "_"))
+    }
+
+    #[derive(Debug)]
+    struct RenameCallbacks {}
+
+    impl ParseCallbacks for RenameCallbacks {
+        fn generated_link_name_override(&self, info: ItemInfo<'_>) -> Option<String> {
+            Some(prefix() + info.name)
+        }
+    }
+
     pub fn generate_mbed_crypto_bindings(mbed_include_dir: String) -> Result<()> {
         let header = mbed_include_dir.clone() + "/psa/crypto.h";
 
@@ -92,11 +110,11 @@ mod common {
             .clang_arg(format!("-I{}", out_dir))
             .clang_arg("-DMBEDTLS_CONFIG_FILE=<config.h>")
             .clang_arg(format!("-I{}", mbed_include_dir))
-            .rustfmt_bindings(true)
             .header("src/c/shim.h")
             .blocklist_type("max_align_t")
             .generate_comments(false)
             .size_t_is_usize(true)
+            .parse_callbacks(Box::new(RenameCallbacks {}))
             .generate()
             .map_err(|_| {
                 Error::new(
@@ -110,8 +128,8 @@ mod common {
         Ok(())
     }
 
-    pub fn compile_shim_library(include_dir: String) -> Result<()> {
-        let out_dir = env::var("OUT_DIR").unwrap();
+    pub fn compile_shim_library(include_dir: String, metadata: bool) -> Result<PathBuf> {
+        let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
         // Compile and package the shim library
         cc::Build::new()
@@ -122,14 +140,11 @@ mod common {
             .warnings(true)
             .flag("-Werror")
             .opt_level(2)
-            .try_compile("libshim.a")
+            .cargo_metadata(metadata)
+            .try_compile("libmbedcryptoshim.a")
             .map_err(|_| Error::new(ErrorKind::Other, "compiling shim.c failed"))?;
 
-        // Also link shim library
-        println!("cargo:rustc-link-search=native={}", out_dir);
-        println!("cargo:rustc-link-lib=static=shim");
-
-        Ok(())
+        Ok(out_dir.join("libmbedcryptoshim.a"))
     }
 }
 
@@ -144,7 +159,8 @@ mod interface {
         if let Ok(include_dir) = env::var("MBEDTLS_INCLUDE_DIR") {
             common::configure_mbed_crypto()?;
             common::generate_mbed_crypto_bindings(include_dir.clone())?;
-            common::compile_shim_library(include_dir)
+            let _ = common::compile_shim_library(include_dir, true)?;
+            Ok(())
         } else {
             Err(Error::new(
                 ErrorKind::Other,
@@ -157,9 +173,10 @@ mod interface {
 #[cfg(feature = "operations")]
 mod operations {
     use super::common;
+    use super::common::prefix;
     use cmake::Config;
     use std::env;
-    use std::io::{Error, ErrorKind, Result};
+    use std::io::{Error, ErrorKind, Result, Write};
     use std::path::PathBuf;
     use walkdir::WalkDir;
 
@@ -190,20 +207,8 @@ mod operations {
         Ok(mbed_build_path)
     }
 
-    fn link_to_lib(lib_path: String, link_statically: bool) {
-        let link_type = if link_statically { "static" } else { "dylib" };
-
-        // Request rustc to link the Mbed Crypto library
-        println!("cargo:rustc-link-search=native={}", lib_path,);
-        println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
-    }
-
     // Build script when the operations feature is on
     pub fn script_operations() -> Result<()> {
-        let lib;
-        let statically;
-        let include;
-
         if env::var("MBEDTLS_LIB_DIR").is_err() ^ env::var("MBEDTLS_INCLUDE_DIR").is_err() {
             return Err(Error::new(
                 ErrorKind::Other,
@@ -216,24 +221,98 @@ mod operations {
         if let (Ok(lib_dir), Ok(include_dir)) =
             (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))
         {
-            lib = lib_dir;
-            include = include_dir;
-            statically = cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok();
+            // Request rustc to link the Mbed Crypto library
+            let link_type = if cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok() {
+                "static"
+            } else {
+                "dylib"
+            };
+            println!("cargo:rustc-link-search=native={}", lib_dir);
+            println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
+
+            common::generate_mbed_crypto_bindings(include_dir.clone())?;
+            let _ = common::compile_shim_library(include_dir, true)?;
         } else {
             println!("Did not find environment variables, building MbedTLS!");
             let mut mbed_lib_dir = compile_mbed_crypto()?;
             let mut mbed_include_dir = mbed_lib_dir.clone();
             mbed_lib_dir.push("lib");
             mbed_include_dir.push("include");
+            let main_lib = mbed_lib_dir.join("libmbedcrypto.a");
 
-            lib = mbed_lib_dir.to_str().unwrap().to_owned();
-            include = mbed_include_dir.to_str().unwrap().to_owned();
-            statically = true;
+            let include = mbed_include_dir.to_str().unwrap().to_owned();
+            common::generate_mbed_crypto_bindings(include.clone())?;
+            let shim_lib = common::compile_shim_library(include, false)?;
+
+            // Modify and copy the libraries into a new directory.
+            let llib_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("llib");
+            let main_lib_name = prefix() + "mbedcrypto";
+            let shim_lib_name = prefix() + "shim";
+            objcopy(vec![
+                (main_lib, llib_path.join(format!("lib{}.a", main_lib_name))),
+                (shim_lib, llib_path.join(format!("lib{}.a", shim_lib_name))),
+            ])?;
+            println!("cargo:rustc-link-search=native={}", llib_path.display());
+            println!("cargo:rustc-link-lib=static={}", main_lib_name);
+            println!("cargo:rustc-link-lib=static={}", shim_lib_name);
         }
 
-        // Linking to PSA Crypto library is only needed for the operations.
-        link_to_lib(lib, statically);
-        common::generate_mbed_crypto_bindings(include.clone())?;
-        common::compile_shim_library(include)
+        Ok(())
+    }
+
+    pub fn objcopy(liblist: Vec<(PathBuf, PathBuf)>) -> Result<()> {
+        // Run nm on the source libraries.
+        let mut args = vec![];
+        for lib in &liblist {
+            let (from, _) = &lib;
+            args.push(from.as_os_str());
+        }
+        let output = std::process::Command::new("nm")
+            .args(args)
+            .output()
+            .expect("failed to run nm");
+        if !output.status.success() {
+            panic!("nm failed");
+        }
+
+        // Extract globally defined symbols.
+        let mut syms = vec![];
+        let re = regex::Regex::new(r"(?m) +[A-TV-Z] +(.+)$").unwrap();
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        for (_, [sym]) in re.captures_iter(&stdout).map(|c| c.extract()) {
+            syms.push(sym);
+        }
+
+        // Generate a file for objcopy containing "old new" in each line.
+        let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+        let prefix = prefix();
+        let symfile = out_path.join("objcopy_syms");
+        {
+            let mut file = std::fs::File::create(&symfile).unwrap();
+            for sym in syms.iter() {
+                file.write_all(format!("{} {}{}\n", sym, prefix, sym).as_bytes())
+                    .unwrap();
+            }
+        }
+
+        for (from, to) in liblist.into_iter() {
+            std::fs::create_dir_all(to.parent().unwrap())?;
+
+            // Run objcopy to copy library and rename symbols.
+            let status = std::process::Command::new("objcopy")
+                .args([
+                    "--redefine-syms",
+                    symfile.to_str().unwrap(),
+                    from.to_str().unwrap(),
+                    to.to_str().unwrap(),
+                ])
+                .status()
+                .expect("failed to execute process");
+            if !status.success() {
+                panic!("objcopy failed");
+            }
+        }
+
+        Ok(())
     }
 }
