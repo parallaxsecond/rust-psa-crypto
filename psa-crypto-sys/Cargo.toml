@@ -17,6 +17,9 @@ cc = "1.0.59"
 cmake = "0.1.44"
 regex = "1.9.1"
 walkdir = "2.3.1"
+# Later versions of "memchr" and "which" (indirectly) need rustc >1.60.0:
+memchr = "=2.6.2"
+which = "=4.4.0"
 
 [features]
 default = ["operations"]
