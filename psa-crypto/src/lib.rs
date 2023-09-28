@@ -10,6 +10,7 @@
 //! This abstraction is built on top of the `psa-crypto-sys` crate.
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![allow(unknown_lints)]
 #![deny(
     nonstandard_style,
     dead_code,
@@ -19,8 +20,12 @@
     overflowing_literals,
     path_statements,
     patterns_in_fns_without_body,
+    private_bounds,
     private_in_public,
+    private_interfaces,
+    renamed_and_removed_lints,
     unconditional_recursion,
+    unnameable_types,
     unused,
     unused_allocation,
     unused_comparisons,
