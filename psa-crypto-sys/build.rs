@@ -1,7 +1,7 @@
 // Copyright 2020 Contributors to the Parsec project.
 // SPDX-License-Identifier: Apache-2.0
 
-#![allow(unknown_lints)]
+#![allow(renamed_and_removed_lints, unknown_lints)]
 #![deny(
     nonstandard_style,
     dead_code,
