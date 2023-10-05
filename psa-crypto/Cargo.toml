@@ -12,7 +12,7 @@ repository = "https://github.com/parallaxsecond/rust-psa-crypto"
 rust-version = "1.66.0"
 
 [dependencies]
-psa-crypto-sys = { path = "../psa-crypto-sys", version = "0.10.0", default-features = false }
+psa-crypto-sys = { path = "../psa-crypto-sys", version = "0.11.0", default-features = false }
 log = "0.4.20"
 serde = { version = "1.0.115", features = ["derive"], default-features = false }
 zeroize = { version = "1.4.3", features = ["zeroize_derive"] }

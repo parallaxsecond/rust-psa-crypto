@@ -1,5 +1,21 @@
 # Changelog
 
+## [psa-crypto-sys-0.11.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-sys-0.11.0) (2023-10-05)
+
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.10.0...psa-crypto-sys-0.11.0)
+
+ **Merged pull requests:**
+
+- Update msrv [\#124](https://github.com/parallaxsecond/rust-psa-crypto/pull/124) ([gowthamsk-arm](https://github.com/gowthamsk-arm))
+- ci: Add workflow dispatch [\#122](https://github.com/parallaxsecond/rust-psa-crypto/pull/122) ([tgonzalezorlandoarm](https://github.com/tgonzalezorlandoarm))
+- Add allow\(renamed\_and\_removed\_lints\). [\#121](https://github.com/parallaxsecond/rust-psa-crypto/pull/121) ([egrimley-arm](https://github.com/egrimley-arm))
+- Add some lints and allow\(unknown\_lints\). [\#120](https://github.com/parallaxsecond/rust-psa-crypto/pull/120) ([egrimley-arm](https://github.com/egrimley-arm))
+- Update GitHub workflows to use newer actions. [\#117](https://github.com/parallaxsecond/rust-psa-crypto/pull/117) ([egrimley-arm](https://github.com/egrimley-arm))
+- Run CI tests with 1.58.1 and stable, and publish a MSRV. [\#116](https://github.com/parallaxsecond/rust-psa-crypto/pull/116) ([egrimley-arm](https://github.com/egrimley-arm))
+- Add a prefix to the library names and to every global symbol [\#115](https://github.com/parallaxsecond/rust-psa-crypto/pull/115) ([egrimley-arm](https://github.com/egrimley-arm))
+- Replace the "no-std" feature with a "std" feature [\#114](https://github.com/parallaxsecond/rust-psa-crypto/pull/114) ([egrimley-arm](https://github.com/egrimley-arm))
+- Disable default-features on serde [\#113](https://github.com/parallaxsecond/rust-psa-crypto/pull/113) ([ithinuel](https://github.com/ithinuel))
+
 ## [psa-crypto-sys-0.10.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-sys-0.10.0) (2023-03-09)
 
 [Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.10.0...psa-crypto-sys-0.10.0)
