@@ -1,10 +1,14 @@
 # Changelog
 
+## [psa-crypto-0.11.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-0.11.0) (2023-10-05)
+
+[Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.10.0...psa-crypto-0.11.0)
+
 ## [psa-crypto-sys-0.11.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-sys-0.11.0) (2023-10-05)
 
 [Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.10.0...psa-crypto-sys-0.11.0)
 
- **Merged pull requests:**
+**Merged pull requests:**
 
 - Update msrv [\#124](https://github.com/parallaxsecond/rust-psa-crypto/pull/124) ([gowthamsk-arm](https://github.com/gowthamsk-arm))
 - ci: Add workflow dispatch [\#122](https://github.com/parallaxsecond/rust-psa-crypto/pull/122) ([tgonzalezorlandoarm](https://github.com/tgonzalezorlandoarm))
