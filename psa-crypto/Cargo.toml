@@ -1,6 +1,6 @@
 [package]
 name = "psa-crypto"
-version = "0.10.0"
+version = "0.11.0"
 authors = ["Parsec Project Contributors"]
 edition = "2018"
 description = "Wrapper around the PSA Cryptography API"
