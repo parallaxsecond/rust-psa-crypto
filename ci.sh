@@ -14,13 +14,13 @@ git submodule update --init
 ################
 # Build client #
 ################
-RUST_BACKTRACE=1 cargo build
+RUST_BACKTRACE=1 cargo build --all-features
 
 # Cross-compilation tests, only the default features are tested.
 rustup target add armv7-unknown-linux-gnueabihf
 rustup target add aarch64-unknown-linux-gnu
-RUST_BACKTRACE=1 cargo build --target armv7-unknown-linux-gnueabihf
-RUST_BACKTRACE=1 cargo build --target aarch64-unknown-linux-gnu
+RUST_BACKTRACE=1 cargo build --target armv7-unknown-linux-gnueabihf --all-features
+RUST_BACKTRACE=1 cargo build --target aarch64-unknown-linux-gnu --all-features
 
 #################
 # Static checks #
