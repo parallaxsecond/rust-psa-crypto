@@ -29,13 +29,14 @@ makes no difference and there is no way to allow dynamic linking. The
 requirements for configuring and building MbedTLS can be found
 [on their repository homepage](https://github.com/ARMmbed/mbedtls#tool-versions).
 
-When the crate builds the library, both the `mbedcrypto` library
-itself and the `shim` library (which is needed for inline functions)
-are renamed by adding a prefix of the form `psa_crypto_X_Y_Z_`. Also
-every globally defined symbol in those libraries has that prefix
-added. This is to avoid link-time collisions with other crates that
-might use the same library, including other versions of this crate.
-The renaming of symbols uses the `nm` and `objcopy` commands.
+By default, the `mbedcrypto` library itself and the `shim` library (which 
+is needed for inline functions) will not have not have any prefixes. If 
+the `prefix` feature is enabled, both the libraries are renamed by 
+adding a prefix of the form `psa_crypto_X_Y_Z_`. Also every globally 
+defined symbol in those libraries has that prefix added. This is to 
+avoid link-time collisions with other crates that might use the same 
+library, including other versions of this crate. The renaming of 
+symbols uses the `nm` and `objcopy` commands.
 
 Linking and generating implementation-specific APIs is controlled by the
 `operations` feature that is enabled by default. Therefore, if you
