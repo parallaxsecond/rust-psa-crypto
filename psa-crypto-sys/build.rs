@@ -81,11 +81,17 @@ mod common {
             ));
         }
 
+        let mbedtls_mode = if cfg!(feature = "baremetal") {
+            "crypto_baremetal"
+        } else {
+            "crypto"
+        };
+
         // Configure the MbedTLS build for making Mbed Crypto
         if !::std::process::Command::new(mbedtls_config)
             .arg("--write")
             .arg(&(out_dir + "/config.h"))
-            .arg("crypto")
+            .arg(mbedtls_mode)
             .status()
             .map_err(|_| Error::new(ErrorKind::Other, "configuring mbedtls failed"))?
             .success()
@@ -136,6 +142,8 @@ mod common {
             .blocklist_type("max_align_t")
             .generate_comments(false)
             .size_t_is_usize(true)
+            .use_core()
+            .ctypes_prefix("::core::ffi")
             .generate()
             .map_err(|_| {
                 Error::new(
@@ -251,12 +259,17 @@ mod operations {
         }
 
         // Build the MbedTLS libraries
-        let mbed_build_path = Config::new(&mbedtls_dir)
+        let mut mbed_build = Config::new(&mbedtls_dir);
+        let mbed_build = mbed_build
             .cflag(format!("-I{}", out_dir))
             .cflag("-DMBEDTLS_CONFIG_FILE='<config.h>'")
             .define("ENABLE_PROGRAMS", "OFF")
-            .define("ENABLE_TESTING", "OFF")
-            .build();
+            .define("ENABLE_TESTING", "OFF");
+
+        #[cfg(feature = "baremetal")]
+        let mbed_build = mbed_build.define("CMAKE_TRY_COMPILE_TARGET_TYPE", "STATIC_LIBRARY");
+
+        let mbed_build_path = mbed_build.build();
 
         Ok(mbed_build_path)
     }
