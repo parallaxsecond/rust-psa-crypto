@@ -63,10 +63,11 @@ mod common {
     use std::env;
     use std::io::{Error, ErrorKind, Result};
     use std::path::{Path, PathBuf};
+    use std::process::Command;
 
     pub fn configure_mbed_crypto() -> Result<()> {
         let mbedtls_dir = String::from("./vendor");
-        let mbedtls_config = mbedtls_dir + "/scripts/config.py";
+        let mbedtls_config = mbedtls_dir.clone() + "/scripts/config.py";
 
         println!("cargo:rerun-if-changed=src/c/shim.c");
         println!("cargo:rerun-if-changed=src/c/shim.h");
@@ -86,6 +87,19 @@ mod common {
         } else {
             "crypto"
         };
+
+        if mbedtls_mode == "crypto_baremetal" {
+            // Apply patch to MbedTLS
+            let patch_path = Path::new("../patches/0001-Update-config-for-baremetal-targets.patch"); // relative to ./vendor folder
+            let status = Command::new("git")
+                .current_dir(&mbedtls_dir)
+                .args(&["apply", patch_path.to_str().unwrap()])
+                .status()?;
+
+            if !status.success() {
+                println!("cargo:warning=Could not apply patch to mbedtls: {:?}", patch_path);
+            }
+        }
 
         // Configure the MbedTLS build for making Mbed Crypto
         if !::std::process::Command::new(mbedtls_config)
