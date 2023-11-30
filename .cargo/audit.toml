@@ -1,0 +1,4 @@
+[advisories]
+ignore = [
+    "RUSTSEC-2023-0071", # `rsa` Marvin Attack not concerning as `rsa` is only used for tests
+]
