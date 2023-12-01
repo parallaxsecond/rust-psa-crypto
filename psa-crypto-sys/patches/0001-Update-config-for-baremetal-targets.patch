@@ -1,0 +1,46 @@
+From 035aca2948c136e76ec7acfa739e4f0264d55c39 Mon Sep 17 00:00:00 2001
+From: Geovane Fedrecheski <geonnave@gmail.com>
+Date: Wed, 29 Nov 2023 11:09:44 +0100
+Subject: [PATCH] Update config for baremetal targets
+
+Signed-off-by: Geovane Fedrecheski <geonnave@gmail.com>
+---
+ scripts/config.py | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/scripts/config.py b/scripts/config.py
+index 6d5edc7c0..36312df04 100755
+--- a/scripts/config.py
++++ b/scripts/config.py
+@@ -241,6 +241,7 @@ def full_adapter(name, active, section):
+ # need to be repeated here.
+ EXCLUDE_FROM_BAREMETAL = frozenset([
+     #pylint: disable=line-too-long
++    'MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS',
+     'MBEDTLS_ENTROPY_NV_SEED', # requires a filesystem and FS_IO or alternate NV seed hooks
+     'MBEDTLS_FS_IO', # requires a filesystem
+     'MBEDTLS_HAVE_TIME', # requires a clock
+@@ -270,6 +271,20 @@ def baremetal_adapter(name, active, section):
+     if name == 'MBEDTLS_NO_PLATFORM_ENTROPY':
+         # No OS-provided entropy source
+         return True
++    if name == 'MBEDTLS_ENTROPY_HARDWARE_ALT':
++        # Custom entropy source provided
++        return True
++    if name == 'MBEDTLS_ENTROPY_FORCE_SHA256':
++        # Force SHA-256 accumulator
++        return True
++    if name == 'MBEDTLS_MEMORY_BUFFER_ALLOC_C':
++        return True
++    if name == 'MBEDTLS_PLATFORM_C':
++        return True
++    if name == 'MBEDTLS_PLATFORM_MEMORY':
++        return True
++    if name == 'MBEDTLS_PLATFORM_NO_STD_FUNCTIONS':
++        return True
+     return include_in_full(name) and keep_in_baremetal(name)
+ 
+ def include_in_crypto(name):
+-- 
+2.34.1
+
