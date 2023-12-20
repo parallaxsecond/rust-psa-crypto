@@ -57,6 +57,8 @@ fn main() -> std::io::Result<()> {
 
 #[cfg(any(feature = "interface", feature = "operations"))]
 mod common {
+    pub const CONFIG_FILE: &str = "custom_config.h";
+
     #[cfg(feature = "prefix")]
     use bindgen::callbacks::{ItemInfo, ParseCallbacks};
 
@@ -84,7 +86,7 @@ mod common {
         // Configure the MbedTLS build for making Mbed Crypto
         if !::std::process::Command::new(mbedtls_config)
             .arg("--write")
-            .arg(&(out_dir + "/config.h"))
+            .arg(&(out_dir + "/" + CONFIG_FILE))
             .arg("crypto")
             .status()
             .map_err(|_| Error::new(ErrorKind::Other, "configuring mbedtls failed"))?
@@ -120,47 +122,43 @@ mod common {
         }
     }
 
-    pub fn generate_mbed_crypto_bindings(mbed_include_dir: String) -> Result<()> {
+    pub fn generate_mbed_crypto_bindings(
+        mbed_include_dir: String,
+        external_mbedtls: bool,
+    ) -> Result<()> {
         let header = mbed_include_dir.clone() + "/psa/crypto.h";
 
+        println!("using mbedtls include directory of: {}", mbed_include_dir);
         println!("cargo:rerun-if-changed={}", header);
 
         let out_dir = env::var("OUT_DIR").unwrap();
 
-        #[cfg(not(feature = "prefix"))]
-        let shim_bindings = bindgen::Builder::default()
+        // Common shim builder settings
+        let mut shim_builder = bindgen::Builder::default()
             .clang_arg(format!("-I{}", out_dir))
-            .clang_arg("-DMBEDTLS_CONFIG_FILE=<config.h>")
             .clang_arg(format!("-I{}", mbed_include_dir))
             .header("src/c/shim.h")
             .blocklist_type("max_align_t")
             .generate_comments(false)
-            .size_t_is_usize(true)
-            .generate()
-            .map_err(|_| {
-                Error::new(
-                    ErrorKind::Other,
-                    "Unable to generate bindings to mbed crypto",
-                )
-            })?;
+            .size_t_is_usize(true);
 
         #[cfg(feature = "prefix")]
-        let shim_bindings = bindgen::Builder::default()
-            .clang_arg(format!("-I{}", out_dir))
-            .clang_arg("-DMBEDTLS_CONFIG_FILE=<config.h>")
-            .clang_arg(format!("-I{}", mbed_include_dir))
-            .header("src/c/shim.h")
-            .blocklist_type("max_align_t")
-            .generate_comments(false)
-            .size_t_is_usize(true)
-            .parse_callbacks(Box::new(RenameCallbacks {}))
-            .generate()
-            .map_err(|_| {
-                Error::new(
-                    ErrorKind::Other,
-                    "Unable to generate bindings to mbed crypto",
-                )
-            })?;
+        {
+            shim_builder = shim_builder.parse_callbacks(Box::new(RenameCallbacks {}));
+        }
+
+        if !external_mbedtls {
+            shim_builder =
+                shim_builder.clang_arg(format!("-DMBEDTLS_CONFIG_FILE=\"{}\"", CONFIG_FILE));
+        }
+
+        // Build the bindings
+        let shim_bindings = shim_builder.generate().map_err(|_| {
+            Error::new(
+                ErrorKind::Other,
+                "Unable to generate bindings to mbed crypto",
+            )
+        })?;
 
         let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
         shim_bindings.write_to_file(out_path.join("shim_bindings.rs"))?;
@@ -168,22 +166,31 @@ mod common {
         Ok(())
     }
 
-    pub fn compile_shim_library(include_dir: String, metadata: bool) -> Result<PathBuf> {
+    pub fn compile_shim_library(
+        include_dir: String,
+        metadata: bool,
+        external_mbedtls: bool,
+    ) -> Result<PathBuf> {
         let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
         let shimlib_name = "libmbedcryptoshim.a";
 
         // Compile and package the shim library
-        cc::Build::new()
+        let mut cfg = cc::Build::new();
+        _ = cfg
             .include(&out_dir)
-            .define("MBEDTLS_CONFIG_FILE", "<config.h>")
             .include(include_dir)
             .file("./src/c/shim.c")
             .warnings(true)
             .flag("-Werror")
             .opt_level(2)
-            .cargo_metadata(metadata)
-            .try_compile(shimlib_name)
+            .cargo_metadata(metadata);
+
+        if !external_mbedtls {
+            _ = cfg.flag(&format!("-DMBEDTLS_CONFIG_FILE=\"{}\"", CONFIG_FILE));
+        }
+
+        cfg.try_compile(shimlib_name)
             .map_err(|_| Error::new(ErrorKind::Other, "compiling shim.c failed"))?;
 
         // Also link shim library
@@ -209,8 +216,8 @@ mod interface {
     pub fn script_interface() -> Result<()> {
         if let Ok(include_dir) = env::var("MBEDTLS_INCLUDE_DIR") {
             common::configure_mbed_crypto()?;
-            common::generate_mbed_crypto_bindings(include_dir.clone())?;
-            let _ = common::compile_shim_library(include_dir, true)?;
+            common::generate_mbed_crypto_bindings(include_dir.clone(), false)?;
+            let _ = common::compile_shim_library(include_dir, true, false)?;
             Ok(())
         } else {
             Err(Error::new(
@@ -253,7 +260,10 @@ mod operations {
         // Build the MbedTLS libraries
         let mbed_build_path = Config::new(&mbedtls_dir)
             .cflag(format!("-I{}", out_dir))
-            .cflag("-DMBEDTLS_CONFIG_FILE='<config.h>'")
+            .cflag(format!(
+                "-DMBEDTLS_CONFIG_FILE='\"{}\"'",
+                common::CONFIG_FILE
+            ))
             .define("ENABLE_PROGRAMS", "OFF")
             .define("ENABLE_TESTING", "OFF")
             .build();
@@ -276,6 +286,7 @@ mod operations {
         let lib;
         let statically;
         let include;
+        let external_mbedtls;
 
         if env::var("MBEDTLS_LIB_DIR").is_err() ^ env::var("MBEDTLS_INCLUDE_DIR").is_err() {
             return Err(Error::new(
@@ -283,15 +294,17 @@ mod operations {
                 "both environment variables MBEDTLS_LIB_DIR and MBEDTLS_INCLUDE_DIR need to be set for operations feature",
             ));
         }
-        common::configure_mbed_crypto()?;
         if let (Ok(lib_dir), Ok(include_dir)) =
             (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))
         {
+            println!("Found environment varibales, using external MbedTLS");
             lib = lib_dir;
             include = include_dir;
             statically = cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok();
+            external_mbedtls = true;
         } else {
             println!("Did not find environment variables, building MbedTLS!");
+            common::configure_mbed_crypto()?;
             let mut mbed_lib_dir = compile_mbed_crypto()?;
             let mut mbed_include_dir = mbed_lib_dir.clone();
             mbed_lib_dir.push("lib");
@@ -300,12 +313,13 @@ mod operations {
             lib = mbed_lib_dir.to_str().unwrap().to_owned();
             include = mbed_include_dir.to_str().unwrap().to_owned();
             statically = true;
+            external_mbedtls = false;
         }
 
         // Linking to PSA Crypto library is only needed for the operations.
         link_to_lib(lib, statically);
-        common::generate_mbed_crypto_bindings(include.clone())?;
-        match common::compile_shim_library(include, false) {
+        common::generate_mbed_crypto_bindings(include.clone(), external_mbedtls)?;
+        match common::compile_shim_library(include, false, external_mbedtls) {
             Ok(_) => Ok(()),
             Err(e) => Err(e),
         }
@@ -320,10 +334,12 @@ mod operations {
                 "both environment variables MBEDTLS_LIB_DIR and MBEDTLS_INCLUDE_DIR need to be set for operations feature",
             ));
         }
-        common::configure_mbed_crypto()?;
+
         if let (Ok(lib_dir), Ok(include_dir)) =
             (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))
         {
+            println!("Building with external MBEDTLS");
+
             // Request rustc to link the Mbed Crypto library
             let link_type = if cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok() {
                 "static"
@@ -333,10 +349,11 @@ mod operations {
             println!("cargo:rustc-link-search=native={}", lib_dir);
             println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
 
-            common::generate_mbed_crypto_bindings(include_dir.clone())?;
-            let _ = common::compile_shim_library(include_dir, true)?;
+            common::generate_mbed_crypto_bindings(include_dir.clone(), true)?;
+            let _ = common::compile_shim_library(include_dir, true, true)?;
         } else {
             println!("Did not find environment variables, building MbedTLS!");
+            common::configure_mbed_crypto()?;
             let mut mbed_lib_dir = compile_mbed_crypto()?;
             let mut mbed_include_dir = mbed_lib_dir.clone();
             mbed_lib_dir.push("lib");
@@ -344,8 +361,8 @@ mod operations {
             let main_lib = mbed_lib_dir.join("libmbedcrypto.a");
 
             let include = mbed_include_dir.to_str().unwrap().to_owned();
-            common::generate_mbed_crypto_bindings(include.clone())?;
-            let shim_lib = common::compile_shim_library(include, false)?;
+            common::generate_mbed_crypto_bindings(include.clone(), false)?;
+            let shim_lib = common::compile_shim_library(include, false, false)?;
 
             // Modify and copy the libraries into a new directory.
             let llib_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("llib");
