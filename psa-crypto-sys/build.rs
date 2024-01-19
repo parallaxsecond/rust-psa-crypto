@@ -308,6 +308,10 @@ mod operations {
             let mut mbed_lib_dir = compile_mbed_crypto()?;
             let mut mbed_include_dir = mbed_lib_dir.clone();
             mbed_lib_dir.push("lib");
+            if !mbed_lib_dir.as_path().exists() {
+                _ = mbed_lib_dir.pop();
+                mbed_lib_dir.push("lib64");
+            }
             mbed_include_dir.push("include");
 
             lib = mbed_lib_dir.to_str().unwrap().to_owned();
@@ -357,6 +361,11 @@ mod operations {
             let mut mbed_lib_dir = compile_mbed_crypto()?;
             let mut mbed_include_dir = mbed_lib_dir.clone();
             mbed_lib_dir.push("lib");
+            if !mbed_lib_dir.as_path().exists() {
+                _ = mbed_lib_dir.pop();
+                mbed_lib_dir.push("lib64");
+            }
+
             mbed_include_dir.push("include");
             let main_lib = mbed_lib_dir.join("libmbedcrypto.a");
 
@@ -388,6 +397,7 @@ mod operations {
             let (from, _) = &lib;
             args.push(from.as_os_str());
         }
+        println!("BILL: args: {:?}", args);
         let output = std::process::Command::new("nm")
             .args(args)
             .output()
