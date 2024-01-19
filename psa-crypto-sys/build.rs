@@ -397,7 +397,7 @@ mod operations {
             let (from, _) = &lib;
             args.push(from.as_os_str());
         }
-        println!("BILL: args: {:?}", args);
+
         let output = std::process::Command::new("nm")
             .args(args)
             .output()
