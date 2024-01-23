@@ -17,6 +17,7 @@ cc = "1.0.59"
 cmake = "0.1.44"
 regex = "1.9.1"
 walkdir = "2.3.1"
+pkg-config = "0.3.29"
 
 [features]
 default = ["operations"]
