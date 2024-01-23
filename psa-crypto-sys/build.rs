@@ -66,6 +66,73 @@ mod common {
     use std::io::{Error, ErrorKind, Result};
     use std::path::{Path, PathBuf};
 
+    #[cfg(any(feature = "prefix", feature = "operations"))]
+    pub fn get_external_mbedtls() -> Option<Result<(String, String)>> {
+        if env::var("MBEDTLS_LIB_DIR").is_err() ^ env::var("MBEDTLS_INCLUDE_DIR").is_err() {
+            return Some(Err(Error::new(
+                ErrorKind::Other,
+                "both environment variables MBEDTLS_LIB_DIR and MBEDTLS_INCLUDE_DIR need to be set for operations feature",
+            )));
+        }
+
+        if let (Ok(lib_dir), Ok(include_dir)) =
+            (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))
+        {
+            println!("Found environment variables, using external MbedTLS");
+            return Some(Ok((include_dir, lib_dir)));
+        }
+
+        if let Ok(mbedtls_result) = pkg_config::Config::new()
+            .range_version("3.5".."4.0")
+            .probe("mbedtls")
+        {
+            let include_dirs: Vec<String> = mbedtls_result
+                .include_paths
+                .into_iter()
+                .map(|x: PathBuf| -> String { x.into_os_string().into_string().unwrap() })
+                .collect();
+            let include_dir = include_dirs.join(" ");
+            // The current build framework doesn't support multiple lib paths for -L unfortuantely, so
+            // we just take the first element, which is enough for now :-(
+            let lib_dir = <PathBuf as Clone>::clone(&mbedtls_result.link_paths[0])
+                .into_os_string()
+                .into_string()
+                .unwrap();
+            println!("Found pkg-config mbedtls, using external MbedTLS");
+            return Some(Ok((include_dir, lib_dir)));
+        }
+
+        // No env vars set and no discovered package through pkg-config
+        None
+    }
+
+    #[cfg(all(feature = "interface", not(feature = "operations")))]
+    pub fn get_external_mbedtls_include_only() -> Result<String> {
+        if let Ok(include_dir) = env::var("MBEDTLS_INCLUDE_DIR") {
+            println!("Found environment variable, using external MbedTLS");
+            return Ok(include_dir);
+        }
+
+        if let Ok(mbedtls_result) = pkg_config::Config::new()
+            .range_version("3.5".."4.0")
+            .probe("mbedtls")
+        {
+            let include_dirs: Vec<String> = mbedtls_result
+                .include_paths
+                .into_iter()
+                .map(|x: PathBuf| -> String { x.into_os_string().into_string().unwrap() })
+                .collect();
+            let include_dir = include_dirs.join(" ");
+
+            return Ok(include_dir);
+        }
+
+        Err(Error::new(
+            ErrorKind::Other,
+            "interface feature necessitates MBEDTLS_INCLUDE_DIR environment variable",
+        ))
+    }
+
     pub fn configure_mbed_crypto() -> Result<()> {
         let mbedtls_dir = String::from("./vendor");
         let mbedtls_config = mbedtls_dir + "/scripts/config.py";
@@ -209,22 +276,17 @@ mod common {
 #[cfg(all(feature = "interface", not(feature = "operations")))]
 mod interface {
     use super::common;
-    use std::env;
-    use std::io::{Error, ErrorKind, Result};
+    use std::io::Result;
 
     // Build script when the interface feature is on and not the operations one
     pub fn script_interface() -> Result<()> {
-        if let Ok(include_dir) = env::var("MBEDTLS_INCLUDE_DIR") {
-            common::configure_mbed_crypto()?;
-            common::generate_mbed_crypto_bindings(include_dir.clone(), false)?;
-            let _ = common::compile_shim_library(include_dir, true, false)?;
-            Ok(())
-        } else {
-            Err(Error::new(
-                ErrorKind::Other,
-                "interface feature necessitates MBEDTLS_INCLUDE_DIR environment variable",
-            ))
-        }
+        let include_dir = common::get_external_mbedtls_include_only()?;
+
+        // TODO: Does interface need the vendored mbedtls?
+        common::configure_mbed_crypto()?;
+        common::generate_mbed_crypto_bindings(include_dir.clone(), false)?;
+        let _ = common::compile_shim_library(include_dir, true, false)?;
+        Ok(())
     }
 }
 
@@ -235,9 +297,9 @@ mod operations {
     use super::common::prefix;
     use cmake::Config;
     use std::env;
+    use std::io::Result;
     #[cfg(feature = "prefix")]
     use std::io::Write;
-    use std::io::{Error, ErrorKind, Result};
     use std::path::PathBuf;
     use walkdir::WalkDir;
 
@@ -288,36 +350,31 @@ mod operations {
         let include;
         let external_mbedtls;
 
-        if env::var("MBEDTLS_LIB_DIR").is_err() ^ env::var("MBEDTLS_INCLUDE_DIR").is_err() {
-            return Err(Error::new(
-                ErrorKind::Other,
-                "both environment variables MBEDTLS_LIB_DIR and MBEDTLS_INCLUDE_DIR need to be set for operations feature",
-            ));
-        }
-        if let (Ok(lib_dir), Ok(include_dir)) =
-            (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))
-        {
-            println!("Found environment varibales, using external MbedTLS");
-            lib = lib_dir;
-            include = include_dir;
-            statically = cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok();
-            external_mbedtls = true;
-        } else {
-            println!("Did not find environment variables, building MbedTLS!");
-            common::configure_mbed_crypto()?;
-            let mut mbed_lib_dir = compile_mbed_crypto()?;
-            let mut mbed_include_dir = mbed_lib_dir.clone();
-            mbed_lib_dir.push("lib");
-            if !mbed_lib_dir.as_path().exists() {
-                _ = mbed_lib_dir.pop();
-                mbed_lib_dir.push("lib64");
+        match common::get_external_mbedtls() {
+            Some(result) => {
+                let (include_dir, lib_dir) = result.unwrap();
+                lib = lib_dir;
+                include = include_dir;
+                statically = cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok();
+                external_mbedtls = true;
             }
-            mbed_include_dir.push("include");
+            None => {
+                println!("Did not find external MBEDTLS, building MbedTLS!");
+                common::configure_mbed_crypto()?;
+                let mut mbed_lib_dir = compile_mbed_crypto()?;
+                let mut mbed_include_dir = mbed_lib_dir.clone();
+                mbed_lib_dir.push("lib");
+                if !mbed_lib_dir.as_path().exists() {
+                    _ = mbed_lib_dir.pop();
+                    mbed_lib_dir.push("lib64");
+                }
+                mbed_include_dir.push("include");
 
-            lib = mbed_lib_dir.to_str().unwrap().to_owned();
-            include = mbed_include_dir.to_str().unwrap().to_owned();
-            statically = true;
-            external_mbedtls = false;
+                lib = mbed_lib_dir.to_str().unwrap().to_owned();
+                include = mbed_include_dir.to_str().unwrap().to_owned();
+                statically = true;
+                external_mbedtls = false;
+            }
         }
 
         // Linking to PSA Crypto library is only needed for the operations.
@@ -332,58 +389,52 @@ mod operations {
     #[cfg(feature = "prefix")]
     // Build script when the operations feature is on
     pub fn script_operations() -> Result<()> {
-        if env::var("MBEDTLS_LIB_DIR").is_err() ^ env::var("MBEDTLS_INCLUDE_DIR").is_err() {
-            return Err(Error::new(
-                ErrorKind::Other,
-                "both environment variables MBEDTLS_LIB_DIR and MBEDTLS_INCLUDE_DIR need to be set for operations feature",
-            ));
-        }
+        match common::get_external_mbedtls() {
+            Some(result) => {
+                let (include_dir, lib_dir) = result.unwrap();
+                // Request rustc to link the Mbed Crypto library
+                let link_type = if cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok()
+                {
+                    "static"
+                } else {
+                    "dylib"
+                };
+                println!("cargo:rustc-link-search=native={}", lib_dir);
+                println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
 
-        if let (Ok(lib_dir), Ok(include_dir)) =
-            (env::var("MBEDTLS_LIB_DIR"), env::var("MBEDTLS_INCLUDE_DIR"))
-        {
-            println!("Building with external MBEDTLS");
-
-            // Request rustc to link the Mbed Crypto library
-            let link_type = if cfg!(feature = "static") || env::var("MBEDCRYPTO_STATIC").is_ok() {
-                "static"
-            } else {
-                "dylib"
-            };
-            println!("cargo:rustc-link-search=native={}", lib_dir);
-            println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
-
-            common::generate_mbed_crypto_bindings(include_dir.clone(), true)?;
-            let _ = common::compile_shim_library(include_dir, true, true)?;
-        } else {
-            println!("Did not find environment variables, building MbedTLS!");
-            common::configure_mbed_crypto()?;
-            let mut mbed_lib_dir = compile_mbed_crypto()?;
-            let mut mbed_include_dir = mbed_lib_dir.clone();
-            mbed_lib_dir.push("lib");
-            if !mbed_lib_dir.as_path().exists() {
-                _ = mbed_lib_dir.pop();
-                mbed_lib_dir.push("lib64");
+                common::generate_mbed_crypto_bindings(include_dir.clone(), true)?;
+                let _ = common::compile_shim_library(include_dir, true, true)?;
             }
+            None => {
+                println!("Did not find environment variables, building MbedTLS!");
+                common::configure_mbed_crypto()?;
+                let mut mbed_lib_dir = compile_mbed_crypto()?;
+                let mut mbed_include_dir = mbed_lib_dir.clone();
+                mbed_lib_dir.push("lib");
+                if !mbed_lib_dir.as_path().exists() {
+                    _ = mbed_lib_dir.pop();
+                    mbed_lib_dir.push("lib64");
+                }
 
-            mbed_include_dir.push("include");
-            let main_lib = mbed_lib_dir.join("libmbedcrypto.a");
+                mbed_include_dir.push("include");
+                let main_lib = mbed_lib_dir.join("libmbedcrypto.a");
 
-            let include = mbed_include_dir.to_str().unwrap().to_owned();
-            common::generate_mbed_crypto_bindings(include.clone(), false)?;
-            let shim_lib = common::compile_shim_library(include, false, false)?;
+                let include = mbed_include_dir.to_str().unwrap().to_owned();
+                common::generate_mbed_crypto_bindings(include.clone(), false)?;
+                let shim_lib = common::compile_shim_library(include, false, false)?;
 
-            // Modify and copy the libraries into a new directory.
-            let llib_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("llib");
-            let main_lib_name = prefix() + "mbedcrypto";
-            let shim_lib_name = prefix() + "shim";
-            objcopy(vec![
-                (main_lib, llib_path.join(format!("lib{}.a", main_lib_name))),
-                (shim_lib, llib_path.join(format!("lib{}.a", shim_lib_name))),
-            ])?;
-            println!("cargo:rustc-link-search=native={}", llib_path.display());
-            println!("cargo:rustc-link-lib=static={}", main_lib_name);
-            println!("cargo:rustc-link-lib=static={}", shim_lib_name);
+                // Modify and copy the libraries into a new directory.
+                let llib_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("llib");
+                let main_lib_name = prefix() + "mbedcrypto";
+                let shim_lib_name = prefix() + "shim";
+                objcopy(vec![
+                    (main_lib, llib_path.join(format!("lib{}.a", main_lib_name))),
+                    (shim_lib, llib_path.join(format!("lib{}.a", shim_lib_name))),
+                ])?;
+                println!("cargo:rustc-link-search=native={}", llib_path.display());
+                println!("cargo:rustc-link-lib=static={}", main_lib_name);
+                println!("cargo:rustc-link-lib=static={}", shim_lib_name);
+            }
         }
 
         Ok(())
