@@ -32,7 +32,7 @@ fn crypt(
 
     let mut output_length = 0;
     let mut output_length_finish = 0;
-    match (|| {
+    let status = {
         Status::from(unsafe {
             psa_crypto_sys::psa_cipher_set_iv(&mut operation, iv.as_ptr(), iv.len())
         })
@@ -61,7 +61,9 @@ fn crypt(
         .to_result()?;
 
         Ok(())
-    })() {
+    };
+
+    match status {
         Ok(()) => (),
         Err(x) => {
             Status::from(unsafe { psa_crypto_sys::psa_cipher_abort(&mut operation) })
