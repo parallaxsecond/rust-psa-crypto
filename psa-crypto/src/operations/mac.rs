@@ -95,7 +95,7 @@ pub fn compute_mac(
 ///         permitted_algorithms: Algorithm::Mac(Mac::FullLength(FullLengthMac::Hmac{hash_alg: Hash::Sha256})),
 ///     },
 /// };
-/// 
+///
 /// psa_crypto::init().unwrap();
 /// let my_key = generate(attributes, None).unwrap();
 /// let mac_alg = Mac::FullLength(FullLengthMac::Hmac{hash_alg: Hash::Sha256});
