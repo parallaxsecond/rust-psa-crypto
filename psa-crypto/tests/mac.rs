@@ -30,12 +30,12 @@ fn get_attrs(alg: &Mac, key_type: Type) -> Attributes {
     let mut usage = UsageFlags::default();
     let _ = usage.set_sign_hash().set_verify_hash();
     Attributes {
-        key_type: key_type.clone(),
+        key_type,
         bits: 256,
         lifetime: Lifetime::Volatile,
         policy: Policy {
             usage_flags: usage,
-            permitted_algorithms: Algorithm::Mac(alg.clone()),
+            permitted_algorithms: Algorithm::Mac(*alg),
         },
     }
 }
@@ -47,7 +47,7 @@ fn test_mac_compute(mac_alg: Mac, key_type: Type, expected: &[u8]) -> Result<()>
     let my_key = import(attributes, None, &KEY)?;
     let buffer_size = attributes.mac_length(mac_alg)?;
     let mut mac = vec![0; buffer_size];
-    let _size = compute_mac(my_key, mac_alg, &MESSAGE, &mut mac)?;
+    compute_mac(my_key, mac_alg, &MESSAGE, &mut mac)?;
     assert_eq!(expected, mac);
     Ok(())
 }
@@ -57,7 +57,7 @@ fn test_mac_verify(mac_alg: Mac, key_type: Type, expected: &[u8]) -> Result<()> 
     let attributes = get_attrs(&mac_alg, key_type);
     psa_crypto::init()?;
     let my_key = import(attributes, None, &KEY)?;
-    let _size = verify_mac(my_key, mac_alg, &MESSAGE, &expected)?;
+    verify_mac(my_key, mac_alg, &MESSAGE, expected)?;
     Ok(())
 }
 
