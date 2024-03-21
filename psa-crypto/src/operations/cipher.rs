@@ -32,7 +32,8 @@ fn crypt(
 
     let mut output_length = 0;
     let mut output_length_finish = 0;
-    match (|| {
+
+    let status = {
         Status::from(unsafe {
             psa_crypto_sys::psa_cipher_set_iv(&mut operation, iv.as_ptr(), iv.len())
         })
@@ -61,16 +62,16 @@ fn crypt(
         .to_result()?;
 
         Ok(())
-    })() {
-        Ok(()) => (),
+    };
+
+    match status {
+        Ok(()) => Ok(output_length + output_length_finish),
         Err(x) => {
             Status::from(unsafe { psa_crypto_sys::psa_cipher_abort(&mut operation) })
                 .to_result()?;
-            return Err(x);
+            Err(x)
         }
     }
-
-    Ok(output_length + output_length_finish)
 }
 
 /// Encrypt a short message with a key
