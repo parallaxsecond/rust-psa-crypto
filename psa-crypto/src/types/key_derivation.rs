@@ -8,7 +8,7 @@ use super::key::Id;
 #[cfg(feature = "operations")]
 use super::status::{Error, Result, Status};
 #[cfg(feature = "operations")]
-use core::convert::{From, TryFrom};
+use core::convert::TryFrom;
 
 /// Key derivation operation for deriving keys from existing sources
 #[derive(Debug, Clone, Copy)]
