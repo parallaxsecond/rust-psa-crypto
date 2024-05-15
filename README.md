@@ -8,7 +8,7 @@
   <a href="https://github.com/parallaxsecond/rust-psa-crypto/actions?query=workflow%3A%22Continuous+Integration%22"><img src="https://github.com/parallaxsecond/rust-psa-crypto/workflows/Continuous%20Integration/badge.svg" alt="CI tests"/></a>
 </p>
 
-This repository contains a Rust wrapper around the [PSA Cryptography API](https://developer.arm.com/architectures/security-architectures/platform-security-architecture/documentation). There are two layers of wrapping:
+This repository contains a Rust wrapper around the [PSA Cryptography API](https://arm-software.github.io/psa-api/crypto/). There are two layers of wrapping:
 
 * [`psa-crypto-sys`](psa-crypto-sys): a lower-level wrapper that exposes a minimal low-level C interface to Rust
 
