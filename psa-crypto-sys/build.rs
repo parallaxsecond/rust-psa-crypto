@@ -160,15 +160,15 @@ mod common {
     ) -> Result<()> {
         let header = mbed_include_dir.clone() + "/psa/crypto.h";
 
-        println!("using mbedtls include directory of: {}", mbed_include_dir);
-        println!("cargo:rerun-if-changed={}", header);
+        println!("using mbedtls include directory of: {mbed_include_dir}");
+        println!("cargo:rerun-if-changed={header}");
 
         let out_dir = env::var("OUT_DIR").unwrap();
 
         // Common shim builder settings
         let mut shim_builder = bindgen::Builder::default()
-            .clang_arg(format!("-I{}", out_dir))
-            .clang_arg(format!("-I{}", mbed_include_dir))
+            .clang_arg(format!("-I{out_dir}"))
+            .clang_arg(format!("-I{mbed_include_dir}"))
             .header("src/c/shim.h")
             .blocklist_type("max_align_t")
             .generate_comments(false)
@@ -181,7 +181,7 @@ mod common {
 
         if !external_mbedtls {
             shim_builder =
-                shim_builder.clang_arg(format!("-DMBEDTLS_CONFIG_FILE=\"{}\"", CONFIG_FILE));
+                shim_builder.clang_arg(format!("-DMBEDTLS_CONFIG_FILE=\"{CONFIG_FILE}\""));
         }
 
         // Build the bindings
@@ -219,7 +219,8 @@ mod common {
             .cargo_metadata(metadata);
 
         if !external_mbedtls {
-            _ = cfg.flag(&format!("-DMBEDTLS_CONFIG_FILE=\"{}\"", CONFIG_FILE));
+            let mbedtls_config_define = format!("-DMBEDTLS_CONFIG_FILE=\"{CONFIG_FILE}\"");
+            _ = cfg.flag(&mbedtls_config_define);
         }
 
         cfg.try_compile(shimlib_name)
@@ -319,7 +320,7 @@ mod operations {
 
         // Build the MbedTLS libraries
         let mbed_build_path = Config::new(&mbedtls_dir)
-            .cflag(format!("-I{}", out_dir))
+            .cflag(format!("-I{out_dir}"))
             .cflag(format!(
                 "-DMBEDTLS_CONFIG_FILE='\"{}\"'",
                 common::CONFIG_FILE
@@ -336,8 +337,8 @@ mod operations {
         let link_type = if link_statically { "static" } else { "dylib" };
 
         // Request rustc to link the Mbed Crypto library
-        println!("cargo:rustc-link-search=native={}", lib_path,);
-        println!("cargo:rustc-link-lib={}=mbedcrypto", link_type);
+        println!("cargo:rustc-link-search=native={lib_path}",);
+        println!("cargo:rustc-link-lib={link_type}=mbedcrypto");
     }
 
     #[cfg(not(feature = "prefix"))]
