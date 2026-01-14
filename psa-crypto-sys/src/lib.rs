@@ -21,6 +21,8 @@
     trivial_casts
 )]
 #[allow(clippy::all)]
+#[allow(unknown_lints)] // unnecessary_transmutes is only present in 1.88+
+#[allow(unnecessary_transmutes)]
 #[cfg(feature = "interface")]
 mod psa_crypto_binding {
     #![allow(unused_imports)]
