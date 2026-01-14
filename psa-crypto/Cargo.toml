@@ -15,7 +15,7 @@ rust-version = "1.66.0"
 psa-crypto-sys = { path = "../psa-crypto-sys", version = "0.12.0", default-features = false }
 log = "0.4.20"
 serde = { version = "1.0.115", features = ["derive"], default-features = false }
-zeroize = { version = "1.4.3", features = ["zeroize_derive"] }
+zeroize = { version = "1.4.3", features = ["zeroize_derive"], default-features = false }
 
 [dev-dependencies]
 rsa = { version = "0.5.0", features = ["alloc"] }

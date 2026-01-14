@@ -171,6 +171,7 @@ mod common {
             .clang_arg(format!("-I{mbed_include_dir}"))
             .header("src/c/shim.h")
             .blocklist_type("max_align_t")
+            .use_core()
             .generate_comments(false)
             .size_t_is_usize(true);
 
