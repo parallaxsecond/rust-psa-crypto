@@ -60,7 +60,7 @@ impl Attributes {
     ///         }),
     ///     },
     /// };
-
+    ///
     /// // Can not export because the export flag is set to false.
     /// attributes.can_export().unwrap_err();
     /// ```
@@ -237,7 +237,7 @@ impl Attributes {
     ///         permitted_algorithms: permitted_alg,
     ///     },
     /// };
-
+    ///
     /// assert!(attributes.is_compatible_with_alg(alg));
     /// attributes.key_type = Type::RsaPublicKey;
     /// assert!(attributes.is_compatible_with_alg(alg));
@@ -570,15 +570,15 @@ impl fmt::Display for Type {
             Type::Chacha20 => write!(f, "Key for an algorithm based on ChaCha20"),
             Type::RsaPublicKey => write!(f, "RSA public key"),
             Type::RsaKeyPair => write!(f, "RSA key pair"),
-            Type::EccKeyPair { curve_family } => write!(f, "ECC key pair (using {})", curve_family),
+            Type::EccKeyPair { curve_family } => write!(f, "ECC key pair (using {curve_family})"),
             Type::EccPublicKey { curve_family } => {
-                write!(f, "ECC public key (using {})", curve_family)
+                write!(f, "ECC public key (using {curve_family})")
             }
             Type::DhKeyPair { group_family } => {
-                write!(f, "Diffie-Hellman key pair (using {})", group_family)
+                write!(f, "Diffie-Hellman key pair (using {group_family})")
             }
             Type::DhPublicKey { group_family } => {
-                write!(f, "Diffie-Hellman public key (using {})", group_family)
+                write!(f, "Diffie-Hellman public key (using {group_family})")
             }
         }
     }

@@ -7,6 +7,7 @@
 //! You can find the API
 //! [here](https://developer.arm.com/architectures/security-architectures/platform-security-architecture/documentation).
 
+#![no_std]
 // This one is hard to avoid.
 #![allow(clippy::multiple_crate_versions)]
 #![allow(clippy::missing_safety_doc)]
@@ -21,6 +22,8 @@
     trivial_casts
 )]
 #[allow(clippy::all)]
+#[allow(unknown_lints)] // unnecessary_transmutes is only present in 1.88+
+#[allow(unnecessary_transmutes)]
 #[cfg(feature = "interface")]
 mod psa_crypto_binding {
     #![allow(unused_imports)]

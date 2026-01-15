@@ -59,7 +59,7 @@ git clone https://github.com/ARMmbed/mbedtls.git
 pushd mbedtls
 git checkout v3.0.0
 ./scripts/config.py crypto
-SHARED=1 make
+SHARED=1 make -j$(nproc)
 popd
 
 # Clean before to only build the interface
