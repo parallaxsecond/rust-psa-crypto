@@ -55,7 +55,7 @@ pub fn compute_mac(
 
     let mut output_length = 0;
 
-    let mac_compute_res = Status::from(unsafe {
+    Status::from(unsafe {
         psa_crypto_sys::psa_mac_compute(
             key_id.0,
             mac_alg.into(),
@@ -66,8 +66,7 @@ pub fn compute_mac(
             &mut output_length,
         )
     })
-    .to_result();
-    mac_compute_res?;
+    .to_result()?;
     Ok(output_length)
 }
 
