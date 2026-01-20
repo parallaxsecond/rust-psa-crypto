@@ -9,6 +9,7 @@ use psa_crypto::types::key::{Attributes, EccFamily, Lifetime, Policy, Type, Usag
 mod aead;
 mod hash;
 mod key_agreement;
+mod mac;
 
 #[test]
 fn generate_integration_test() {

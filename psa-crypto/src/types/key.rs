@@ -431,9 +431,17 @@ impl Attributes {
     #[cfg(feature = "interface")]
     pub fn mac_length(self, mac_alg: Mac) -> Result<usize> {
         self.compatible_with_alg(mac_alg.into())?;
-        Ok(unsafe {
+        let size = unsafe {
             psa_crypto_sys::PSA_MAC_LENGTH(self.key_type.try_into()?, self.bits, mac_alg.into())
-        })
+        };
+        // PSA_MAC_LENGTH will return 0 for incompatible algorithms
+        // and other errors. Since we need > 0 mac_length to allocate
+        // space for the mac itself, treat 0 as an error.
+        if size > 0 {
+            Ok(size)
+        } else {
+            Err(Error::DataInvalid)
+        }
     }
 
     /// Sufficient buffer size for an encrypted message using the given aead algorithm
