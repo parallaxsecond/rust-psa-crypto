@@ -1,6 +1,6 @@
 [package]
 name = "psa-crypto-sys"
-version = "0.12.0"
+version = "0.13.0"
 authors = ["Parsec Project Contributors"]
 edition = "2018"
 description = "Wrapper around the PSA Cryptography API"
@@ -9,10 +9,10 @@ keywords = ["psa", "crypto", "cryptography"]
 categories = ["api-bindings", "external-ffi-bindings", "cryptography"]
 license = "Apache-2.0"
 repository = "https://github.com/parallaxsecond/rust-psa-crypto"
-rust-version = "1.66.0"
+rust-version = "1.85.0"
 
 [build-dependencies]
-bindgen = { version = "0.69.4", optional = true }
+bindgen = { version = "0.72.1", optional = true }
 cc = "1.0.59"
 cmake = "0.1.44"
 regex = "1.9.1"
