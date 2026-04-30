@@ -63,14 +63,13 @@ mod common {
     use bindgen::callbacks::{ItemInfo, ParseCallbacks};
 
     use std::env;
-    use std::io::{Error, ErrorKind, Result};
+    use std::io::{Error, Result};
     use std::path::PathBuf;
 
     #[cfg(any(feature = "prefix", feature = "operations"))]
     pub fn get_external_mbedtls() -> Option<Result<(String, String)>> {
         if env::var("MBEDTLS_LIB_DIR").is_err() ^ env::var("MBEDTLS_INCLUDE_DIR").is_err() {
-            return Some(Err(Error::new(
-                ErrorKind::Other,
+            return Some(Err(Error::other(
                 "both environment variables MBEDTLS_LIB_DIR and MBEDTLS_INCLUDE_DIR need to be set for operations feature",
             )));
         }
@@ -127,8 +126,7 @@ mod common {
             return Ok(include_dir);
         }
 
-        Err(Error::new(
-            ErrorKind::Other,
+        Err(Error::other(
             "interface feature necessitates MBEDTLS_INCLUDE_DIR environment variable",
         ))
     }
@@ -186,12 +184,9 @@ mod common {
         }
 
         // Build the bindings
-        let shim_bindings = shim_builder.generate().map_err(|_| {
-            Error::new(
-                ErrorKind::Other,
-                "Unable to generate bindings to mbed crypto",
-            )
-        })?;
+        let shim_bindings = shim_builder
+            .generate()
+            .map_err(|_| Error::other("Unable to generate bindings to mbed crypto"))?;
 
         let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
         shim_bindings.write_to_file(out_path.join("shim_bindings.rs"))?;
@@ -225,7 +220,7 @@ mod common {
         }
 
         cfg.try_compile(shimlib_name)
-            .map_err(|_| Error::new(ErrorKind::Other, "compiling shim.c failed"))?;
+            .map_err(|_| Error::other("compiling shim.c failed"))?;
 
         // Also link shim library
         #[cfg(not(feature = "prefix"))]
@@ -264,7 +259,7 @@ mod operations {
     use std::env;
     #[cfg(feature = "prefix")]
     use std::io::Write;
-    use std::io::{Error, ErrorKind, Result};
+    use std::io::{Error, Result};
     use std::path::{Path, PathBuf};
     use walkdir::WalkDir;
 
@@ -279,8 +274,7 @@ mod operations {
 
         //  Check for Mbed TLS sources
         if !Path::new(&mbedtls_config).exists() {
-            return Err(Error::new(
-                ErrorKind::Other,
+            return Err(Error::other(
                 "MbedTLS config.py is missing. Have you run 'git submodule update --init'?",
             ));
         }
@@ -291,13 +285,10 @@ mod operations {
             .arg(&(out_dir + "/" + common::CONFIG_FILE))
             .arg("crypto")
             .status()
-            .map_err(|_| Error::new(ErrorKind::Other, "configuring mbedtls failed"))?
+            .map_err(|_| Error::other("configuring mbedtls failed"))?
             .success()
         {
-            return Err(Error::new(
-                ErrorKind::Other,
-                "config.py returned an error status",
-            ));
+            return Err(Error::other("config.py returned an error status"));
         }
 
         Ok(())
