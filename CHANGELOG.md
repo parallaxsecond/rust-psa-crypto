@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.13.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/0.13.0) (2026-05-01)
+
+This covers updates for v0.13.0 of both `psa-crypto` and `psa-crypto-sys`.
+
+## What's Changed
+* ci.yml: Correct the Rust compiler version by @tgonzalezorlandoarm in https://github.com/parallaxsecond/rust-psa-crypto/pull/130
+* audit.toml: Add Marvin Attack from rsa crate to ignore list by @gowthamsk-arm in https://github.com/parallaxsecond/rust-psa-crypto/pull/134
+* Mbedtls fixes 0.12 by @billatarm in https://github.com/parallaxsecond/rust-psa-crypto/pull/135
+* Update mbedtls to version 3.5.1 by @billatarm in https://github.com/parallaxsecond/rust-psa-crypto/pull/137
+* Use pkg config by @billatarm in https://github.com/parallaxsecond/rust-psa-crypto/pull/139
+* Bump bindgen to 0.69.4 by @tgonzalezorlandoarm in https://github.com/parallaxsecond/rust-psa-crypto/pull/144
+* build: fixes for newer Rust by @dsseng in https://github.com/parallaxsecond/rust-psa-crypto/pull/146
+* Update document link in README by @gowthamsk-arm in https://github.com/parallaxsecond/rust-psa-crypto/pull/136
+* build: make psa-crypto-sys no_std, fix zeroize with no_std by @dsseng in https://github.com/parallaxsecond/rust-psa-crypto/pull/145
+* Enabled psa_mac_compute and psa_mac_verify functions. by @mes5k in https://github.com/parallaxsecond/rust-psa-crypto/pull/143
+* Bump bindgen crate version by @anta5010 in https://github.com/parallaxsecond/rust-psa-crypto/pull/149
+
+## New Contributors
+* @billatarm made their first contribution in https://github.com/parallaxsecond/rust-psa-crypto/pull/135
+* @dsseng made their first contribution in https://github.com/parallaxsecond/rust-psa-crypto/pull/146
+* @mes5k made their first contribution in https://github.com/parallaxsecond/rust-psa-crypto/pull/143
+
+**Full Changelog**: https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-0.12.0...psa-crypto-0.13.0
+
 ## [psa-crypto-0.12.0](https://github.com/parallaxsecond/rust-psa-crypto/tree/psa-crypto-0.12.0) (2023-10-16)
 
 [Full Changelog](https://github.com/parallaxsecond/rust-psa-crypto/compare/psa-crypto-sys-0.12.0...psa-crypto-0.12.0)
